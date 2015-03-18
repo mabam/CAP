@@ -1,0 +1,47 @@
+*** rtmp.c.old	Sun Feb  4 11:30:32 1990
+--- rtmp.c	Sun Feb  4 11:38:20 1990
+***************
+*** 540,546 ****
+    word net;
+    NODE id, *sid;
+  
+!   if (ddp->type == ddpRTMPRQ)	/* is it a rtmp request? */
+      return(rtmprq_handler(port,ddp)); /* yes, handle it */
+    if (ddp->type != ddpRTMP)	/* is it rtmp? */
+      return(TRUE);		/* no, dump it */
+--- 540,546 ----
+    word net;
+    NODE id, *sid;
+  
+!   if (ddp->type == ddpRTMP_REQ)	/* is it a rtmp request? */
+      return(rtmprq_handler(port,ddp)); /* yes, handle it */
+    if (ddp->type != ddpRTMP)	/* is it rtmp? */
+      return(TRUE);		/* no, dump it */
+***************
+*** 902,909 ****
+    int count;
+    int mainnotknown = FALSE;
+  
+!   if (!zone_unknown)		/* set whenever new route is created */
+!     return;
+    /* initialize helper field, find first to query */
+    for (first=NULL, re = routes, j = 0; re ; re = re->re_next)
+      if (re->re_state && !re->re_zonep) {
+--- 902,908 ----
+    int count;
+    int mainnotknown = FALSE;
+  
+!   if (zone_unknown) {		/* set whenever new route is created */
+    /* initialize helper field, find first to query */
+    for (first=NULL, re = routes, j = 0; re ; re = re->re_next)
+      if (re->re_state && !re->re_zonep) {
+***************
+*** 961,966 ****
+--- 960,966 ----
+      log(LOG_LOTS, "zipping %s for %d networks", node_format(curbridge),
+  	count-1);
+      ddp_output(curbridge, &ddp, zip_buf, count*sizeof(word));
++     }
+    }
+    /* restart query */
+    { struct timeval tv; 

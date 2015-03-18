@@ -1,0 +1,24 @@
+Use this as a prototype if you don't need the Adobe filters.  If you
+do use the Adobe shell scripts, then note that papif can be used in
+place of pscomm and use the standard printcap entry formed by
+Transcript and adjust the shell script accordingly.
+
+ps:LaserWriter:A sample LaserWriter printer:\ # printer name
+	 :lp=/dev/ps:\			# spool device
+	 :sd=/usr/spool/lpd/ps:\	# spool directory
+	 :pl#72:pw#85:\			# page length and width
+	 :sf:\				# suppress form feeds
+	 :lf=/usr/adm/ps-errs:\		# log file
+	 :af=/usr/adm/ps.acct:\		# accounting file
+	 :if=/usr/local/cap/ps:\	# input filter
+	 :of=/usr/local/cap/papof:	# output filter
+
+lp - device to print to - use any dummy file name.  (Don't use /dev/null
+  if your systems interlocks on it (e.g. opens exclusive))
+of - output filter
+if - input filter
+sd - spooling directory - should be unique!
+lf - logging file (useful, you should use this)
+af - accounting file
+
+

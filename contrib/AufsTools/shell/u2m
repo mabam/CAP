@@ -1,0 +1,7 @@
+#
+set f = _tmp_$$
+foreach i ($argv)
+	mv $i $f
+	tr '\012' '\015' <$f >$i
+	rm $f
+end

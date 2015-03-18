@@ -1,0 +1,381 @@
+.TH aufs 8 "Jan 31 1994" "Columbia University"
+.SH NAME
+aufs
+\- daemon program to establish AppleTalk filing protocol UNIX File Server
+.SH SYNOPSIS
+.B aufs 
+[
+.BI \-n " <name>"
+] [
+.BI \-V " <system afpvols>"
+] [
+.BI \-U " <number of sessions>"
+] [
+.BI \-P " <password file>"
+] [
+.BI \-G " <guest id>"
+] [
+.BI \-X " <directory name>"
+] [
+.BI \-A " <application control file>"
+] [
+.BI \-F " <file type mapping>"
+] [
+.BI \-B " <IPaddress[:port]>"
+] [
+.BI \-f " <IP filter file>"
+] [
+.BI \-[i|I] " <idle timeout>"
+] [
+.BI \-c " <directory name>"
+] [
+.BI \-l " <logfile name>"
+] [
+.BI \-m " <motdfile name>"
+] [
+.BI \-M " <msgfile name>"
+] [
+.BI \-S " <n>"
+] [
+.BI \-R " <n>"
+] [
+.BI \-r " <readme_path>"
+] [
+.BI \-k
+] [
+.BI \-p
+] [
+.BI \-s
+] [
+.BI \-u
+] [
+.BI \-T
+] [
+.BI \-d " <flags>"
+] [
+.BI \-a " <flags>"
+] [
+.BI \-t " <" "Input | Output | Both" ><cmdname>
+] [
+.BI \-L " <authorization program>"
+] [
+.BI \-Z " <debugfile>"
+]
+.SH DESCRIPTION
+.I aufs
+implements a file server on a UNIX host for client computers on AppleTalk
+that support AFP,
+or Macintoshes on the internet that support AFP via TCP/IP using AppleShare
+client 3.7 or later.
+This manual entry describes how to run the UNIX server daemon process.
+See AUFS(1) for information about how to use the server.
+.PP
+.I aufs
+is normally started at boot time via a command in start-cap-servers (which
+is usually run from /etc/rc.local).
+The CAP name information server daemon
+.I atis
+must be running when 
+.I aufs
+is started.
+AUFS must be run from the root account.
+If debugging options are specified (see \-d or \-a, below), 
+.I aufs
+runs in the foreground to log messages to standard output.
+Otherwise, it automatically puts itself into the background to run as 
+a daemon process.
+The master daemon forks a new child process to handle each client connection 
+request.
+.SH OPTIONS
+There are no arguments needed for normal operation.  Optional arguments
+allow control of configuration and debugging.
+.TP 10
+.BI \-n " <name>"
+is used to specify the server name.  By default the server name is
+"<hostname> Aufs".
+.TP 10
+.BI \-V " <system afpvols>"
+is used to specify a server-wide volumes file.
+The volumes listed in the file will be available to every AFP client.
+Individual users may also have their own volumes file in their home directory.
+See AUFS(1) for a description of the volumes file format.
+.TP 10
+.BI \-U " <number of sessions>"
+is used to modify the maximum number of sessions allowed.  The default
+is around 10 or so (depends on the ASP implementation).  The maximum
+value is limited solely by the number of DDP sockets available.
+One UNIX process is created for each open session.
+.TP 10
+.BI \-P " <password file>"
+specifies the absolute pathname of a "lookaside" password file containing
+cleartext usernames and passwords or to an optional administrative file
+that lists valid usernames for use with the DISTRIB_PASSWDS feature (must
+be specified at compile time by enabling the option at Configure time).
+This option requires special configuration when installing aufs --
+see the installation instructions in the source directory.
+.TP 10
+.BI \-G " <guest name>"
+is used to allow "guest" or "Anonymous" AppleShare sessions.  This is
+not enabled by default, as it is a security violation unless it is
+done in a very controlled fashion.  In particular, <guest name> should be
+the username of a UNIX account with very limited privilege and volume
+access.  A common account used for this purpose is "nobody".  For guest
+sessions, no user volumes file is allowed or read.
+.TP 10
+.BI \-X " <directory name>"
+is used to allow access control for 
+.I lwsrv.
+.I Lwsrv
+requires the same option in order to enable the access control
+(this option must be specified at compile time by enabling the
+LWSRV_AUFS_SECURITY option at Configure time).
+The directory specified will be used to store temporary information
+used to authenticate the user. It is not uncommon to use /tmp as
+the directory, although it is probably much better to use a separate
+directory.
+.I aufs
+will normally remove the temporary files, but if the directory used
+is not /tmp, something should be run that will remove all the files
+within that directory when the machine is starting up.
+.TP 10
+.BI \-A " <application control file>"
+allows the maximum number of times an application may be opened to be
+controlled (this option must be specified at compile time by enabling
+the APPLICATION_MANAGER option at Configure time). The control file
+lists the full path to each Application data fork followed by a colon ':'
+and a number. An optional trailing 'P' may be added to protect the Application
+from Finder copying. For more details, see contrib/AppManager/README.
+.TP 10
+.BI \-F " <file type mapping>"
+specifies a global file which maps a UNIX file suffix into a Mac Type and
+Creator (this option must be specified at compile time by enabling the
+USR_FILE_TYPES option at Configure time). The mapping file also indicates
+the type of data translation to be used and a specific comment string. A
+user may over-ride these mappings by having a .afpfile (or afpfile) file
+in their home directory.
+.TP 10
+.BI \-T
+enables AppleShareIP (AFP via TCP/IP) support in
+.I aufs.
+Note that the first
+.I aufs
+process defaults to the well-know port number 548. Subsequent incarnations
+of
+.I aufs
+will require that the TCP/IP port number be specified using the \-B option.
+Clients needing to connect to these servers, that are not also connected to
+the same network via AppleTalk, must specify the port number in
+the dialog box obtained by clicking on the Chooser "Server IP Address..."
+button. The format is the same as for the \-B option, ie: 128.250.1.21:2169
+to use port number 2169 on host 128.250.1.21.
+.TP 10
+.BI \-B " <IPaddress[:port]>"
+tells
+.I aufs
+to listen for TCP/IP connections at the specified IP address and optional
+port (defaults to any available interface address and port number 548).
+This option implies \-T.
+.TP 10
+.BI \-f " <IP filter file>"
+specifies the pathname of a file containing yes/no permissions for client
+IP numbers or subnets wishing to connect using AFP via TCP/IP. See the file
+cap60/etc/aufsIPFilter for details.
+.TP 10
+.BI \-c " <directory name>"
+specifies a directory where
+.I aufs
+can put coredumps.  Hopefully, you won't see any coredumps.
+.TP 10
+.BI \-l " <logfile name>"
+can be used to specify the path name of a file for logging messages.
+The default log file is a file with the name <server name>.log
+(see -n option) in the current working directory where 
+.I aufs
+is started.   There is no way to turn off logging.
+.TP 10
+.BI \-m " <motdfile name>"
+specifies the path name of a file which contains a "message of the day" to
+be displayed when an AFP 2.1 compatible client connects to the server.
+.TP 10
+.BI \-M " <msgfile name>"
+specifies the path name of a file which contains a message to be sent to
+all connected (and AFP 2.1 compatible) clients when the parent AUFS process
+is sent an URG signal.  Typically used for "the server will be unavailable"
+messages.
+.TP 10
+.BI \-S " <n>"
+is used to specify the number of packets the server is allowed to send in
+each ATP response to the client,
+where <n> can vary from 1 to 8.
+This controls the flow rate for data sent from the server to the client.
+It may be required when the UNIX host system sends back to back
+packets at a faster rate than the target system or intervening gateways
+can accept.
+The default value is installation dependent (see LOCAL CONFIGURATION, below).
+.TP 10
+.BI \-R " <n>"
+is used to specify to the client the number of packets he is allowed to
+send in each ATP response to the server, where <n> can vary from 1 to 8.
+This controls the flow rate for data sent from the client to the server.
+It may be required when the UNIX host system cannot process received
+back to back packets (due to speed or buffer space limitations)
+as fast as the remote system or intervening gateways can send them.
+The default value is installation dependent (see LOCAL CONFIGURATION, below).
+.TP 10
+.BI \-r " <readme_path>"
+is used to specify a README file (full path name) to be linked into the top
+level directory of a new AUFS user. For example: to explain the purpose of
+.finderinfo and .resource directories and/or any local configuration
+settings (this option must be specified at compile time by enabling the
+AUFS_README option at Configure time).
+.TP 10
+.BI \-[i|I] " <idle_time>"
+sets an AUFS idle timeout, after which the AUFS session will begin to
+close down, sending warning messages at the 5, 3 and 1 minute marks.
+Any access to the server volume from the 5 minute mark onward will 
+reset the timeout and send a "no longer shutting down" message to the
+Macintosh.  The \-i flag specifies that timeouts are for GUEST
+connections only, \-I specifies everyone. The <idle_time> field is
+measured in minutes (this option must be specified at compile time by
+enabling the AUFS_IDLE_TIMEOUT option at Configure time).
+.TP 10
+.BI \-u
+tells the AUFS server not offer volumes specified in the afpvols file
+of the user's home directory. For use when the directories are NFS mounted
+or the server has a specific/special function.
+.TP 10
+.BI \-k
+specifies that DDP checksums are not to be used, the field is set to zero.
+.TP 10
+.BI \-p
+is used to tell AFP 2.1 compatible Macintosh clients to not save the user's
+password in long term storage.
+.TP 10
+.BI \-L "<authorization program>"
+is used to specify a full path name to an external authorization program.
+The program is passed the AppleTalk network number, node number and name of
+the client and the AUFS server name, in that order.  The program should
+return 0 to authorize the user and non-zero to deny access.  An
+unsuccessful attempt is treated in the same way as "user unknown" or
+"login disabled".  This option may also be used to log server connections
+(this option must be specified at compile time by enabling the
+LOGIN_AUTH_PROG option at Configure time).
+.SH DEBUGGING OPTIONS
+.TP 10
+.BI \-Z "<debugfile>"
+is used to specify the name of the output file to use for detailed debugging
+of AFP commands (this option must be specified at compile time by enabling
+the DEBUG_AFP_CMD option at Configure time).
+.TP 10
+.B \-s
+tells 
+.I aufs
+to report usage statistics such as system time use and
+number of times encountered for the various AFP commands.
+These statistics are recorded in the log file at the end of a run.
+.TP 10
+.BI \-d " <flags>"
+specifies debugging flags for the cap libraries.  See cap(3) for a
+list of valid flags.
+.TP 10
+.BI \-a " <flags>"
+specifies debugging flags for 
+.I aufs.  
+Valid values (case independent) include
+.I DeskTop
+for desktop management, 
+.I Directory
+for directory calls, 
+.I Enumerate
+for enumerate calls,
+.I File
+for file calls, 
+.I Fork
+for fork calls, 
+.I OS
+for os
+dependent debugging,
+.I Server
+for a trace of calls,
+.I Unix
+for unix level debugging,
+.I Volume
+for volume debugging,
+.I debug
+to mark as debugging (keeps 
+.I aufs 
+from backgrounding if no other debug flags are set), and
+.I All
+for all of the above.
+A list of multiple options should be separated by blanks and enclosed in quotes.
+You can also set the environment variable AUFSDEBUG to hold these values.
+.TP 10
+.BI \-t " <" "Input | Output | Both" ><cmdname>
+specifies that packets traces (partial dumps) of the specified
+AFP commands should be done, for input, output, or both (can be 
+abbreviated to first character).
+For example, to trace all Enumerate packets received by 
+.I aufs 
+you would specify 
+.I \-t IEnumerate
+A list of multiple options should be enclosed in quotes.
+You can also set the environment variable AUFSTRACE to hold these values.
+.SH SIGNALS
+.I aufs
+operates by forking off a child process to deal with each session.
+Child processes will take the SIGHUP signal to mean that the process 
+should quit after sending a termination notice to the remote client,
+SIGTERM to mean that it should initiate a shutdown in 5 minutes, with
+termination messages to the remote client at odd minute intervals and
+SIGURG to mean that a message is to be read from the specified file (the -M
+option) and sent to the remote client.
+WARNING: it is possible to catch
+.I aufs
+in a state where it is in a critical section that should not have been
+interrupted and the actions taken in the signal handlers are not legal.
+.PP
+If your system has process groups implemented, then signals to the parent
+(master)
+.I aufs
+daemon have these effects:
+.TP 15
+.B SIGHUP
+If the parent process receives SIGHUP, it will send a SIGHUP to all children
+and terminate immediately.
+.TP 15
+.B SIGTERM
+If the parent process receives SIGTERM, it will send SIGTERM to all children
+and shutdown after a little over 5 minutes.
+.TP 15
+.B SIGURG
+If the parent process receives a SIGURG, it will send SIGURG to all children
+who will then collect and display an advisory message from the specified file.
+.TP 15
+.B SIGUSR1
+If the parent process receives SIGUSR1, it will re-read the global afpvols
+volume configuration file (this option requires that REREAD_AFPVOLS be
+defined at configuration time).
+.TP 15
+.B SIGUSR2
+Sending a SIGUSR2 signal to the AUFS parent process causes it to close and
+then reopen the specified log file. This allows log files to be truncated
+at intervals (this option requires that CLOSE_LOG_SIG be used to define
+the signal name - default SIGUSR2 - at configuration time).
+.SH LOCAL CONFIGURATION
+.br
+.sp
+.SH BUGS AND NOTES
+There are no known bugs in the code, but it is recognized that the DeskTop
+management is less than optimial.
+.PP
+If the client does not execute the correct unmounting or shutdown sequence,
+the aufs child process can be left running and will need to be 
+removed by the system administrator.
+.PP
+Notes and warnings pertaining to client use and file system implementation
+are documented in AUFS(1).
+.SH AUTHOR
+AUFS was written by Bill Schilit, Computer Science Deparment and
+Charlie C. Kim, User Services, Columbia University.
+.SH SEE ALSO
+AUFS(1), CAP(3), CAP(8), atis(8)

@@ -1,0 +1,21 @@
+#
+# set echo
+set argc = $#argv
+if( $argc > 2 ) then
+	set dest = $argv[argc]
+	foreach i ( $argv[-(argc-1)] )
+		set h1 = $i:h
+		if( $h1 == $i ) set h1 = "."
+		cp $i $dest
+		cp h1/.finderinfo/$i:t $dest/.finderinfo
+		cp h1/.resource/$i:t $dest/.resource
+	end
+else
+	set h1 = $argv[1]:h
+	if( $h1 == $argv[1] ) set h1 = "."
+	set h2 = $argv[2]:h
+	if( $h2 == $argv[2] ) set h2 = "."
+	cp $argv[1] $argv[2]
+	cp $h1/.finderinfo/$argv[1]:t $h2/.finderinfo/$argv[2]:t
+	cp $h1/.resource/$argv[1]:t $h2/.resource/$argv[2]:t
+endif

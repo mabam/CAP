@@ -1,0 +1,11 @@
+CAPD
+----
+
+CAPD is a general purpose CAP daemon. The initial version for use with
+Kernel AppleTalk simply sets up reasonable values in the etalk.local
+configuration file and exits.
+
+The usual arguments are identical to those used with aarpd, ie:
+
+	capd [-D level] [-d opt] [-l log] interface zone
+

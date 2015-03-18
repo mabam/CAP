@@ -1,0 +1,234 @@
+Aufs Installation notes
+
+Note: Installation of Aufs assumes you have the CAP libraries already
+installed.
+
+Aufs installation on BSD 4.2, BSD 4.3, Ultrix and Sun machines
+shouldn't be that hard, but you do have to go through the various
+possible defines and decide if you need them or not.  Also included
+here is information on the password look aside file.  Finally, if you
+aren't running on a machine as listed above see the section on
+porting.
+
+
+Previously, the Makefile built two versions of Aufs.  The second
+version was used to slow down sends from the host system.  Under this
+version of Aufs, you can use the "S" switch to limit the number of
+packets sent.  See the section Fastpath below.
+
+
+FASTPATH
+********
+
+The Kinetics FastPath box MAY have problems keeping up with packets
+from a 8600 or faster machine with a high speed ethernet interface.
+We can't quantify which machines will have this problem (other than to
+say we saw it on a 8650 with a DELUA running Ultrix 1.2 and an 8700
+with a DEBNT running Ultrix 2.0, but didn't on a MicroVax II's running
+BSD 4.3 and Ultrix 2.0 with DEQNA's or a VAX750 running Ultrix 2.0
+with a DEUNA), but if you see extensive delays, then you may have this
+problem.  You can check things out by running aufs with the debugging
+command "-a server" - if you see a long delay between "Sending reply
+..." and "done", then you probably need to reduce the packet burst
+number via the "-S" switch.  [You can also turn on atp debugging and
+watch for "incoming bitmap" messages -- if they tend to be most of the
+bits, then the same holds].  The standard (and maxiumum) is 8.  You'll
+probably have to reduce it to one.  (Note: other causes might be
+problems on your ethernet, etc.).  If this doesn't fix things, then
+something else in your environment has problems.
+
+LOCKING
+********
+
+For a full explanation of how locking is managed, see "design.notes",
+but here's the basic information.  The modules that handles locking is
+actually in libafp(afposlock) to allow its use by client programs that
+go into Aufs volumes. 
+
+If you have both lockf and flock available on your system, then you
+are set.  You can have shared writeable volumes with the following
+caveat - the open fork command does not implement "deny" permissions,
+thus you should probably not have shared "writable" applications
+unless they are AppleShare compatible (e.g. don't write to
+themselves).  In addition, programs that depend on "deny" permissions
+being set on data files will also cause problems (MacWrite 4.6
+actually sets a byte range lock on the files it uses (but locks for
+0x7fffffff instead of using -1 for the entire file)).
+
+If you only have lockf on your system, then some coordination of
+shared volumes is possible and Byte Range Lock will be available.
+Allowing general write access to a volume is feasible, but not
+recommended since setting a lock blocks.  Also, files that are
+read-only by one class of users and writable by others may result in
+the read-only users getting corrupted data since they have to way to
+tell the writers not to write because they are reading.  This applies
+mainly to the Desktop and finderinfo files.
+
+If you have flock, then you don't have byte range locks.  flock is
+better than lockf in dealing with shared files like the desktop and
+finderinfo files - you should be able to share writable volumes as if
+you had both flock and lockf except you cannot do Byte Range Locks, so
+be careful (e.g. probably a bad idea to share data files).
+
+NFS: lockf and/or flock must be coordinated across machines with a
+special daemon outside of the standard NFS protocol.  If this is not
+done, errors that designate problems because of "remote files system"
+are ignored and the code proceeds on the assumption the lock has been
+made (just like the case when one or both are not available)--but you
+should know that they haven't!  In particular, don't have multiple
+writers.
+
+
+DEFINES
+*******
+
+The m4.features file in the top level CAP directory can be used to
+select additional server features. Configure offers the opportunity to
+customise this file at configuration time. See CAP60.README.
+
+Defines can also be set by changing m4.setup and reconfiguring your
+makefiles.  See [smartunixfinderinfo] and [aufsosdefs] in m4.setup.
+
+All the configurable options listed below go in "OSDEFS" in the MakeFile.
+
+International Character Sets
+----------------------------
+Provision has now been made to handle international character sets or
+rather "ascii"s that are different from what most people in the U.S.
+see.  The idea (and tables) come from Dan Sahlin of the Swedish
+Institute of Computer Science.
+
+There are three major character set translation tables defined:
+	Swedish D47		file ends in .swe and has a type of TEXT
+	Swedish-Finnish E47	file ends in .fin and has a type of TEXT
+	ISO 8859-1 Latin 1	file ends in .latin1 and has a type of TEXT
+These are only active if "FULL_NCS_SUPPORT" is defined in OSDEFS.
+
+In addtion, there is our standard unix to macintosh definition that
+maps between carriage returns and line feeds which happens when the
+file has a type of "TEXT" and a creator of "unix".  This cannot be
+turned off without editing the source.
+
+The action should really be specifiable on a per volume basis instead
+of a server wide basis.
+
+
+End of line translation
+-----------------------
+The automatic cr/lf translate feature for read a line a time mode can
+be turned off by defining NONXLATE.
+
+Unix file types
+---------------
+You can make Aufs "guess" the file type by turning on
+"SMART_UNIX_FINDERINFO".  This is not turned on by default because of
+the heavy penalty involved - you must open and read every file when
+getting the finderinfo (at least the first time).  All this is handled
+in afpudb.c which knows about a couple of different file types.  You
+can add icons here if you wish and we will include them in the
+distribution if we like them if you send them to us.  Note: this is
+highly unix version dependent.
+
+VOLUME INFO
+-----------
+If you have the statfs or getmnt systems calls available on your
+system, then you will be able to get information on space used and
+free on a volume.  The information returned is for space free on the
+file system that the root directory of the volume is on.  Note that
+volumes may span file systems - in this case, the information will be
+misleading and incorrect.  To use statfs or getmnt simply define
+USESTATFS or USEGETMNT respectively.
+
+You can define USEQUOTA if you want Aufs to return the person's quota
+if it exists.
+
+NOTE ON SUNS (and other other system that uses the Sun quota code
+instead of the Melbourne quota code) : On current versions of SunOS
+(possibly all, I don't know), the quota code used differs from the
+Berkeley code (which is derived from and/or is the Melbourne code) -
+it is their own private version.  The major external difference as far
+as Aufs is concerned is that system call and some of the arguments are
+different.  (SunOS's system call is quotactl vs. quota in BSD).  Code
+under the USESUNQUOTA define masks the differences by implementing a
+quota subroutine that calls quotactl with the proper arguments.  On
+Suns, USESUNQUOTA is the default and need not be turned on.  (Systems
+other than Suns that run SunOS quota code must turn on the code by
+defining USESUNQUOTA).  If this behavior is unwanted, then you
+shouldn't define "USEQUOTA"!
+
+WARNING: the USESUNQUOTA code builds a table of mounted file systems -
+the table length is taken from param.h as NMOUNT.  If you are
+compiling for another system or multiple systems with differing values
+of NMOUNT, you should define MAXUFSMOUNTED to the larger of these
+values.
+
+You can define USTAT if you have the ustat system call on your system.
+However, ustat returns the free space left including the safe margin
+(usually 10%) that is only writable by root.  It also doesn't say how
+much is used.  The problem is that the first time around the query is
+for the free space and total space and subsequent queries are for free
+space only.  This means that if space frees up, then the free space
+(to the mac) goes negative.  We must be able to return the real total
+space to make this work right and we can't without mucho work (that
+requires munging through the kernel).  THIS OPTION IS NOT RECOMMENDED.
+
+Edward Moy has supplied us with a "server" based method of getting
+volume information (that uses one server per Aufs process).  It is
+workable, but isn't all that efficient (or inefficient).  Some method
+of using this in conjuction with the ustat call should probably be
+figured out. To include, use -DSIZESERVER. See sizeserver.shar in the
+patches/Moy@Berkeley directory.
+
+PASSWORD
+********
+Aufs normally uses the unix password file.  This means we are limited
+to 8 characters for the login name and we don't know the "real"
+password.  Thus, we have encrypted passwords.
+
+Aufs now allows a password lookaside file that will be used under the
+following conditions:
+	o specified at startup with the -P option
+	o des encryption supplied (cf. afp/README)
+	o it is owned by root and not readable by world
+
+The format of this file is very rigid (and stupid).  Each entry must
+be formatted as (scanf format):
+	"USER: %s\tUNIXUSER: %s\tPASSWORD: %s"
+where user is the username that must be supplied by the AFP client,
+unixuser is the user name that user runs under and password is the
+password to use.  No comments, etc. are allowed.
+
+
+PORTING
+*******
+
+It is entirely possible to run Aufs under other versions of Unix than
+listed before.  One we have tried is hpux - a System V machine with
+BSD networking extensions.  There are number of problems with it
+(especially in older versions (pre-6.0) where you have to supply a
+rename function, etc), but it does work.  Most of the configuration
+options that will allow us to run on a System V machine with BSD
+networking extensions are in cap/netat/sysvcompat.h (there because
+some of the defines also apply to other code).
+
+It is worth nothing that we by-pass the problem of how to map the 32
+character files names from the Mac to the 14 character file names of
+System V R2 and the 32 character file names of System V R3 by simply
+not allowing names longer than the operating system limit.  This limit
+is encoded in afpdid.c by using the MAXNAMLEN (assumed to be in
+<sys/dir.h>)
+
+Some assumptions:
+	off_t is defined in <sys/types.h> and encodes the "whence"
+	and return values of lseek and tell.  Furthermore, it must
+	be at least a signed double word (32 bits) in size.
+	groups (gid_t) is short or unsigned short
+
+Late breaking news:
+
+Some systems may have getgroups defined to return an array of type
+gid_t instead of type int.  This will cause problems if typeof(gid_t)
+!= typeof(int) (which is generally true).  To get around this problem,
+define use "-DGGTYPE=gid_t" in afposdefs.
+
+

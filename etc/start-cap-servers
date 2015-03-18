@@ -1,0 +1,45 @@
+#!/bin/sh
+
+### sample start servers file (copy to /usr/local/lib)
+### start from '/etc/rc.local'
+
+LOGd=/usr/tmp
+LOGf=/dev/null
+CAP=/usr/local/cap
+LIB=/usr/local/lib/cap
+
+LWARGS="-a ${LIB}/procsets -f ${LIB}/LW+Fonts"
+
+#
+# Start UAR first if used
+#
+# ${CAP}/uar -C "interface"
+# sleep 10
+
+#
+# Otherwise start aarpd first for Native EtherTalk
+#
+# ${CAP}/aarpd "interface" "zone"
+
+#
+# Or capd for Kernel AppleTalk under Linux
+#
+# ${CAP}/capd "interface" "zone"
+
+#
+# allow atis to startup before other CAP programs
+#
+${CAP}/atis
+
+#
+# Make this 15 seconds if using aarpd
+#
+sleep 5
+
+${CAP}/snitch -S -f "SUN 4 SunOS 4.0 UNIX" -l lwsrv
+${CAP}/lwsrv -n "Technical Services Spool" -p lw.tsa ${LWARGS}
+
+# if CAP compiled with FIXED_DIRIDS then start AFP ID server first
+# ${CAP}/afpidsrvr -l ${LOGd}/afpidsrvr.log
+
+${CAP}/aufs -U 20 -V ${LIB}/afpvols -l ${LOGf} -n `hostname`

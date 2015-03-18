@@ -1,0 +1,156 @@
+.TH atis 8 "20 June 1990" "Columbia University"
+.SH NAME
+atis \- AppleTalk information server and name registry for UNIX
+.SH SYNTAX
+.B atis
+[
+.BI \-d " <capflags>"
+] [
+.BI \-D " <level>"
+] [
+.B \-E
+] [
+.B \-N
+] [
+.B \-R
+] [
+.BI \-l " <log file>"
+] [
+.BI \-k
+] [
+.B reload
+] [
+.B dump
+] [
+.B debug
+] [
+.B nodebug
+] [
+.B exit
+]
+.SH DESCRIPTION
+.I atis
+acts as a name information server and an echo server
+for a CAP Unix host.
+In the traditional (IPTalk) version of CAP, you need not
+run 
+.I atis
+if no program to be run will register an NBP entity.  Examples of
+programs which do register NBP entities are: lwsrv and aufs.  
+In the Ethertalk version of CAP, you must run atis in order to
+discover the network number of your host and keep the default
+router up to date.  In any case,
+it is recommended that you run
+.I atis
+in the event you do start to add programs which will register names. 
+The echo service, while optional, is highly recommended.  (Note: The
+AppleShare client requires use of the echo service).
+.PP
+The Name Information Service function is to act as a name registry
+for the particular host atis is running on.
+.PP
+The options
+.I atis
+accepts are:
+.TP
+.BI \-d " <capflags>"
+<capflags> are standard debugging flags for the
+.I CAP
+library.  The important one for atis is "n" for NBP.  See CAP(3) for a
+description of the valid flags.
+.TP
+.BI \-l " <logfile>"
+specifies a file that messages should be logged to.
+.TP
+.BI \-k
+specifies that DDP checksums are not to be used, the field is set to zero.
+.TP
+.BI \-D " <level>"
+defines the debugging level (an integer from 1 to 3).
+The higher the level is set, the more verbose
+.I atis
+is when logging.
+.TP
+.B \-N
+tells
+.I atis
+to run without installing the NIS listener.
+.TP
+.B \-E
+says that
+.I atis
+should run without the ECHO listener.
+.TP
+.B \-R
+says that
+.I atis
+should run without the RTMP (Routing) listener. RTMP is started
+only for the Ethertalk configuration. It is used to discover the
+local network number, and to keep the default router up to date.
+.PP
+.I atis
+automatically disassociates itself from the controlling terminal
+unless debug options are set.  To allow some control over the
+disassocated process, the pid is recorded in /etc/atis.pid and the
+following commands options have been added.
+.TP
+.B dump
+sends a SIGQUIT signal to the running atis.  This causes the running
+atis to dump
+its name table into /usr/tmp/nis.db.
+.TP
+.B reload
+sends a SIGHUP signal to the running atis.  This 
+causes the running
+.I atis
+to reload its name tables from /usr/tmp/nis.db.
+.TP
+.B exit
+will stop the currently running copy of 
+.I atis
+by sending the signal SIGTERM.
+.TP
+.B debug
+increments the debug level of the running server by sending it a
+SIGIOT.  If no log file was defined, /usr/tmp/atis.run is created and used.
+.TP
+.B nodebug
+turns off debugging in the running server by sending it a SIGEMT.  If
+/usr/tmp/atis.run was created by
+.I debug
+then the file is closed.
+.PP
+Examples of valid commands are
+.nf
+	atis debug debug debug
+.fi
+to set the debug level to 3 or
+.nf
+	atis dump exit
+.fi 
+to dump the database and exit.
+.PP
+.SH FILES
+/etc/atis.pid records the pid of the currently running server.
+.br
+/etc/atalk.local is used to find the closest Ethernet/Appletalk bridge
+(directory location alterable at compile time).
+.br
+/usr/tmp/nis.db is used to hold the name data base when dumped
+.br
+/usr/tmp/atis.run is used for logging if debug is turned on without a
+log file via "atis debug".
+.SH NOTES
+The current copy of atis runs with Revisions 10/86, 9/87, 1/88 or 6/88 of the
+KIP UDP software for the Kinetics FastPath gateway as done by Bill Croft of
+Stanford University. This is compatible with K-STAR 7.0 from Kinetics
+or later from Shiva and the gateway code 'Megan' for the Webster MultiPort
+Gateway.
+.br
+.I atis
+.B must
+be run as "root" (uid 0).
+.SH AUTHOR
+atis was written by Charlie C. Kim of Columbia University.
+.SH "SEE ALSO"
+CAP(3), CAP(8), AUFS(1), AUFS(8), lwsrv(8), atprint(1), atlook(1)

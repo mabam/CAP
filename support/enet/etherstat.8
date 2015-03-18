@@ -1,0 +1,30 @@
+.TH ETHERSTAT 1
+.SH NAME
+etherstat \- Ethernet packet filter (PUP, Ethertalk) connections and statistics
+.SH SYNOPSIS
+.B etherstat
+.SH DESCRIPTION
+.I Etherstat
+is used to print the internal data structures for the Ethernet packet
+filter, enet(4).  It will show information
+for all network protocols that use the packet filter.  Currently
+this includes Ethertalk and PUP.
+.I Etherstat
+prints information about each open connection, and then a summary.
+The information is organized by device.  Each packet filter device
+corresponds to an Ethernet interface (e.g. ie0, le1).  
+.I Etherstat
+will print both the minor device number and the corresponding
+Ethernet interface name.
+.PP
+The Ethernet packet filter allows software to specify which packets
+it is interested in using "filters" described as Polish operator
+strings.  In the most general case,
+.I Etherstat
+will print the filter associated with each connection as a Polish
+operator string.  However it will recognize a few commonly used
+operator strings, and print them in a more human-readable form,
+as Appletalk port numbers for Ethertalk connections, and as PUP
+address specifications for PUP connections.
+.SH "SEE ALSO"
+enet(4)

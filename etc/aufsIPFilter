@@ -1,0 +1,26 @@
+#
+# aufs/AppleShareIP Address Access Filter List
+#
+# NB: The filter file format is compatible with that used by the ARNS
+# Remote Access package (http://www.cs.mu.OZ.AU/appletalk/atalk.html)
+#
+# The filter list consists of a single character mode, an IP mask and
+# optional IP address. If the latter is included, the mask is applied
+# to the incoming IP address and tested against the provided address.
+# Otherwise the incoming IP address must be unchanged by the mask.
+#
+# Modes:
+#
+# * IP_MASK [ IP_ADDR ]		permit access
+# + IP_MASK [ IP_ADDR ]		permit access
+# - IP_MASK [ IP_ADDR ]		deny access
+#
+#
+# any mac on a specific subnet
++ 255.255.255.0    192.43.207.0
+# connections from ariel
+* 128.250.255.255  128.250.20.3
+# anybody on campus
++ 128.243.255.255
+# nobody else
+- 255.255.255.255

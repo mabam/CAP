@@ -1,0 +1,139 @@
+CAP note: last revision April 1, 1987
+
+UNIX Appletalk Session Protocol (ASP) Implementation notes
+
+Last revision: February 23, 1988
+Previous revision: April 1, 1987
+
+Design document: Inside Appletalk, June 1986.
+
+There are two major things to note about this version of ASP.
+
+First, it uses a non-standard interface.  Second, some of the error
+codes have slightly different meanings.  For now, you'll have to go
+the source to get to the interfaces (sorry).
+
+This is a preliminary note that defines some of the specifics of the
+CAP version of ASP.  Mostly, they are error codes which are added or
+used slighltly differently or out of the specified context.  Maybe in
+the future, there will be a more detailed document that will go into
+more depth.
+
+SPGetStat
+	aspFault - unexpected internal inconsistency - usually bad atp
+		   completion.
+	noATPResource - can't get ATP resources
+	SizeErr - request too big (shouldn't happen)
+
+SPOpenSession
+	aspFault - unexpected internal inconsistency - usually bad atp
+		   completion.
+	noATPResource - can't get ATP resources
+	SizeErr - request too big (shouldn't happen)
+
+SPCloseSession
+	aspFault - unexpected internal inconsistency - usually bad atp
+		   completion.
+	noATPResource - can't get ATP resources
+	SizeErr - request too big (shouldn't happen)
+	sktClosed - socket already closed (in some way)
+
+
+SPWrite
+	aspFault - unexpected internal inconsistency - usually bad atp
+		   completion.
+	noATPResource - can't get ATP resources
+	SizeErr - request too big
+	NoAck - no acknowlegment in the specfied timeout
+
+SPCommand
+	aspFault - unexpected internal inconsistency - usually bad atp
+		   completion.
+	noATPResource - can't get ATP resources
+	SizeErr - request too big
+	NoAck - no acknowlegment in the specfied timeout
+
+SPWrtContinue
+	aspFault - unexpected internal inconsistency - usually bad atp
+		   completion.
+	noATPResource - can't get ATP resources
+	SizeErr - request too big
+	NoAck - no acknowlegment in the specfied timeout
+
+SPAttention
+	aspFault - unexpected internal inconsistency - usually bad atp
+		   completion.
+	noATPResource - can't get ATP resources
+	SizeErr - request too big
+
+SPGetStat
+	aspFault - unexpected internal inconsistency - usually bad atp
+		   completion.
+	noATPResource - can't get ATP resources
+	SizeErr - request too big (Shouldn't happen)
+
+
+SPWrtReply, SPCmdReply
+	noATPResource - can't get ATP resources
+	NoAck - No acknowledgement to reply - decided to do this instead
+	 of closing session (really means no rel received, but should
+	 close session based on tickle then...)
+
+SPGetRequest
+	noATPResource - can't get ATP resources
+	SessClosed - session closed underneath us
+	BadReqRcvd - unexpected request received - please reissue getRequest
+
+SPGetSession
+	NoMoreSessions - either out of sessions or atp sockets
+	SktClosed - SLS closed!!!!!
+
+SPInit
+	noATPResource - can't get ATP resources
+
+
+EXTENSIONS
+
+* aspInit(n) tells asp to allow up to n sessions (total, not per sls)
+
+The SPFork and SPShutdown calls are necessary because the way ASP is
+defined, the client sends tickles to the Server Listener Socket (SLS).
+If one needs to fork off clients to handle ASP connections, then it is
+necessary for the base process to watch for incoming tickles.  The
+child process cannot do this since the SLS must not be read from by
+the child (or else the base process will not see the input).
+
+* SPFork(srn, hc_tickle, open_tickle) tells asp to fork and leave things
+in the following state:
+   In the base process:
+	If srn points to a server connection, then the connection is left
+	"half-closed".  It listens for incoming tickle requests.
+	Certain outgoing calls are still allowed (SPClose,
+	SPAttention).  In all other respects, the connection is deemed
+	closed (and in fact, the Sever Session Socket created is
+	closed -- SPAttention and SPClose sends out on the SLS when
+	half closed).  If the srn points to a client connection, the
+	connection is torn down.
+    In the child process:
+	All half closed connections are discarded (without sending
+	closes etc).  The SLS is discarded.
+
+In addition, hc_tickle tells the base process to continue tickling the
+remote (useful if child process may block).  (Default is considered
+off since it the parent really shouldn't need to do this, but then
+again this whole exercise shouldn't be necessary).  hc stands for the
+half-closed copy of the connection.
+
+open_tickle tells the child process whether the child should tickle
+the remote.  If the base process does the tickling, it probably isn't
+necessary for the child process to do it...  open, of course, stands
+for the "open" copy of the connection.
+
+* SPShutdown(srn) finishes closing down a half closed socket.
+
+* SPGetNetworkInfo(srn, AddrBlock *addr)
+ returns the remote WSS (server) or SSS (client) address.  You must
+ supply a block that is filled in.
+
+
+

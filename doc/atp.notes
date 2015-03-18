@@ -1,0 +1,57 @@
+CAP note: last revision April 1, 1987
+
+UNIX Appletalk Transport Protocol (ATP) Implementation notes
+
+Last revision: April 1, 1987
+
+Design document: Inside Appletalk, June 1986.
+
+The CAP ATP is fairly complete and follows the protocol definition
+fairly closely.  The programmer's interface is as close to that of
+Inside MacIntosh as could be expected.  The differences are:
+	- there is no facility for an ATPAddResponse
+	- ATPSndRequest will accept a socket number in atpsocket
+	  instead of generating some internal socket unless zero is
+	  passed.  (note: this facility is suggested by in Inside
+	  Appletalk).  Furthmore, any fork using ATPSndRequest will
+	  open a new socket if the passed atpsocket is zero.
+	- the flags atpXO and atpEOM in the AppleBus record are
+	  renamed to fatpXO and fatpEOM.
+
+In addition, a special interface for protocol implementors has been
+added.  All implemented routines (except the cancel routines) have a
+"call back" version.  The arguments are the same as the standard
+version of the call except no async flag is passed (it is assumed to
+be asynchronous) and this argument is replaced by the address of the
+callback routine and a unsigned long integer.  When the routine is
+called back, it is passed the address of the applebus record and the
+unsigned integer.
+
+
+The following documents return codes which are not as documented by
+Apple in Inside MacIntosh.
+
+ATPSndReq
+	atplenerr => reqcount too big or bad rspbdsptr
+	toomanyskts => can't open socket for request
+	badAtpSkt => final net write failed - probably bad write
+	reqFailed => timeout
+	tooManyReqs => should never happen
+In the BDS, we pass buffSize to encode length of the various BDS
+buffers.  If a datasize is larger than buffSize for any element of the
+BDS, then this simply means the remote sent more data than the buffer
+size.  Varying protocols will handle this event differently.
+
+ATPOpenSocket
+	Always returns tooManySkts if DDPOpenSocket fails...
+
+ATPCloseSocket
+	Always ignors DDPCloseSocket errors
+
+ATPGetRequest
+	noDataArea - means can't startup request
+
+ATPSndRsp
+	badBuffNum - really means that we couldn't find the specified
+		request to respond to..
+

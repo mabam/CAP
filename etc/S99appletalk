@@ -1,0 +1,59 @@
+#!/bin/sh
+#(@)/etc/rc3.d/S99appletalk
+# startup script for CAP60 servers
+
+CAPHOME=/usr/local/cap; export CAPHOME
+CAPLIBS=/usr/local/lib/cap; export CAPLIBS
+
+killproc ()
+{	pid=`/bin/ps -e | grep $1 | awk '{ print $1 }'`
+	[ "pid" != "" ] && kill $pid
+}
+
+case "$1" in
+'start')
+	echo "Starting Columbia AppleTalk package ..."
+
+# edit for required zone name
+	${CAPHOME}/aarpd le0 Fysik
+
+	${CAPHOME}/atis > /dev/null 2>&1; sleep 5
+
+	#${CAPHOME}/snitch -S -f "SPARCserver MP670"
+
+#	mkdir -m 0700 /tmp/at.auth
+
+# AppleShare for Unix
+#	${CAPHOME}/aufs \
+#		-U 8 \
+#		-l /tmp/CAPShare.log \
+#		-n "`uname -n`" \
+#		-X /tmp/at.auth \
+#		-V /etc/CAP60/afpvols 
+
+# LaserWriter print spooler
+#	${CAPHOME}/lwsrv \
+#		-N \
+#		-a ${CAPLIBS}/ProcSets \
+#		-f ${CAPLIBS}/LWFonts \
+#		-X /tmp/at.auth
+
+# check integrity
+	FILES="/etc/rc0.d/K02appletalk \
+	       /etc/rc1.d/K02appletalk \
+	       /etc/rc2.d/K02appletalk \
+	       /etc/init.d/CAP60"
+	for FILE in $FILES; do
+		if [ ! -f $FILE ]; then
+			ln /etc/rc3.d/S99appletalk $FILE
+		fi
+	done
+	echo "... done."
+	;;
+'stop')
+#	killproc lwsr
+#	killproc aufs
+	${CAPHOME}/atis exit > /dev/null 2>&1
+	killproc aarpd
+	;;
+esac

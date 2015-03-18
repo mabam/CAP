@@ -1,0 +1,50 @@
+                           dumpdt/builddt
+                      CAP DeskTop Handling Tools
+
+                      The University of Melbourne
+                          djh@munnari.OZ.AU
+                            August, 1997
+                            version 1.0.3
+
+
+'dumpdt' dumps the content of the .IDeskTop and .ADeskTop files in the
+specified CAP AUFS volume. usage:
+
+	dumpdt volumename
+
+ie:
+	
+	dumpdt ~/mac
+
+
+'builddt' traverses the specified volume and builds new .IDeskTop and
+.ADeskTop files based on the current volume contents. The -w flag must
+be used explicitly to cause new .?DeskTop files to be written. The -q
+flag sets 'quiet' mode, otherwise a message is printed for each file
+examined. The -d flag can be used to obtain a verbose debug listing.
+
+usage:
+
+	builddt [ -d ] [ -w ] [ -q ] volumename
+
+ie:
+
+	builddt -w ~/mac
+
+WARNING: The CAP .?DeskTop file contents are cached within running AUFS
+processes.  To make effective changes for global volumes (afpvols specified
+with the -V option), the parent AUFS server should be killed, the DeskTop
+rebuilt and the server restarted.  For personal volumes, the volume should
+be unmounted from all Macintoshes before the DeskTop is rebuilt.
+
+WARNING: this is beta software. Run without -w and check the output
+for sensible data first. Always keep copies of existing .?DeskTop files.
+
+
+Copyright (c) 1993-1997, The University of Melbourne.
+All Rights Reserved.  Permission to publicly redistribute this
+package (other than as part of CAP) or use any part of this software
+for any purpose other than as part of the original distribution must
+be obtained in writing from the copyright owner.
+
+Please report problems to djh@munnari.OZ.AU

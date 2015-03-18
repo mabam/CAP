@@ -1,0 +1,172 @@
+What does AUFS do?
+
+Through the use of the AFP protocol Aufs maps the macintosh file
+system into the Unix file system.
+
+Things to note about Aufs:
+
+User info:
+ o Resource Fork, and finder information are stored in subdirectories
+   (.resource, .finderinfo).  The data fork is stored as is.  For
+   example the file "dir:Hey" on the mac is stored as three files
+   dir/Hey, dir/.resource/Hey, and dir/.finderinfo/Hey.
+
+ o Login requires a username and password.  The password is verified
+   and no more than 8 chars (AFP spec).  This is your unix user name
+   and passowrd and is transmitted in clear text.  You will not be
+   able to login if your unix password is longer than 8 chars.
+   Also, no randnum password encryption is used due to the lack of a
+   key on the unix side :-(.  (Note: there is a mechanism to allow a
+   "lookaside password file so you can have long user ids, encrypted
+   passwords, etc".)
+
+ o Volumes are defined by an "afpvols" file.  The vols file contains
+   lines with the volume's name, the path, and an optional password.
+   The root directory of the volume is specified by the path.  (New:
+   Aufs version 3 will search for the file afpvols first and then
+  .afpvols).
+ 
+ o When a user logs into the server the user's home directory is
+   searched for an afpvols file.  The names in this file can then
+   be mounted by the Mac client.  See the sample afpvols file "afpvols".
+
+ o If the user does not have a afpvols file then their home
+   directory will be added as a volume.
+
+ o A server wide vols file can be specified on the aufs command
+   line.  The volumes in this file are always seen by clients
+   and could contain general (maybe read-only) mac utilities
+   and files.
+
+ o Case does not matter on Mac filenames, to make Aufs implement this
+   feature, define NOCASEMATCH. Beware of the performance degradation.
+
+ o Since unix file names may not contain 8 bit chars and slash,
+   Aufs translates special characters in file names into colon
+   followed by two hex digits.
+
+ o Unix files are given the type "TEXT" and creator "unix" and the
+   standard unix end of line "linefeed" is translated to a "carriage
+   return" when sending to the mac and vice versa.
+
+ o National character sets may be defined using afposncs.c -- see
+   INSTALLATION and design.notes and afposncs.c
+
+ o Since mac file names may not be longer than 31 chars, Aufs
+   simply skips long file names on the unix side.
+
+ o Two files are maintained by Aufs for the desktop database,
+   these are .IDeskTop and .ADeskTop.  .IDeskTop stores icon
+   information, .ADeskTop stores APPL information.  Both of
+   these files are created in the volumes root directory.
+
+ o Bytes used, and bytes free on a volume are set to arbitrary
+   values (unless you are running a machine with "statfs" or "getmnt").
+
+ o Depending on your system, there may be no file or desktop locking.
+   Share writable volumes at your own risk in these situations.  (cf.
+   INSTALLATION for information).
+
+ o Aufs will follow symbolic links for directories and files.
+   However, for directories, Aufs will not permit more than about 4 
+   symbolic links to be followed in any path.  When the limit is
+   reached, the symbolic links to directories will not appear to be
+   there.  However, be careful - you can do really strange things with
+   symbolic links.
+
+Admin info:
+
+ o Aufs disassociates itself when run without debugging turned on.
+ o Aufs forks a new child process for each session.
+ o For other bugs, problems, etc. see todo and design.notes
+ o See the design.notes for info on protections.
+ o You cannot run many programs on a write locked directory/disk.
+ o Be careful when moving volumes around: tar has a very small limit
+   on path names.  rdist and dump work well though.
+
+What Aufs does not do?
+----------------------
+
+It does not handle the problem of 14 character file names under System
+V - file names are simply truncated.
+
+Known problems
+--------------
+
+Here's the big one: we finally realized that the .ADeskTop, .IDeskTop
+and .finderinfo files are NOT written in network order.  This means
+you can't transport directly between machines with different byte
+orders!  (Not tar, dump, or NFS).  Aufs version 3 will destroy the old
+desktop files.  Aufs version 3 will also rewrite the old .finderinfo
+files when it sees them.  To ensure things are okay, rebuild your
+desktop.
+
+Both DeskTop files grow without bounds.  The only way to prune them is
+to delete then and rebuild the desktop from the Mac.
+
+The Applications mapping database can quickly get out of sync with
+reality - not enough information is stored to keep in line (and even
+we did store enough it would be costly to recover).  Problem comes
+when you start moving directories holding Applications around - it may
+or may not work out - remember though, you can alway rebuild the
+desktop (painful as it might be..).
+
+The file creator "unix" and file type "TEXT" are not registered with
+Apple.
+
+read/writes and many other operation are blocking - this may cause
+problems!  However, making them run async is a lot of work.  The
+"solution" is to stay away from things that might block for a long
+long time - e.g. ttys.  For the most part though, it wouldn't cause
+problems.
+
+Aufs uses a complete path name specification to deal with files in
+general.  When it exceeds the maximum path name on a system, this will
+cause serious problems - Aufs should really enforce this restriction
+or remove it, but it doesn't.
+
+Unix systems keep three dates on files: ctime - last status change
+time, mtime - last modification time, and atime - last access time.
+Mac wants modification and creation.  Modification is really later of
+mtime and ctime.  Creation time is unknown and we give the earliest of
+ctime, mtime and atime to give an approximation.
+
+How to Run
+----------
+
+Aufs can be run with no arguments in which case it registers the
+name "Hostname Aufs:AFPServer@*."
+
+A logfile is created as "object".log in your currently connected
+directory.  
+
+If you are not running aufs from root, then other users will not
+be able to login since it tries to do a setuid, etc.
+
+Other useful options are:
+
+	-a for AFP debugging by level (or setenv AUFSDEBUG):
+	   All DeskTop Directory File Fork OS Server Volume debug 
+	   The option "debug" disables forking among other things.
+	-t for packet traces (or setenv AUFSTRACE):
+	   [I|O|B]CmdName
+	-n for setting the server's name
+	-V volfile - set the server wide volumes file
+	-U # - set the maximum number of asp/afp sessions allowed
+	    (default is 10)
+	-G to specify an id to use as "<guest>" (disallowed o.w.)
+	-P specify an auxillary password file to override the standard one
+	   (this is a mess)
+	-c specify directory to put coredumps into (note: if you specify
+	   this, be sure to give absolute path names for -P)
+	-s for statistics after run
+
+Example: aufs -t 'bdelete irename' -a 'file fork dir' -s -n Billy
+
+Above example would trace delete packets on both input and output,
+rename packets on input only.  File, fork and directory routines will
+print their own information.  Statistics will be printed at the end of
+the run.  The server will register as "Billy:AFPServer@*".
+
+See the man page in cap/man for more information.
+

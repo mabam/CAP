@@ -1,0 +1,69 @@
+.TH aarpd 8 "20 August 1991" "Melbourne University"
+.SH NAME
+aarpd \- AppleTalk Address Resolution Protocol Daemon
+.SH SYNTAX
+.B aarpd
+[
+.BI \-d " <capflags>"
+] [
+.BI \-D " <level>"
+] [
+.BI \-l " <log file>"
+] [
+.B <interface> <zoneName>
+]
+.SH DESCRIPTION
+.PP
+.I aarpd
+implements the AppleTalk Address Resolution Protocol for CAP programs using
+Native EtherTalk (Phase 1 or Phase 2).  It communicates with CAP processes
+using RPC (Remote Procedure Calls) which interrogate a central AARP table.
+Addresses that are not currently available provoke AARP lookups on the
+network.  These are added to the AARP table whose contents are aged and
+deleted at intervals.
+.PP
+.I aarpd
+maintains the address of the current default router.  This is obtained
+from
+.I atis
+which is listening to RTMP packets.  The default router is chosen by
+counting the RTMP tuples, favouring routers that perform "split horizon".
+.PP
+At startup,
+.I aarpd
+probes for a node number, determines the network number and
+maintains a copy of the network information in /etc/etalk.local which it
+updates as necessary.
+.PP
+The options
+.I aarpd
+accepts are:
+.TP
+.BI -d " <capflags>"
+<capflags> are standard debugging flags for the
+.I CAP
+library.  See CAP(3) for a
+description of the valid flags.
+.TP
+.BI -l " <logfile>"
+specifies a file that messages should be logged to.
+.TP
+.BI -D " <level>"
+defines the debugging level (an integer from 1 to 20).
+The higher the level is set, the more verbose
+.I aarpd
+is when logging.
+.TP
+.BI <interface> " <zoneName>"
+defines the network interface (as listed by netstat(8)) such as ie0, le0,
+ln0 or pf0.  The zoneName argument is a valid zonename for the EtherTalk
+connected to the interface.  These values may be seeded in /etc/etalk.local
+but it is recommended that both arguments be supplied.
+.SH FILES
+/etc/etalk.local - refer man/etalk.local.5
+.SH NOTES
+.I aarpd
+be run as "root" (uid 0) and should be started before any other CAP
+programs.
+.SH "SEE ALSO"
+CAP(3), CAP(8), AUFS(1), AUFS(8)

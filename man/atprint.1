@@ -1,0 +1,105 @@
+.TH AppleTalkPrinting 1 "20 June 1990" "Columbia University"
+.SH NAME
+lwpr, iwpr, tlw, papif, lwsrv, isrv 
+\- UNIX access to AppleTalk printers and UNIX print spoolers for AppleTalk
+.SH DESCRIPTION
+The Columbia AppleTalk Package (CAP) allows UNIX programs to print to 
+printers connected to the AppleTalk network, or to act as print spoolers
+for Macintosh computers on the AppleTalk network.
+The four sample programs
+.I lwpr,
+.I iwpr,
+.I tlw,
+.I isrv,
+are distributed as part of CAP to illustrate this printer access and
+are documented here.
+The two production applications
+.I papif
+and 
+.I lwsrv
+distributed in CAP for LaserWriter printing and spooling are documented
+in their own manual entries.
+.PP
+.I lwpr
+is the simplest program of the bunch.
+It allows one to send a single PostScript file directly to a
+LaserWriter, as a networked Macintosh would.
+The syntax is simply 
+.I 
+lwpr \-p lwname filename
+The 
+.I \-p lwname
+option specifies the name of the LaserWriter, which should be the fully 
+qualified network name, e.g. "LaserWriter:LaserWriter@MYZONE".  
+If you have your PRINTER environment
+variable set to a printer that maps to a LaserWriter (via
+cap.printers), then you may omit the "-p" option.
+.I lwpr
+runs in the foreground, establishing a connection to the LaserWriter and
+then sending the file.
+.PP
+.I iwpr
+functions exactly the same way as 
+.I lwpr,
+except that it expects to send a properly formatted file
+to an Appletalk ImageWriter II, e.g. "A-TALK:ImageWriter@MYZONE".
+.PP
+.I tlw
+allows you to communicate with the interactive executive on a networked
+PostScript device.
+You can specify the device in one of three ways (-a is the default).
+"tlw -u <short-printer-name>" maps a Unix short printer name to an Appletalk
+entity name via the cap.printers file (often found in /etc).
+"tlw -a <object-name>" specifies a device of type "LaserWriter" in the current
+zone "*".
+"tlw -a <appletalk-entity>" lets you choose an arbitrary object, type and zone,
+e.g. "tlw -a frobozz:LaserShare@zork".
+You can terminate the conversation with an EOF signal (normally CTRL-D).
+.PP
+.I isrv
+is designed to run as a background daemon process that advertises itself
+on the AppleTalk network as an ImageWriter II printer and accepts print
+jobs from Macintosh computers, which it then sends to a normal UNIX 
+printer queue connected to a real ImageWriter II.
+.I isrv
+is invoked as 
+.I
+isrv -P <printer name> -T <base model> [-d <debug flags>]
+where <printer name> is the name of the UNIX printer queue connected 
+to the real ImageWriter;
+the <base model> must be "ImageWriter"; 
+and the optional 
+.I -d <debug flags>
+argument can be used to specify standard CAP debugging flags (see 
+CAP(3)).
+If debug flags are specified, 
+.I isrv
+will stay in the foreground to log debug messages to standard output.
+Otherwise, it will put itself into the background to run as a daemon.
+.SH NOTES
+.I isrv
+is incredibly slow.  We do not recommend the use of AppleTalk
+ImageWriters outside of an AppleTalk network (e.g. use it on a single
+cable only).  It is included because it was written before we realized
+how bad the overhead was.
+.PP
+.I lsrv, lwsrv,
+and 
+.I papif
+were previously documented here.
+.I lsrv
+has been removed from the distribution.
+.I lwsrv
+and
+.I papif
+are now documented separately.
+.SH BUGS
+There are bound to be several.
+.SH FILES
+/etc/cap.printers \- papif configuation file to associate UNIX printer 
+queues with LaserWriter names.  Location may vary according to local option.
+.SH AUTHOR
+lwpr, iwpr, tlw and isrv were written by Charlie C. Kim of
+Columbia University.
+.SH "SEE ALSO"
+CAP(3), CAP(8), atis(8), lwsrv(8), papif(8)

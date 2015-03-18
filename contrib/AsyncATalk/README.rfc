@@ -1,0 +1,123 @@
+Asynchronous AppleTalk for UNIX/CAP hosts - Request For Comment. 17/10/88
+-------------------------------------------------------------------------
+
+The Department of Computer Science at The University of Melbourne has
+developed and is currently testing a version of Asynchronous AppleTalk
+for remote AppleTalk access via UNIX/CAP hosts. 
+
+This system is based on the code presented in the October 1987 issue of 
+"Dr. Dobb's Journal of Software Tools" by Richard E. Brown and Steve 
+Ligett of Kiewit Computer Centre, Dartmouth College, Hanover, New 
+Hampshire, and contains later protocol extensions. The UNIX code uses some 
+library routines and database files from the Columbia AppleTalk Package 
+(CAP) developed by Charlie Kim, Center for Computing Activities at 
+Columbia University.
+
+The purposes of this document are to discuss the problems encountered and
+the solutions used in implementing Asynchronous AppleTalk capability
+on a UNIX host and to solicit comments from interested parties. 
+
+Background:
+
+Asynchronous AppleTalk replaces the normal Link Access Protocol (LAP)
+used on LocalTalk networks with an Async AppleTalk LAP (AALAP) which
+sends AppleTalk frames over an async link such as a modem or twisted pair.
+To achieve this, one usually needs to purchase extra hardware to connect
+to the other end of the link and to bridge to a normal LocalTalk network.
+After some discussions and experimentation, it was decided that it was
+possible to use a UNIX host which already had ample dial-up facilities
+to perform this function. This naturally left some problems to solve ...
+
+1. How to use the Macintosh to perform the functions of dialling a modem
+	and allowing a normal login. Most async implementations could
+	dial modems but fell short of giving a login window.
+
+	SOLUTION: massage the Async code from Dartmouth to provide a window
+	and speed/parity dialog box. At the same time, it was felt that
+	the system should conform to current Apple standards for choosing 
+	alternate LAPs, therefore implement as 'atlk'/'adev' resources.
+	NB: the window currently emulates a VT52.
+
+	STATUS: complete.
+
+2. How to get AALAP packets onto LocalTalk networks.
+
+	SOLUTION: repackage packets from the serial line as UDP
+	encapsulated DDP packets (otherwise known as KIP format) and 
+	send them via ethernet to the local gateway (a Multigate in this
+	case but Kboxes should do).
+
+	PROBLEM: How do we know who the local gateway is and who we are ?
+	The current solution is to use the file 'atalk.local' with a new
+	(4th) line. The file now looks like this ...
+
+--------------------atalk.local-------------------------------
+# myNet		myNode		myZone 
+93.30		26		unimelb-CompSci	# host information
+# bridgeNet	bridgeNode	bridgeIP
+93.20		23		128.250.1.23	# bridge information
+# nisNet	nisNode
+93.30		26				# Name Info Server info.
+# asyncNet	asyncZone
+170.26		unimelb-Async			# Async Info (***NEW***)
+--------------------------------------------------------------
+
+	See below for explanations of Async information.
+
+3. How to get packets back to the UNIX host to send via AALAP.
+
+	This is a bit trickier because we need to allow Async Macs to
+	have different node numbers and KIP/CAP has no mechanism for more
+	than one node number per host (yet). 
+
+	SOLUTION: Map Mac node numbers into a UDP user port range and have 
+	the gateway forward anything destined for node N on an Async network 
+	to the host UDP port = N + PortOffset [PortOffset has notionally 
+	been assigned the value 43520 (0xaa00)]. This port is monitored by 
+	our user process. Additionally, we have to assign a new AppleTalk 
+	network number to our UNIX host and make a suitable entry in the 
+	file atalkatab to tell the gateway of this arrangement. IE:
+
+------------------portion of atalkatab------------------------
+# Test Asynchronous AppleTalk network
+170.26	A	128.250.1.26	unimelb-Async	# async net running on munnari
+--------------------------------------------------------------
+
+	Where:
+		"170.26" is the Async AppleTalk net number on this host
+		'A' indicates this is an Async net
+		"128.250.1.26" is the host IP address.
+		"unimelb-Async" is the zone assigned for testing the code.
+
+	PROBLEM 1: gateways won't normally do this, we have to modify the
+	gateway KIP code. The modification is minor but requires the
+	acceptance and cooperation of the network community. The 'A' flag
+	is equivalent to the 'H2' flag not currently in use. We have
+	modified 'atalkad.c' to recognise 'A', the modification is trivial.
+
+
+	PROBLEM 2: Broadcast packets! We obviously can't have a gateway
+	sending to all the 254 possible UDP ports (node numbers). The
+	current solution to this problem is to assign a Well Known Socket
+	for broadcast packets (currently 750). An Async daemon running on 
+	the host monitors this port for:
+
+		1. notification from user processes that they have
+		started and are using node number N.
+
+		2. broadcast packets sent from the gateway for
+		redirection to the port N + PortOffset.
+
+	STATUS of 2 & 3: Complete and testing.
+
+Please send comments, request for information to ...
+
+	djh@munnari.oz.au
+
+	David Hornsby
+	Professional Officer
+	Department of Computer Science
+	Richard Berry Building
+	University of Melbourne
+	Parkville 3052
+	Victoria, Australia

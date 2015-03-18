@@ -1,0 +1,37 @@
+# $Author: djh $ $Date: 1996/09/10 14:26:51 $
+# $Header: /mac/src/cap60/RCS/conf.func.lst,v 2.11 1996/09/10 14:26:51 djh Rel djh $
+# $Revision: 2.11 $
+# 
+# see Conf.func.sh for format of file
+#
+# fill empty fields with x -- some machines strip extra IFS's
+N+-,GETOPT,x,getopt,"cap: argument processing"
+E,GETOPT,x,x,"cap: will use public domain getopt"
+N+-,GETMNT,/usr/include/sys/mount.h,getmnt,"aufs: info on file systems (dec)"
+N+-,STATFS,/usr/include/sys/statvfs.h,statvfs,"aufs: info on file systems (solaris)"
+N+-,STATFS,/usr/include/sys/vfs.h,statfs,"aufs: info on file systems (sun nfs)"
+N+-,STATFS,/usr/include/sys/statfs.h,statfs,"aufs: info on file systems (irix,domainos)"
+N+-,STATFS,/usr/include/sys/mount.h,statfs,"aufs: info on file systems (bsd44)"
+E,STATFS,x,x,"aufs: no space information on volumes will be available"
+N+-,QUOTA,/usr/include/sys/quota.h,quota,"aufs: info on user quota"
+N+-,QUOTA,/usr/include/sys/fs/ufs_quota.h,ioctl,"aufs: info on user quota (solaris)"
+E,QUOTA,x,x,"aufs: no information on user quotas"
+A+,SUNQUOTA,/usr/include/ufs/quota.h,quotactl,"aufs: info on user quota"
+O+,SUNQUOTA,/usr/include/ufs/quotas.h,quotactl,"aufs: info on user quota (next)"
+N+-,SUNQUOTA,/usr/include/mntent.h,getmntent,"aufs: used by sunquota"
+N+-,BSDQUOTA,/usr/include/ufs/quota.h,quotactl,"aufs: used by bsdquota"
+E,SUNQUOTA,x,x,"aufs: not using sun/bsd quota system"
+N+-,FLOCK,/usr/include/sys/file.h,flock,"afp: file locking"
+E,FLOCK,x,x,"afp: don't run with multiple writes on a volume: no file locking"
+N+-,LOCKF,/usr/include/unistd.h,lockf,"afp: byte range locking using unistd.h"
+N+-,FCNTLLOCKF,/usr/include/fcntl.h,lockf,"afp: byte range locking using fcntl.h"
+E,LOCKF,x,x,"afp: don't run with multiple writes on a volume: no byte range lock"
+A+,VPRINTF,/usr/include/varargs.h,vprintf,"cap: variable arg printf"
+N+-,VPRINTF,/usr/include/varargs.h,vfprintf,"cap: variable arg fprintf"
+E,VPRINTF,x,x,"cap: no vprintf available, will do the best we can"
+N-+,NORECVMSG,x,recvmsg,"cap: lib: scatter gather recv"
+E,NORECVMSG,x,x,"cap: lib: no recvmsg in system"
+N-+,NOSENDMSG,x,sendmsg,"cap: lib: scatter gather send"
+E,NOSENDMSG,x,x,"cap: lib: no sendmsg in system"
+N-+,NOFFS,x,ffs,"cap: lib: ffs - find first set bit"
+E,NOFFS,x,x,"cap: lib: no ffs"

@@ -1,0 +1,88 @@
+Native EtherTalk
+----------------
+
+This directory contains support files for the CAP libraries. They provide
+the ability to send and receive EtherTalk packets (Phase 1 or Phase 2) on
+the EtherNet from UNIX hosts.
+
+Currently they support ...
+
+	NIT interface on SUNs
+	ENET ethernet driver on SUNs (refer ../enet)
+	ULTRIX packet filter (ULTRIX 4.0 or greater)
+	Berkeley Packet Filter on 386/BSD, FreeBSD (Phase 1)
+
+The files aarpd.c et. al. also build an AARP daemon for address resolution.
+In CAP 6.0, UAB, UAR and Native EtherTalk use the file /etc/etalk.local for
+information about the local network. For Native EtherTalk, the file can be
+intialised with entries for "interface" and "thisZone". It is preferable,
+however, to provide these as arguments when aarpd is run, IE:
+
+	aarpd ie0 unimelb-CompSci	# ie0 for NIT
+
+When aarpd has dynamically obtained a node number, it rewrites (or creates)
+/etc/etalk.local with the values for thisNode, interface and thisZone.
+Before CAP programs can run, however, the values of the local network number
+(thisNet) and the default bridge address (bridgeNode) must be found.
+
+With Native EtherTalk, atis is also an RTMP listener (in addition to ECHO
+and NBP). ATIS determines the local network number (initially zero) and the
+default bridge from the RTMP packets (the default bridge may randomly change
+due to network disruptions, load changes etc). This information is conveyed
+via SetBridgeAddress() to aarpd which maintains /etc/etalk.local.
+
+CAP programs read /etc/etalk.local on startup and can call GetBridgeAddress()
+at any time to get the latest value for the bridge address.
+
+SetBridgeAddress() and GetBridgeAddress() are new CAP library calls. With
+Native EtherTalk, the calls use RPC for interprocess communication.
+
+For correct operation, it is thus necessary to run aarpd followed by atis
+before any CAP servers are started. It is not necessary to add a delay
+after aarpd as it does not return until the node number is determined. The
+usual sleep after atis should be increased to 15 seconds to allow an RTMP
+packet to be found and processed.
+
+
+Notes on CAP port for 386BSD/FreeBSD port.
+
+The code provides support for Native Ethertalk and UAB using the Berkeley
+Packet filter in 386bsd pk0.2.4 and FreeBSD.  I would expect it to work in
+NetBSD, but since I don't have access to a system running that, I haven't
+been able to test it.  It supports Phase 1 only because the "ed" ethernet
+driver does not currently support multicast addresses.  
+
+You will need to install the patches to the packet filter code and ethernet
+driver I posted to comp.os.386bsd.bugs if they haven't been included in the
+standard release yet.  If they are not installed, or if you are using an
+ethernet driver other than "ed", you will get a message about SIOCGIFADDR
+when you try to run aarpd or uab.
+
+You will need to build a kernel with packet filter support and create a
+number of packet filter devices (/dev/bpf[0-n]).  If you are running with
+UAB you can get by with very few: if you use native ethertalk you may need
+at least 8 to do anything very much.  I currently run with 12.
+
+aarpd should be run with the name of the interface e.g.
+
+   aarpd ed0 my_zone
+
+With UAB put ed:0 into the bridge_desc file.
+
+Dave Matthews <dcjm@dcs.ed.ac.uk>
+
+
+SECURITY NOTE:
+
+The default permissions on /dev/nit, /dev/enet or /dev/pf/pfilt* devices
+normally preclude average users from running CAP programs such as atlook,
+getzones etc. If this is a problem at your site, then the options are as
+follows, in decreasing order of preference ...
+
+	1. make the user CAP programs set-group-ID and then have
+		/dev/nit etc. writeable by this group.
+
+	2. make the CAP programs set-user-ID to the owner of /dev/nit (root).
+
+	3. make /dev/nit world writeable. This is the LEAST PREFERRED method
+		because of the gaping security hole.

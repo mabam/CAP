@@ -1,0 +1,70 @@
+.\" SCCSid = "@(#)prepfix.1	2.2 10/24/89"
+.TH PREPFIX 1 "24 Oct 1989"
+.UC 4
+.SH NAME
+prepfix \- converts Apple LaserPrep files to form useable on Unix
+.SH SYNOPSIS
+.B prepfix
+[
+\-l
+printer_name1
+[
+\-l
+printer_name2
+]...
+]
+[
+file
+]
+.SH DESCRIPTION
+.I Prepfix
+takes the command-line LaserPrep file (or the standard input if no filename is
+given), and converts it into a form that is useable on Unix with the
+.IR macps (1),
+and is even electronically mailable.
+.PP
+To use
+.IR prepfix ,
+create the input LaserPrep file on a Macintosh by opening an empty
+document in some application, selecting
+.B Print
+>From the
+.B File
+menu and then typing (and holding) Command-K immediately after clicking the
+.B OK
+button in the LaserWriter print dialog box.
+Another dialog will appear, confirming that a file named ``PostScript'' is
+being created (the Command-K keys can be released now).
+.PP
+Depending on the application, the created PostScript file can be found in the
+System Folder, the application folder or the top level of the disk.
+This file can then be uploaded via some file transfer program, such as
+MacTerminal/VersaTerm and
+.IR macget (1)
+or MacKermit/Red Ryder and
+.IR kermit (1).
+.PP
+Normally, only Apple LaserWriters can take advantage of the bit smoothing
+feature of the LaserPrep file.
+However, other PostScript laser printer using the Motorola 680x0 processor
+and the Adobe PostScript firmware can be made to do bit smoothing by
+specifying for each printer the
+.B \-l
+option and the printer's name, as returned by the PostScript
+.B product
+command in
+.B statusdict
+(remember to quote the printer name if it contains blanks).
+The resulting LaserPrep file will be modified so that for LaserWriters and for
+printers specified in the
+.B \-l
+option, bit smoothing will be allowed (smoothing must still be selected in the
+Print Dialog box when saving the PostScript to disk).
+More than one printer name can be specified using additional
+.B \-l
+and printer name pairs.
+.SH "SEE ALSO"
+macps(1), macget(1), kermit(1)
+.SH BUGS
+.I Prepfix
+only works with version 4.0 and up of the Macintosh LaserPrep files.

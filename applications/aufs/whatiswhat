@@ -1,0 +1,33 @@
+Notes on files.
+
+README - Generally useful information
+INSTALLATION - Installation considerations
+design.notes - design consideration 
+todo - things left to do or done
+afpvols - sample volume file
+user.doc - user documentation
+abmisc2.c+ - server register routine
+afpavl.[c,h] - implements balanced trees (general)
+afpdid.[c,h]* - directory id routines
+afpdir.c@ - Handles directories
+afpdt.[c,h]*+@ - Handles desktop
+afpfile.c@ - File handling routines
+afpfork.c@+ - Fork handling routines
+afpgc.[c,h] - Generalized caching management
+afpmisc.c - miscellaneous, yet useful routines
+afpntoh.h - translator file for packs
+afpos.c*+ - Most os dependent routines
+afposenum.c* - OS dependent part of file enumeration
+afposfi.c* - OS dependent finder information handling
+afposncs.[c,h] - OS dependent character set normalization
+afppasswd.c - auxillary password routines
+afpserver.c+@ - main server loop
+afpvols.[c,h]@ - handles volumes
+aufs.c+ - main driver
+aufsicon.c - icon for aufs
+afps.h - general header file
+afpudb.[c,h]* - holds Unix desktop information
+
+*'ed items are heavily os dependent
++'ed items have CAP library dependencies
+@'ed items are primary AFP drivers

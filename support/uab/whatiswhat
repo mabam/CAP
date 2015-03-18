@@ -1,0 +1,42 @@
+Unix AppleTalk Bridge
+	gw.h		gateway definitions
+	uab.c		gateway driver
+	bridge_desc	bridge descriptions
+	desc.ms		general description
+
+DDP/RTMP/ZIP
+	ddprouter.c	ddp router
+	ddpsvcs.c	ddp services
+	rtmp.c		rtmp routines
+
+DDP PORT management
+	ddpport.c	ddp port management
+	ddpport.h	ddp port definitions
+	node.h		lap node description
+	if_desc.h	(lap) interface descriptions
+
+EtherTalk (ELAP)
+	aarp.c		aarp routines
+	aarp_defs.h	aarp specific header
+	aarp.h		aarp general header
+	ethertalk.c	ethertalk routines
+	ethertalk.h	ethertalk definitions
+
+Async AppleTalk (ASYNC)
+	asyncatalk.c	async routines
+
+Process (de)multiplexing
+	mpxddp.h	ddp to local process (de)multiplexing
+	kip_mpx.c	ddp to local process via modified kip scheme
+
+Protocol Interfaces
+	proto_intf.h	protocol interface
+	dlip.c		dli: protocol interface
+	snitp.c		snit: protocol interface
+
+Auxillary routines:
+	hash.c		hash routines
+	hash.h		hash routine header
+	log.c		log routines
+	log.h		logging header
+

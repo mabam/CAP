@@ -1,0 +1,18 @@
+#! /bin/sh
+TEMP=/tmp/kcs$$
+trap "rm -f $TEMP" 1 2 3 15
+ps agx | egrep ':[0-9][0-9]( | [^ ]*/)(atalkrd|atis|aufs|lwsrv|lwrename|printqueue)( |$)' > $TEMP
+cat $TEMP
+echo -n 'Kill [ny]? '
+read reply junk
+if [ X${reply-n} = Xy ] ; then
+        echo Killing...
+        AUFS=`egrep ':[0-9][0-9]( | [^ ]*/)aufs( |$)' $TEMP | awk '{print $1}'`
+        if [ x"$AUFS" != x ]; then
+                kill -HUP $AUFS
+        fi
+        kill `egrep -v ':[0-9][0-9]( | [^ ]*/)aufs( |$)' $TEMP | awk '{print $1}'`
+else
+        echo Cancelled...
+fi
+rm -f $TEMP

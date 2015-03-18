@@ -1,0 +1,75 @@
+Installation Instructions (SCCSid = "@(#)Installation	2.2 10/24/89")
+
+1) Look at the Makefile.  There are three CFLAGS options that you can
+use.  Setting SYSV should allow macps and prepfix to compile on System
+V machines (I've only tried it under A/UX).  Setting CONFIGDIR will
+cause macps to look for macps.config in that directory.  Setting SAVE
+will cause macps to enclose the entire print job is a PostScript
+save/restore context.  Normally you don't need SAVE, since most
+spooling software will automatically do an EOF between print jobs, which
+effectively does a restore of memory for you, but some spooling
+software does require the save/restore.  Note that defining SAVE will
+cause printing to fail on a NeXT laser printer, while it is harmless on
+most other systems.
+
+The options will look something like:
+
+CFLAGS = -O -DSYSV -DCONFIGDIR=\"/usr/new/lib\" -DSAVE
+
+if you defined all the options.
+
+2) Type "make".  If all goes well, macps and prepfix will be created.
+
+3) To create the unprocessed LaserPrep file on the Mac, as well as
+creating the raw PostScript files that you want to print, make sure
+that either you're not running MultiFinder, or if you are, go to the
+Chooser under the Apple menu, click on the LaserWriter icon and then
+turn off Background Printing.
+
+4) For each version of LaserPrep on the Mac that you want to include,
+install that version in the System Folder.  Then, open an empty
+document in some simple application (one that doesn't have its
+own ProcSet to download).  Choose Print from the File menu and the
+LaserWriter print dialog will appear.  Click on the OK button and
+IMMEDIATELY press and hold Command-K.  When a dialog box appears
+telling you that it is creating a PostScript file, you can release
+Command-K.  The unprocessed LaserPrep file will usually be found in one
+of three places, in the System Folder, in the same folder as the
+application or at the top level of the disk.
+
+5) Upload the PostScript file(s) to Unix, using some file transfer
+program like MacTerminal, Versaterm, Red Ryder, MacKermit or NCSA
+Telnet (if your file transfer program feels left out, feel free to add
+it to your list).
+
+6) Run prepfix on each unprocessed file, diverting the standard output
+to an appropriataly named file (like LaserPrep5.2).  If you want to
+allow bit smoothing on a non-Apple PostScript printer, specify the -l
+option to prepfix (you can specify as many printer names as you want,
+each with a separate -l flag).  If you aren't sure the your printer can
+do smoothing, you can try it and see if it works (if it doesn't, you
+can always re-run prepfix on the unprocessed file(s), leaving off the
+printer that doesn't work).  If you don't know the product name for you
+printer, you can use the following PostScript code to print it:
+
+%!
+/in {72 mul} def
+/Courier findfont 18 scalefont setfont
+1 in 8 in moveto
+statusdict /product get show
+showpage
+
+7) Put the modified LaserPrep file(s) in some directory and modify the
+macps.config file to point to these LaserPrep files.  Then put the
+macps.config file in a "lib" subdirectory to where you install macps
+(or in the directory CONFIGDIR if you used that option).
+
+8) Now when you want to print something, do the same thing as in step 4
+above with the LaserWriter print dialog, except press and hold
+Command-F (this cause LaserPrep not to be included in the PostScript
+file).
+
+9) Upload the PostScript file and run macps on it, sending the output
+to your printer, as in:
+
+	% macps psfile | lpr

@@ -1,0 +1,74 @@
+.TH CAP 3 "24 July 1990" "Columbia University"
+.SH NAME
+libcap \- base CAP networking library 
+.br
+libafpc \- afp client protocol library
+.br
+libafp \- afp support routines
+.SH DESCRIPTION
+.I libcap
+is the library of routines that implement a large subset of the
+AppleTalk protocols.  There are two different
+LAP delivery mechanisms for CAP: IPTalk and Ethertalk (possibly using
+UAB). For a discussion
+of the differences, and details on configuring the CAP system,
+see CAP(8).
+.PP
+The architecture of
+the CAP AppleTalk protocol implementation is fairly simple.  At the
+lowest layer, the various LAP mechanisms provide DDP support.
+On top of the DDP layer, ATP and NBP provide the basic transport and
+name binding functionality.  ASP, PAP, and the parts of ZIP that are
+implemented are layered on top of ATP.
+.PP
+The protocols are not run automatically.  Programs are responsible for
+giving up the cpu at regular intervals by a call to a "sleep" routine
+(abSleep) to allow the
+protocols to run.  The various protocols will schedule two kinds of
+events that can be run.  The first is a "packet ready" event that
+indicates input is ready on a particular socket.  The second is a
+"timeout" event.  Note:  a "packet ready" event takes precendent over a
+"timeout" event.  These events are handled by calling handler
+routines that run fairly quickly and without blocking.  See
+doc/sched.notes in the source directory for futher information.
+.PP
+The afp client protocols are in
+.I libafpc.
+The library
+.I libafp
+provides a
+set of support routines for AFP client and server programs.
+.SH DEBUG FLAGS
+The following standard CAP debugging flags are provided by the abmisc
+.I "dbugarg"
+routine.
+.nf
+	d - DDP
+	a - ATP
+	n - NBP
+	p - PAP
+	s - ASP
+	k - Scheduler
+	v - Version
+.fi
+The following flags are also accepted, but are not used.
+.nf
+	i - Initialization code
+	l - LAP
+.fi
+The version flag prints details about the CAP release and current patch
+level, together with a string describing the low level delivery method.
+.SH SEE ALSO
+CAP(8), AUFS(8), atis(8), atprint(1), atlook(1)
+.PP
+See the following files in the source code directory for CAP:
+.nf
+.ta \w'doc/sched.notes  	'u
+doc/abmisc.doc	miscellaneous routines
+doc/asp.notes	asp notes
+doc/atp.notes	atp notes
+doc/cap.notes	general notes
+doc/nbp.ext	nbp extensions for unix
+doc/pap.notes	pap notes
+doc/sched.notes	protocol scheduler notes
+.fi

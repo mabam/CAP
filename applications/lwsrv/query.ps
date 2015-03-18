@@ -1,0 +1,207 @@
+%!
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This file prints the responses to the standard LaserWriter 8.0 driver
+% queries.  (Note: the ADOSpooler query has been modified to output "spooler"
+% rather than "0".  This is to avoid confusion in what to enter in the
+% database, since lwsrv should response with "spooler", not the default "0".)
+% 
+% Remove the beginning part of the file, up to (but not including) the line
+% beginning with "%!PS-Adobe 3.0 Query" if you want the query responses to
+% be sent to the printer's standard output (and probably captured in a log
+% file) rather than being printed.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+/D 6 dict def
+D begin
+/in {72 mul} def
+/top 10.5 in def
+/bottom .5 in def
+/left 1 in def
+/ypos top def
+/lf 10 def
+end
+/Courier findfont 9 scalefont setfont
+/Str 256 string def
+/flush {showpage} def
+/INITGRAPHICS {initgraphics} bind def
+/initgraphics {currentpoint INITGRAPHICS moveto} def
+/RESTORE {restore} bind def
+/restore {D begin ypos end currentpoint 4 -1 roll RESTORE
+	moveto D begin /ypos exch def end} def
+/newline {D begin /ypos ypos lf sub dup bottom lt {pop showpage top}if def
+	left ypos moveto end} def
+D begin left ypos moveto end
+/= {Str cvs show newline} def
+/== {Str cvs show newline} def
+/print {Str cvs (\n) search {show pop newline}if show} def
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%!PS-Adobe-3.0 Query
+%%?BeginFeatureQuery: *LanguageLevel
+(==>FeatureQuery *LanguageLevel) =
+/languagelevel where
+{
+pop languagelevel dup 2 ge{(")print 3 string cvs print("\n)}{pop("1"\n)}ifelse
+}{
+("1"\n)
+}ifelse
+print
+%%?EndFeatureQuery: Unknown
+%%?BeginFeatureQuery: *PSVersion
+(==>FeatureQuery *PSVersion) =
+statusdict begin
+("\()print version print(\) )print revision 40 string cvs print("\n)print
+end
+%%?EndFeatureQuery: Unknown
+%%?BeginQuery: ADOSpooler
+(==>Query ADOSpooler) =
+(spooler) ==
+%%?EndQuery: spooler
+%%?BeginFeatureQuery: *?Resolution
+(==>FeatureQuery *?Resolution) =
+/mstr 40 string def
+initgraphics
+72 0 dtransform
+dup mul exch dup mul add sqrt .25 add round
+cvi
+0 72 dtransform
+dup mul exch dup mul add sqrt .25 add round
+cvi 2 copy eq
+{
+pop
+mstr cvs print
+}{
+exch
+mstr cvs print(x)print
+mstr cvs print
+}ifelse
+(dpi\n)print
+%%?EndFeatureQuery: Unknown
+%%?BeginQuery: ADOIsBinaryOK?
+(==>Query ADOIsBinaryOK?) =
+(True\n)
+/currentdevparams where
+{
+pop
+[
+{
+currentsystemparams/CurInputDevice get
+currentdevparams
+}stopped
+{
+cleartomark 0 dict
+}{
+exch pop
+}ifelse
+dup/Filtering known
+{
+/Filtering get
+/None ne
+{pop(False\n)}if
+}{
+pop
+}ifelse
+}if
+print
+%%?EndQuery: Unknown
+%%?BeginFeatureQuery: *FreeVM
+(==>FeatureQuery *FreeVM) =
+(")print vmstatus exch sub 40 string cvs print("\n)print pop
+%%?EndFeatureQuery: Unknown
+%%?BeginFeatureQuery: *TTRasterizer
+(==>FeatureQuery *TTRasterizer) =
+save
+true
+{
+systemdict/resourcestatus known{
+42/FontType resourcestatus{pop pop false(Type42)=}{true}ifelse
+}{true}ifelse
+}{false}ifelse
+{
+statusdict begin product end dup(LaserWriter)ne exch(LaserWriter Plus)ne and
+systemdict/eexec known and
+systemdict/cexec known and{
+countdictstack mark
+false
+<1861AEDAE118A9F95F1629C0137F8FE656811DD93DFBEA65E947502E78BA12284B8A58EF0A3
+2E272778DAA2ABEC72A84102D591E11D96BA61F57877B895A752D9BEAAC3DFD7D3220E2BDE7
+C036467464E0E836748F1DE7AB6216866F130CE7CFCEC8CE050B870C11881EE3E9D70919>
+{eexec}stopped{
+cleartomark
+countdictstack exch sub dup 0 gt{{end}repeat}{pop}ifelse
+false
+}{
+{cleartomark pop true}{cleartomark pop false}ifelse
+}ifelse
+}{false}ifelse{
+false
+(Accept68K)=
+}{true}ifelse
+}{false}ifelse
+{
+(None)=
+}if
+restore
+%%?EndFeatureQuery: Unknown
+%%?BeginFeatureQuery: *Product
+(==>FeatureQuery *Product) =
+statusdict begin
+("\()print product print(\)"\n)print
+end
+%%?EndFeatureQuery: Unknown
+%%?BeginQuery: Product
+(==>Query Product) =
+statusdict begin
+("\()print product print(\)"\n)print
+end
+%%?EndQuery: Unknown
+%%?BeginFeatureQuery: *ColorDevice
+(==>FeatureQuery *ColorDevice) =
+systemdict/colorimage known
+{
+statusdict begin
+/processcolors where
+{
+pop processcolors 1 eq
+{
+(Unknown)
+}{
+(True)
+}ifelse
+}{
+(Unknown)
+}ifelse
+end
+}{
+(False)
+}ifelse
+print(\n)print
+%%?EndFeatureQuery: Unknown
+%%?BeginQuery: ADORamSize
+(==>Query ADORamSize) =
+/languagelevel where{pop languagelevel}{1}ifelse 2 ge{
+currentsystemparams dup/RamSize known{/RamSize get}{pop -1}ifelse
+}{
+statusdict/ramsize known{statusdict begin ramsize end}{-1}ifelse
+}ifelse dup 0 le{
+pop vmstatus exch pop exch pop
+gsave newpath matrix setmatrix clippath pathbbox grestore
+mul 8 div cvi
+statusdict/processcolors known{statusdict/processcolors get exec mul}if
+exch pop exch pop add
+cachestatus pop exch pop add exch pop add exch pop add
+524288 div ceiling cvi 524288 mul
+}if(")print 40 string cvs print("\n)print
+%%?EndQuery: Unknown
+%%?BeginFeatureQuery: *FaxSupport
+(==>FeatureQuery *FaxSupport) =
+(None)/resourcestatus where{pop
+/HWOptions/Category resourcestatus{pop pop
+/Fax/HWOptions resourcestatus{pop pop pop(Base)}if
+}if
+}if print(\n)print
+%%?EndFeatureQuery: Unknown
+%%?BeginFontListQuery
+(==>FontListQuery) =
+save/scratch 100 string def FontDirectory{pop =}forall systemdict/filenameforall known{(fonts/*){(.)search {pop pop pop}{dup length 6 sub 6 exch getinterval =}ifelse}scratch filenameforall}if(*) = restore
+%%?EndFontListQuery: *
+flush
+%%EOF

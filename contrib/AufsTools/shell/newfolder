@@ -1,0 +1,7 @@
+#
+set u = `umask`
+umask 007
+foreach i ($argv)
+   mkdir $i $i/.finderinfo $i/.resource
+end
+umask $u

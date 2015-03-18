@@ -1,0 +1,90 @@
+.TH UNSTUFFIT L "December 1990"
+.UC
+.SH NAME
+unstuffit \- unpack a Stuffit archive file to CAP aufs files
+.SH SYNOPSIS
+.B unstuffit
+[
+.B \-rdulM
+] [
+-vqfm
+] file ...
+.br
+.SH DESCRIPTION
+For the Stuffit archive(s) file listed, 
+.I unstuffit
+extracts the files in the archive into separate files.
+This makes it possible, for example, to separate a large StuffIt file
+into component files for selective downloading, rather than
+downloading the larger archive file just to extract a single, small
+file.  It also allows the use of StuffIt to compress a group of files
+into a single, smaller archive that can be uploaded to a Unix system
+for storage, printing, etc.
+.PP
+.I Unstuffit
+stores extracted files in CAP aufs format in the current directory, which
+must be a CAP aufs folder.
+Characters in the Mac file name that are
+illegal (or unwieldy, like spaces) are changed to underscores in the Unix file
+name.
+.PP
+StuffIt version 1.5 has the ability to archive a group of files and folders
+in such a way that the hierarchical relationship of the files and folders
+is maintained.
+.I Unstuffit
+version 1.5 can unpack files archived in this manner and place them in
+corresponding subdirectories, which it will create in CAP aufs folder format,  so as to maintain the hierarchy.  As an option,
+the hierarcy can be flattened out and all the files stored in the current
+directory.
+.PP
+.TP
+.B \-f
+For StuffIt files containing a "Hierarchy Maintained Folder" entry, extract the
+files into a "flat" organization (all in the current directory) rather than
+maintaining the hierarchy by creating new directories, etc.
+Default is to maintain the hierarchical folder organization.
+.TP
+.B \-l
+List the files in the archive but do not extract them.  The name, size,
+type, and creator of each file is listed.
+.TP
+.B \-m
+Assumes the input file in MacBinary format rather than aufs
+format and skips over the MacBinary header.
+.TP
+.B \-r
+Extract resources forks only.
+.TP
+.B \-d
+Extract data forks only.
+.TP
+.B \-q
+Query user before extracting files and folders.  If a "n" answer is given for
+a folder, none of the files or folders in that folder will be extracted.
+.TP
+.B \-v
+Verbose option.  Causes 
+.I unstuffit
+to list name, size, type, and creator of each file extracted.
+.SH BUGS
+The
+.I compress
+program has been observed to go into strange states when uncompressing a 
+damaged file.  Often it will get stuck writing out bogus data until the
+disk fills up.  Since 
+.I unstuffit
+sends data through 
+.I compress,
+the same problem could occur when extracting files from a damaged Stuffit
+archive.
+.SH FILES
+For archives that have been compressed with the Lempel-Ziv method, the 
+.I compress 
+program must be present on the system and in the search path since 
+.I unstuffit 
+uses it for the uncompressing.
+.I Compress
+is available from the comp.sources.unix archives.
+.SH AUTHOR
+Nigel Perry (np@doc.ic.ac.uk) based upon unsit by
+Allan G. Weber (weber@sipi.usc.edu).

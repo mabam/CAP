@@ -1,0 +1,171 @@
+UAB EXPERIMENTAL RELEASE - BUG REPORT #1
+
+Two problems listed here
+
+OS: any
+Revision: n/a
+Major local modifications: n/a
+Machine Type: n/a
+Date: 5/2/89
+Reported by: Charlie C. Kim, cck@cunixc.columbia.edu
+Priority: high
+
+Problem: UAB may dereference a null pointer (and core dump if you are lucky)
+
+Diagnosis: The call to aarp_request in aarp_resolve was bogus.  One of
+the arguments to aarp_request was the aarp table entry of the source
+node: unfortunately, this no longer made sense and could possibly be
+NULL.  Luckily, a call to aarp_request was relatively rare (most aarp
+table entries were gleaned).
+
+Solution: Rewrite aarp_request.  See patch(aarp.c).
+
+
+OS: any
+Revision: n/a
+Major local modifications: n/a
+Machine Type: n/a
+Date: 5/2/89
+Reported by: Charlie C. Kim, cck@cunixc.columbia.edu
+Priority: medium
+
+Problem: Under certain circumstances, uab ports set to auto-acquire
+network numbers will not do so.
+
+Diagnosis: A filter in the routing portion of the code improperly
+filtered out broadcasts if the network number did not match the ddp
+port's network number.  In general, this should not cause a problem,
+except when the port's network number was not established (e.g. was
+set to zero) and a long ddp packet was input.
+
+Solution: Loosen filter.  See patch(ddprouter.c).
+
+PATCH:
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%START OF PATCH%%%%%%%%%%%%%%%%%%%%%%
+*** /tmp/,RCSt1023127	Wed May  3 01:02:44 1989
+--- aarp.c	Tue May  2 23:57:57 1989
+***************
+*** 413,419
+      }
+    }
+    /* query on interface */
+!   aarp_request(aih, aa, tpa);
+    return(0);
+  }
+  
+
+--- 413,419 -----
+      }
+    }
+    /* query on interface */
+!   aarp_request(aih, tpa);
+    return(0);
+  }
+  
+***************
+*** 794,800
+   * - doesn't check that target is ourselves
+  */
+  private void
+! aarp_request(aih, snode, tpa)
+  AI_HANDLE *aih;
+  AARP_ENTRY *snode;
+  struct ethertalkaddr *tpa;
+
+--- 794,800 -----
+   * - doesn't check that target is ourselves
+  */
+  private void
+! aarp_request(aih, tpa)
+  AI_HANDLE *aih;
+  struct ethertalkaddr *tpa;
+  {
+***************
+*** 796,802
+  private void
+  aarp_request(aih, snode, tpa)
+  AI_HANDLE *aih;
+- AARP_ENTRY *snode;
+  struct ethertalkaddr *tpa;
+  {
+    AARP_ENTRY *aa;
+
+--- 796,801 -----
+  private void
+  aarp_request(aih, tpa)
+  AI_HANDLE *aih;
+  struct ethertalkaddr *tpa;
+  {
+    AARP_ENTRY *aa;
+***************
+*** 822,827
+    ap->aaph_arp.arp_pro = htons(ETHERTYPE_APPLETALK);
+    ap->aaph_arp.arp_hln = EHRD;
+    ap->aaph_arp.arp_pln = ETPL;
+    bcopy((caddr_t)snode->aae_eaddr, (caddr_t)&ap->aaph_arp.arp_sha, EHRD);
+    bcopy((caddr_t)&snode->aae_pa, (caddr_t)ap->aaph_arp.arp_spa,
+  	sizeof(struct ethertalkaddr));
+
+--- 821,827 -----
+    ap->aaph_arp.arp_pro = htons(ETHERTYPE_APPLETALK);
+    ap->aaph_arp.arp_hln = EHRD;
+    ap->aaph_arp.arp_pln = ETPL;
++ #ifdef notdef
+    bcopy((caddr_t)snode->aae_eaddr, (caddr_t)&ap->aaph_arp.arp_sha, EHRD);
+    bcopy((caddr_t)&snode->aae_pa, (caddr_t)ap->aaph_arp.arp_spa,
+  	sizeof(struct ethertalkaddr));
+***************
+*** 825,830
+    bcopy((caddr_t)snode->aae_eaddr, (caddr_t)&ap->aaph_arp.arp_sha, EHRD);
+    bcopy((caddr_t)&snode->aae_pa, (caddr_t)ap->aaph_arp.arp_spa,
+  	sizeof(struct ethertalkaddr));
+    bcopy((caddr_t)tpa, (caddr_t)ap->aaph_arp.arp_tpa, sizeof(*tpa));
+  
+    ap->aaph_ae = aa;		/* remember this for later */
+
+--- 825,846 -----
+    bcopy((caddr_t)snode->aae_eaddr, (caddr_t)&ap->aaph_arp.arp_sha, EHRD);
+    bcopy((caddr_t)&snode->aae_pa, (caddr_t)ap->aaph_arp.arp_spa,
+  	sizeof(struct ethertalkaddr));
++ #else
++   bcopy((caddr_t)aih->ai_eaddr, (caddr_t)&ap->aaph_arp.arp_sha, EHRD);
++   /* grab any source protocol address (on right interface already!) */
++   { int i = aih->ai_numnode;
++     struct ai_host_node *an = aih->ai_nodes;
++ 
++     for ( ; i ; an++, i--)
++       if (an->aihn_state == AI_NODE_OKAY) {
++ 	bcopy((caddr_t)&an->aihn_pa, (caddr_t)ap->aaph_arp.arp_spa,
++ 	      sizeof(struct ethertalkaddr));
++ 	break;
++       }
++     if (i == 0)			/* no host node! drop request for now */
++       return;
++   }
++ #endif
+    bcopy((caddr_t)tpa, (caddr_t)ap->aaph_arp.arp_tpa, sizeof(*tpa));
+  
+    ap->aaph_ae = aa;		/* remember this for later */
+*** /tmp/,RCSt1023127	Wed May  3 01:02:46 1989
+--- ddprouter.c	Wed May  3 00:41:47 1989
+***************
+*** 181,188
+      }
+      /* forward packets for self to self */
+      /* don't forward broadcasts 'cept to self*/
+!     if (ddp->dstNet == PORT_DDPNET(port) &&
+! 	(isbroadcast || (ddp->dstNode == PORT_DDPNODE(port)))) {
+        ddp_input(port, ddp, data, datalen);
+        return;
+      }
+Z
+--- 181,188 -----
+      }
+      /* forward packets for self to self */
+      /* don't forward broadcasts 'cept to self*/
+!     if (isbroadcast || 
+! 	(ddp->dstNet==PORT_DDPNET(port) && ddp->dstNode==PORT_DDPNODE(port))) {
+        ddp_input(port, ddp, data, datalen);
+        return;
+      }
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%END OF PATCH%%%%%%%%%%%%%%%%%%%%%%

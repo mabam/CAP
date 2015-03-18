@@ -1,0 +1,36 @@
+  atlook.c	- Find AppleTalk entities and print information
+		- note: look.c contains the code for looks and pinger
+  atlooklws	- Find AppleTalk LaserWriters and print status
+  atpinger	- Utilizes the echo protocol to "ping" hosts
+  lwpr.c	- Send file to AppleTalk LaserWriter
+		- note: lwpr also contains the code for iwpr
+  iwpr		- send file to appletalk imagewriter
+  tlw.c		- Talks to LaserWriter "Interactive Executive"
+  isrv.c	- Sample Server for ImageWriter (experimental)
+  ash.c		- sample afp client - allows a few things to be done 
+		  with appleshare servers
+  instappl.c 	- allows an application to be installed into a unix
+	          aufs volume 
+  getzones.c	- return list of zones from KIP (1/88 or later)
+
+You can get a basic idea of what some of these programs do by reading the
+"man" pages in ../man:
+
+	CAP.8: overview
+	atis.8: atistest
+	atprint.1: lwpr, lsrv, isrv, tlw
+	atlook.1: atlook, atlooklws, atpinger
+
+atistest is for verification in the installation procedure.
+
+General notes:
+
+tlw, lwpr, iwpr now have a settable "Send Flow Quantum multiplier"
+called SFLOWQ that tells them how many pkts they can send in a single
+write.  You should set this to 1 if you have problems with the
+FastPath or LaserWriter dropping packets.  By default, it is set to 8
+(the maximum).  Setting fastether in m4.setup sets it to 1.
+
+lwpr makes use of /etc/cap.printers.  This really isn't necessary, but
+it's nice.
+

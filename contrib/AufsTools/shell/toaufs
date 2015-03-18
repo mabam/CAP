@@ -1,0 +1,6 @@
+#
+setenv MAC_EXT .$$conv
+mcvert -v $argv
+capit *$MAC_EXT
+rm *$MAC_EXT
+

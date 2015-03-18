@@ -1,0 +1,21 @@
+#
+# This is a sample atalk.local file. Comment lines start with #.
+# mynet, mynode, myzone refer to network values for the CAP host.
+# bridgenet, bridgenode, bridgeIP refer to the hardware gateway.
+# NB: bridgenode has to be the lower 8 bits of the IP address.
+# nisnet, nisnode point to the host running atis. Normally these
+# are the same as mynet and mynode. This line is semi optional.
+# asyncnet and asynczone apply to Asynchronous AppleTalk on the
+# CAP host. This line is also optional but, if included, *must* be
+# the fourth active line (ie: nisnet and nisnode must be present).
+# Zone names containing spaces must be quoted with " or ' quotes.
+# Zone names containing " or ' can use \" or \' as escapes.
+#
+# mynet		mynode		myzone 
+93.31		18 		unimelb-CompSci
+# bridgenet	bridgenode	bridgeIP
+93.31		123		128.250.135.123
+# nisnet	nisnode
+93.31		18
+# asyncnet	asynczone
+170.170		"unimelb Async"

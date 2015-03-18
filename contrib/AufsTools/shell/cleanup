@@ -1,0 +1,7 @@
+# clean up an Aufs folder
+foreach i ({.resource,.finderinfo}/*)
+	if(! -e "$i:t") then
+		ls -l "$i"
+		rm "$i"
+	endif
+end

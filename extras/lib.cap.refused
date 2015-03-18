@@ -1,0 +1,25 @@
+
+To use the laserwriters, you must have a login name on one of the Unix
+machines. You must set the name of your Macintosh to your Unix login name.
+
+If you are running System version 6.0.7 or earlier in your Macintosh,
+select "Chooser" from the Apple menu and change the name to your Unix
+login name.
+
+If you are using System version 7.0 or later, start "Sharing Setup" from
+the "Control Panels" folder and fill in your login name under "Owner Name".
+
+If you really like to have a special name, you can ask the systems group
+to have your special name registered.
+
+
+OzTeX users:
+In order to print properly you must add one line to the DVItoPS.ps and
+TEXTtoPS.ps files. Be sure that they start with these two lines:
+	%!
+	%%For: username
+The first line should already be there. Replace username by the name
+you have in the Chooser, subject to the same restrictions as above.
+
+
+The SystemsGroup.

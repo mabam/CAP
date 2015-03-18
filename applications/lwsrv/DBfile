@@ -1,0 +1,552 @@
+plain300 = (
+	Query ADOIsBinaryOK? True;
+	FeatureQuery *?Resolution 300dpi;
+	FeatureQuery *ColorDevice False;
+	FeatureQuery *FaxSupport None;
+	FeatureQuery *LanguageLevel '"1"';
+	FeatureQuery *TTRasterizer None;
+	Query ADOSpooler spooler;
+);
+
+"COMPAQ PAGEMARQ 15" = (
+	include "LaserWriter Plus";
+	FeatureQuery *PSVersion '"(2012.015) 13"';
+	FeatureQuery *?Resolution 400x800dpi;
+	FeatureQuery *ColorDevice Unknown;
+	FeatureQuery *FreeVM '"2397046"';
+	FeatureQuery *Product '"(COMPAQ PAGEMARQ 15)"';
+	Query Product '"(COMPAQ PAGEMARQ 15)"';
+	FeatureQuery *FaxSupport Base;
+	Query ADORamSize '"10485760"';
+);
+
+"Dataproducts LZR 1260" = (
+	include "LaserWriter Plus";
+	FeatureQuery *PSVersion '"(47.0) 0"';
+	FeatureQuery *FreeVM '"2389815"';
+	FeatureQuery *Product '"(Dataproducts LZR 1260)"';
+	Query Product '"(Dataproducts LZR 1260)"';
+	FeatureQuery *TTRasterizer Accept68K;
+	Query ADORamSize '"4194304"';
+);
+
+LaserWriter = (
+	include plain300;
+	font (
+		Courier,
+		Courier-Bold,
+		Courier-BoldOblique,
+		Courier-Oblique,
+		Helvetica,
+		Helvetica-Bold,
+		Helvetica-BoldOblique,
+		Helvetica-Oblique,
+		Symbol,
+		Times-Bold,
+		Times-BoldItalic,
+		Times-Italic,
+		Times-Roman,
+	);
+	FeatureQuery *PSVersion '"(23.0) 0"';
+	FeatureQuery *FreeVM '"173936"';
+	FeatureQuery *Product '"(LaserWriter)"';
+	Query Product '"(LaserWriter)"';
+	Query ADORamSize '"2097152"';
+);
+
+"LaserWriter II NT" = (
+	include "LaserWriter Plus";
+	FeatureQuery *PSVersion '"(47.0) 1"';
+	FeatureQuery *FreeVM '"434204"';
+	FeatureQuery *Product '"(LaserWriter II NT)"';
+	Query Product '"(LaserWriter II NT)"';
+	FeatureQuery *TTRasterizer Accept68K;
+);
+
+"LaserWriter II NTX" = (
+	include "LaserWriter II NT";
+	FeatureQuery *PSVersion '"(47.0) 1"';
+	FeatureQuery *FreeVM '"433810"';
+	FeatureQuery *Product '"(LaserWriter II NTX)"';
+	Query Product '"(LaserWriter II NTX)"';
+);
+
+"LaserWriter IIf" = (
+	include "LaserWriter Plus";
+	FeatureQuery *ColorDevice Unknown;
+	FeatureQuery *LanguageLevel '"2"';
+	FeatureQuery *PSVersion '"(2010.113) 1"';
+	FeatureQuery *FreeVM '"2381689"';
+	FeatureQuery *TTRasterizer Type42;
+	FeatureQuery *Product '"(LaserWriter IIf)"';
+	Query Product '"(LaserWriter IIf)"';
+	Query ADORamSize '"8388608"';
+);
+
+"LaserWriter IIg" = (
+	include "LaserWriter IIf";
+	FeatureQuery *PSVersion '"(2010.130) 2"';
+	FeatureQuery *FreeVM '"2150107"';
+	FeatureQuery *Product '"(LaserWriter IIg)"';
+	Query Product '"(LaserWriter IIg)"';
+);
+
+"LaserWriter Plus" = (
+	include LaserWriter;
+	font (
+		AvantGarde-Book,
+		AvantGarde-BookOblique,
+		AvantGarde-Demi,
+		AvantGarde-DemiOblique,
+		Bookman-Demi,
+		Bookman-DemiItalic,
+		Bookman-Light,
+		Bookman-LightItalic,
+		Courier,
+		Courier-Bold,
+		Courier-BoldOblique,
+		Courier-Oblique,
+		Helvetica,
+		Helvetica-Bold,
+		Helvetica-BoldOblique,
+		Helvetica-Narrow,
+		Helvetica-Narrow-Bold,
+		Helvetica-Narrow-BoldOblique,
+		Helvetica-Narrow-Oblique,
+		Helvetica-Oblique,
+		NewCenturySchlbk-Bold,
+		NewCenturySchlbk-BoldItalic,
+		NewCenturySchlbk-Italic,
+		NewCenturySchlbk-Roman,
+		Palatino-Bold,
+		Palatino-BoldItalic,
+		Palatino-Italic,
+		Palatino-Roman,
+		Symbol,
+		Times-Bold,
+		Times-BoldItalic,
+		Times-Italic,
+		Times-Roman,
+		ZapfChancery-MediumItalic,
+		ZapfDingbats,
+	);
+	FeatureQuery *PSVersion '"(42.2) 3"';
+	FeatureQuery *FreeVM '"172414"';
+	FeatureQuery *Product '"(LaserWriter Plus)"';
+	Query Product '"(LaserWriter Plus)"';
+);
+
+"LaserWriter Pro 630" = (
+	include "LaserWriter IIg";
+	FeatureQuery *PSVersion '"(2010.130) 1"';
+	FeatureQuery *FreeVM '"1698253"';
+	FeatureQuery *Product '"(LaserWriter Pro 630)"';
+	Query Product '"(LaserWriter Pro 630)"';
+	FeatureQuery *?Resolution 600dpi;
+);
+
+"PrintServer 20" = (
+	include "plain300";
+	FeatureQuery *PSVersion '"(48.3) 19"';
+	FeatureQuery *FreeVM '"964599"';
+	FeatureQuery *Product '"(PrintServer 20)"';
+	Query Product '"(PrintServer 20)"';
+	Query ADORamSize '"2621440"';
+	font (
+		AvantGarde-Book,
+		AvantGarde-BookOblique,
+		AvantGarde-Demi,
+		AvantGarde-DemiOblique,
+		Courier,
+		Courier-Bold,
+		Courier-BoldOblique,
+		Courier-Oblique,
+		Helvetica,
+		Helvetica-Bold,
+		Helvetica-BoldOblique,
+		Helvetica-Oblique,
+		LubalinGraph-Book,
+		LubalinGraph-BookOblique,
+		LubalinGraph-Demi,
+		LubalinGraph-DemiOblique,
+		NewCenturySchlbk-Bold,
+		NewCenturySchlbk-BoldItalic,
+		NewCenturySchlbk-Italic,
+		NewCenturySchlbk-Roman,
+		Souvenir-Demi,
+		Souvenir-DemiItalic,
+		Souvenir-Light,
+		Souvenir-LightItalic,
+		Symbol,
+		Times-Bold,
+		Times-BoldItalic,
+		Times-Italic,
+		Times-Roman,
+	);
+);
+
+"QMS-PS 410" = (
+	include "LaserWriter Plus";
+	FeatureQuery *PSVersion '"(52.4) 94"';
+	FeatureQuery *FreeVM '"336596"';
+	FeatureQuery *Product '"(QMS-PS 410)"';
+	Query Product '"(QMS-PS 410)"';
+	font (
+		AGaramond-Bold,
+		AGaramond-BoldItalic,
+		AGaramond-Italic,
+		AGaramond-Regular,
+		AGaramond-Semibold,
+		AGaramond-SemiboldItalic,
+		AvantGarde-Book,
+		AvantGarde-BookOblique,
+		AvantGarde-Demi,
+		AvantGarde-DemiOblique,
+		Bookman-Demi,
+		Bookman-DemiItalic,
+		Bookman-Light,
+		Bookman-LightItalic,
+		Courier,
+		Courier-Bold,
+		Courier-BoldOblique,
+		Courier-Oblique,
+		Helvetica,
+		Helvetica-Bold,
+		Helvetica-BoldOblique,
+		Helvetica-Condensed,
+		Helvetica-Condensed-Bold,
+		Helvetica-Condensed-BoldObl,
+		Helvetica-Condensed-Oblique,
+		Helvetica-Narrow,
+		Helvetica-Narrow-Bold,
+		Helvetica-Narrow-BoldOblique,
+		Helvetica-Narrow-Oblique,
+		Helvetica-Oblique,
+		NewCenturySchlbk-Bold,
+		NewCenturySchlbk-BoldItalic,
+		NewCenturySchlbk-Italic,
+		NewCenturySchlbk-Roman,
+		Palatino-Bold,
+		Palatino-BoldItalic,
+		Palatino-Italic,
+		Palatino-Roman,
+		Symbol,
+		Times-Bold,
+		Times-BoldItalic,
+		Times-Italic,
+		Times-Roman,
+		ZapfChancery-MediumItalic,
+		ZapfDingbats,
+	);
+);
+
+"Silentwriter 95" = (
+	include "LaserWriter IIg";
+	FeatureQuery *PSVersion '"(2010.121) 1"';
+	FeatureQuery *FreeVM '"251597"';
+	FeatureQuery *TTRasterizer None;
+	FeatureQuery *Product '"(Silentwriter 95)"';
+	Query Product '"(Silentwriter 95)"';
+	Query ADORamSize '"2097152"';
+);
+
+"Varityper" = (
+	include "LaserWriter Plus";
+	FeatureQuery *?Resolution 1270dpi;
+	FeatureQuery *PSVersion '"(52.3) 4.7"';
+	FeatureQuery *FreeVM '"2298400"';
+	FeatureQuery *Product '"(Varityper)"';
+	Query Product '"(Varityper)"';
+	FeatureQuery *ColorDevice Unknown;
+	Query ADORamSize '"16777212"';
+);
+
+"SPARCprinter" = (
+        include "LaserWriter Plus";
+        FeatureQuery *PSVersion '"(3.010) 0"';
+        FeatureQuery *FreeVM '"1147258"';
+        FeatureQuery *Product '"(NeWS Server)"';
+        Query Product '"(NeWS Server)"';
+        Query ADORamSize '"138936320"';
+        font (
+                AvantGarde-Book,
+                AvantGarde-BookOblique,
+                AvantGarde-Demi,
+                AvantGarde-DemiOblique,
+                Bembo,
+                Bembo-Bold,
+                Bembo-BoldItalic,
+                Bembo-Italic,
+                Bookman-Demi,
+                Bookman-DemiItalic,
+                Bookman-Light,
+                Bookman-LightItalic,
+                Courier,
+                Courier-Bold,
+                Courier-BoldOblique,
+                Courier-Oblique,
+                GillSans,
+                GillSans-Bold,
+                GillSans-BoldItalic,
+                GillSans-Italic,
+                Helvetica,
+                Helvetica-Bold,
+                Helvetica-BoldOblique,
+                Helvetica-Narrow,
+                Helvetica-Narrow-Bold,
+                Helvetica-Narrow-BoldOblique,
+                Helvetica-Narrow-Oblique,
+                Helvetica-Oblique,
+                LucidaBright,
+                LucidaBright-Demi,
+                LucidaBright-DemiItalic,
+                LucidaBright-Italic,
+                LucidaSans,
+                LucidaSans-Bold,
+                LucidaSans-BoldItalic,
+                LucidaSans-Italic,
+                LucidaSans-Typewriter,
+                LucidaSans-TypewriterBold,
+                NewCenturySchlbk-Bold,
+                NewCenturySchlbk-BoldItalic,
+                NewCenturySchlbk-Italic,
+                NewCenturySchlbk-Roman,
+                Palatino-Bold,
+                Palatino-BoldItalic,
+                Palatino-Italic,
+                Palatino-Roman,
+                Rockwell,
+                Rockwell-Bold,
+                Rockwell-BoldItalic,
+                Rockwell-Italic,
+                Symbol,
+                Times-Bold,
+                Times-BoldItalic,
+                Times-Italic,
+                Times-Roman,
+                ZapfChancery-MediumItalic,
+                ZapfDingbats,
+        );
+);
+
+"OKI ML801PS" = (
+	include "LaserWriter Plus";
+	FeatureQuery *PSVersion '"(52.3) 0"';
+	FeatureQuery *?Resolution 400dpi;
+	FeatureQuery *FreeVM '"3947324"';
+	FeatureQuery *TTRasterizer Accept68K;
+	FeatureQuery *Product '"(ML801PS)"';
+	Query Product '"(ML801PS)"';
+	Query ADORamSize '"8388608"';
+	font (
+		Courier,
+		Courier-Bold,
+		Courier-BoldOblique,
+		Courier-Oblique,
+		Helvetica,
+		Helvetica-Bold,
+		Helvetica-BoldOblique,
+		Helvetica-Oblique,
+		Symbol,
+		Times-Bold,
+		Times-BoldItalic,
+		Times-Italic,
+		Times-Roman,
+		PCTimes-Roman,
+		PCHelvetica,
+		Mincho-PC-Hiragana,
+		Mincho-PC-Katakana,
+		NotDefFont,
+		Ryumin-Light-H,
+		Ryumin-Light-V,
+		Ryumin-Light-EUC-H,
+		Ryumin-Light-EUC-V,
+		Ryumin-Light-SuppA-H,
+		Ryumin-Light-SuppA-V,
+		Ryumin-Light-SuppB-HV,
+		Ryumin-Light-RKSJ-H,
+		Ryumin-Light-RKSJ-V,
+		Ryumin-Light-RKSJ-UserGaiji,
+		Ryumin-Light-83pv-SuppA-H,
+		Ryumin-Light-83pv-SuppB-H,
+		Ryumin-Light-83pv-RKSJ-H,
+		Ryumin-Light-NWP-H,
+		Ryumin-Light-NWP-V,
+		Ryumin-Light-Ext-H,
+		Ryumin-Light-Ext-V,
+		Ryumin-Light-Ext-SuppA-H,
+		Ryumin-Light-Ext-SuppA-V,
+		Ryumin-Light-Ext-SuppB-HV,
+		Ryumin-Light-Ext-RKSJ-H,
+		Ryumin-Light-Ext-RKSJ-V,
+		Ryumin-Light-Add-H,
+		Ryumin-Light-Add-V,
+		Ryumin-Light-Add-SuppA-H,
+		Ryumin-Light-Add-SuppA-V,
+		Ryumin-Light-Add-SuppB-HV,
+		Ryumin-Light-Add-RKSJ-H,
+		Ryumin-Light-Add-RKSJ-V,
+		GothicBBB-Medium-H,
+		GothicBBB-Medium-V,
+		GothicBBB-Medium-EUC-H,
+		GothicBBB-Medium-EUC-V,
+		GothicBBB-Medium-SuppA-H,
+		GothicBBB-Medium-SuppA-V,
+		GothicBBB-Medium-SuppB-HV,
+		GothicBBB-Medium-RKSJ-H,
+		GothicBBB-Medium-RKSJ-V,
+		GothicBBB-Medium-RKSJ-UserGaiji,
+		GothicBBB-Medium-83pv-SuppA-H,
+		GothicBBB-Medium-83pv-SuppB-H,
+		GothicBBB-Medium-83pv-RKSJ-H,
+		GothicBBB-Medium-NWP-H,
+		GothicBBB-Medium-NWP-V,
+		GothicBBB-Medium-Ext-H,
+		GothicBBB-Medium-Ext-V,
+		GothicBBB-Medium-Ext-SuppA-H,
+		GothicBBB-Medium-Ext-SuppA-V,
+		GothicBBB-Medium-Ext-SuppB-HV,
+		GothicBBB-Medium-Ext-RKSJ-H,
+		GothicBBB-Medium-Ext-RKSJ-V,
+		GothicBBB-Medium-Add-H,
+		GothicBBB-Medium-Add-V,
+		GothicBBB-Medium-Add-SuppA-H,
+		GothicBBB-Medium-Add-SuppA-V,
+		GothicBBB-Medium-Add-SuppB-HV,
+		GothicBBB-Medium-Add-RKSJ-H,
+		GothicBBB-Medium-Add-RKSJ-V,
+		Helvetica-Narrow,
+		Helvetica-Narrow-Bold,
+		Helvetica-Narrow-BoldOblique,
+		Helvetica-Narrow-Oblique,
+		Palatino-Bold,
+		Palatino-BoldItalic,
+		Palatino-Italic,
+		Palatino-Roman,
+		ZapfChancery-MediumItalic,
+		ZapfDingbats,
+		Bookman-Demi,
+		Bookman-DemiItalic,
+		Bookman-Light,
+		Bookman-LightItalic,
+		NewCenturySchlbk-Bold,
+		NewCenturySchlbk-BoldItalic,
+		NewCenturySchlbk-Italic,
+		NewCenturySchlbk-Roman,
+		AvantGarde-Book,
+		AvantGarde-BookOblique,
+		AvantGarde-Demi,
+		AvantGarde-DemiOblique,
+	);
+);
+
+"EPSON LP-9000PS2" = (
+	include "LaserWriter Plus";
+	FeatureQuery *PSVersion '"(2014.107) 1"';
+	FeatureQuery *?Resolution 600dpi;
+	FeatureQuery *FreeVM '"1880311"';
+	FeatureQuery *TTRasterizer Type42;
+	FeatureQuery *Product '"(EPSON LP-9000PS2)"';
+	Query Product '"(EPSON LP-9000PS2)"';
+	Query ADORamSize '"11534336"';
+	font (
+		Courier,
+		Courier-Bold,
+		Courier-BoldOblique,
+		Courier-Oblique,
+		Helvetica,
+		Helvetica-Bold,
+		Helvetica-BoldOblique,
+		Helvetica-Oblique,
+		Symbol,
+		Times-Bold,
+		Times-BoldItalic,
+		Times-Italic,
+		Times-Roman,
+		PCTimes-Roman,
+		PCHelvetica,
+		Mincho-PC-Hiragana,
+		Mincho-PC-Katakana,
+		NotDefFont,
+		Ryumin-Light-H,
+		Ryumin-Light-V,
+		Ryumin-Light-EUC-H,
+		Ryumin-Light-EUC-V,
+		Ryumin-Light-SuppA-H,
+		Ryumin-Light-SuppA-V,
+		Ryumin-Light-SuppB-HV,
+		Ryumin-Light-RKSJ-H,
+		Ryumin-Light-RKSJ-V,
+		Ryumin-Light-RKSJ-UserGaiji,
+		Ryumin-Light-83pv-SuppA-H,
+		Ryumin-Light-83pv-SuppB-H,
+		Ryumin-Light-83pv-RKSJ-H,
+		Ryumin-Light-NWP-H,
+		Ryumin-Light-NWP-V,
+		Ryumin-Light-Ext-H,
+		Ryumin-Light-Ext-V,
+		Ryumin-Light-Ext-SuppA-H,
+		Ryumin-Light-Ext-SuppA-V,
+		Ryumin-Light-Ext-SuppB-HV,
+		Ryumin-Light-Ext-RKSJ-H,
+		Ryumin-Light-Ext-RKSJ-V,
+		Ryumin-Light-Add-H,
+		Ryumin-Light-Add-V,
+		Ryumin-Light-Add-SuppA-H,
+		Ryumin-Light-Add-SuppA-V,
+		Ryumin-Light-Add-SuppB-HV,
+		Ryumin-Light-Add-RKSJ-H,
+		Ryumin-Light-Add-RKSJ-V,
+		GothicBBB-Medium-H,
+		GothicBBB-Medium-V,
+		GothicBBB-Medium-EUC-H,
+		GothicBBB-Medium-EUC-V,
+		GothicBBB-Medium-SuppA-H,
+		GothicBBB-Medium-SuppA-V,
+		GothicBBB-Medium-SuppB-HV,
+		GothicBBB-Medium-RKSJ-H,
+		GothicBBB-Medium-RKSJ-V,
+		GothicBBB-Medium-RKSJ-UserGaiji,
+		GothicBBB-Medium-83pv-SuppA-H,
+		GothicBBB-Medium-83pv-SuppB-H,
+		GothicBBB-Medium-83pv-RKSJ-H,
+		GothicBBB-Medium-NWP-H,
+		GothicBBB-Medium-NWP-V,
+		GothicBBB-Medium-Ext-H,
+		GothicBBB-Medium-Ext-V,
+		GothicBBB-Medium-Ext-SuppA-H,
+		GothicBBB-Medium-Ext-SuppA-V,
+		GothicBBB-Medium-Ext-SuppB-HV,
+		GothicBBB-Medium-Ext-RKSJ-H,
+		GothicBBB-Medium-Ext-RKSJ-V,
+		GothicBBB-Medium-Add-H,
+		GothicBBB-Medium-Add-V,
+		GothicBBB-Medium-Add-SuppA-H,
+		GothicBBB-Medium-Add-SuppA-V,
+		GothicBBB-Medium-Add-SuppB-HV,
+		GothicBBB-Medium-Add-RKSJ-H,
+		GothicBBB-Medium-Add-RKSJ-V,
+		Helvetica-Narrow,
+		Helvetica-Narrow-Bold,
+		Helvetica-Narrow-BoldOblique,
+		Helvetica-Narrow-Oblique,
+		Palatino-Bold,
+		Palatino-BoldItalic,
+		Palatino-Italic,
+		Palatino-Roman,
+		ZapfChancery-MediumItalic,
+		ZapfDingbats,
+		Bookman-Demi,
+		Bookman-DemiItalic,
+		Bookman-Light,
+		Bookman-LightItalic,
+		NewCenturySchlbk-Bold,
+		NewCenturySchlbk-BoldItalic,
+		NewCenturySchlbk-Italic,
+		NewCenturySchlbk-Roman,
+		AvantGarde-Book,
+		AvantGarde-BookOblique,
+		AvantGarde-Demi,
+		AvantGarde-DemiOblique,
+	);
+);

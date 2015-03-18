@@ -1,0 +1,15 @@
+Native EtherTalk
+----------------
+
+*** Still to do as of Feb 14th 1991
+
+Test the supplied enet driver (../enet/* & senetp.c, easy, should just work).
+Make the DLI interface work under ULTRIX (dlip.c, harder, socket problem ??).
+
+Determine the need for locking of /etc/etalk.local during updates on nets
+that suffer frequent changes of default bridge.
+
+*** Already done:
+
+Make the native SUN NIT interface (snitp.c) work.
+

@@ -1,0 +1,638 @@
+cap60/applications/lwsrv/README
+
+Last update:
+Mon Aug 28 10:08:35 EST 1995
+
+LWSRV is a LaserWriter print spooler that runs on a UNIX workstation.
+
+In normal operation, LWSRV registers an NBP name (as specified by the -n
+command line argument) of NBP type 'LaserWriter' on the local AppleTalk
+Network.  It accepts print jobs from Macintosh workstations and submits
+them to the standard UNIX print queue (using lpr or lp) for printing.  
+
+A single LWSRV process may be used to advertise a number of LaserWriter
+spoolers.  LWSRV is also multi-threaded in that it accepts multiple
+incoming print jobs.
+
+This release of LWSRV builds as two versions, 'lwsrv' for use with
+LaserWriter drivers version 7.N and earlier, and 'lwsrv8' for use with
+LaserWriter drivers version 8.N and later that support level 3 DSC queries.
+In some future release, 'lwsrv8' will replace the current 'lwsrv' which
+is currently included for backward compatibility.
+
+For more information, see:
+
+	cap60/man/lwsrv.8
+	cap60/man/papif.8
+	cap60/doc/print.cookbook
+
+	http://www.cs.mu.OZ.AU/appletalk/atalk.html
+	
+	"Inside Appletalk, 2nd Edition", Sidhu/Andrews/Oppenheimer
+	  Chapter 14, "Print Spooling Architecture".
+
+Setting up
+------- --
+
+Before you can use LWSRV, you need to already have the ability to send
+UNIX print jobs to a Postcript printer using the UNIX lpr(1) or lp(1)
+print commands.  You can do this with a serial-line connected printer,
+or via the CAP 'papif' program to an AppleTalk connected LaserWriter
+(see cap60/doc/print.cookbook or if on a Solaris host, use the script
+cap60/applications/papif/add_at_printer).
+
+The LWSRV program is normally started from the 'start-cap-servers' file
+which is run at UNIX boot time by an 'rc' startup script.  An example
+file is provided in the CAP distribution as cap60/etc/start-cap-servers.
+
+
+lwsrv for LaserWriter 7.N and below
+----- --- ----------- --- --- -----
+
+To use the 'lwsrv' program, you need to provide it with at least four,
+usually five command-line arguments;
+
+	-n nameOfPrinter
+	-p unixPrintQueue
+	-a dictionaryDirectory
+	-f fontFile
+
+The "nameOfPrinter" is the name to be advertised in the Macintosh Chooser.
+It cannot be the same name as another LaserWriter or print spooler.
+
+The "unixPrintQueue" is the string you normally provide as the lpr -P
+option to send jobs to a Postscript printer.
+
+"dictionaryDirectory" is a directory where LWSRV can keep copies of any
+printer dictionaries (procsets) that it uploads.  This would normally be
+"/usr/local/lib/cap/procsets".
+
+"fontFile" is the name of a file that lists the fonts available for the
+printer.  This would normally be "/usr/local/lib/cap/LWPlusFonts" which
+you copy from cap60/applications/lwsrv/LWPlusFonts.
+
+When using 'lwsrv' with System 7, you should also specify the -N option
+which indicates to 'lwsrv' that it should not collect new Procsets.
+
+There are other possible command line options, including the -k option to
+prevent DDP checksums from breaking some printers, see cap60/man/lwsrv.8.
+
+
+lwsrv8 for LaserWriter 8.N
+------ --- ----------- ---
+
+This is the version of LWSRV that supports level 3 DSC queries as used
+by the Macintosh LaserWriter 8.N drivers.
+
+'lwsrv8' also supports use of a configuration file which can contain
+the normal command line options to LWSRV, answers for level 3 DSC
+queries and a pointer to a library database of templates that describe
+the features associated with each printer.
+
+To set up 'lwsrv8', copy the file 'DBfile' to /usr/local/lib/cap, then
+
+	cd /usr/local/lib/cap
+	lwsrvconfig -c DB DBfile
+	mkdir procsets
+
+This creates an ndbm(3) database of the printer descriptions available
+in DBfile.  If the printer you have is not included in DBfile, send
+the Postscript file 'query.ps' to your printer, transcribe the printed
+settings to DBFile and re-run 'lwsrvconfig'.  See the 'lwsrvconfig'
+description below.
+
+You then need to edit the file "lwsrv.conf" to add your printer NBP
+name, include an appropriate printer description and UNIX printer queue.
+
+The following is an example of a simple "lwsrv.conf" configuration file
+that contains an entry naming the library database, the 'lwsrv8' options
+and the specification for spooler name and name of the UNIX print queue.
+
+	Library = /usr/local/lib/cap/DB;
+
+	Options = (
+		DontCollect;
+		ProcsetDir /usr/local/lib/cap/procsets;
+		FontFile /usr/local/lib/cap/LW+Fonts;
+	);
+
+	"Technical Services Spool" = (
+		include "LaserWriter IIf";
+		printerqueue lw.tsa;
+	);
+
+This would be run as
+
+	lwsrv8 /usr/local/lib/cap/lwsrv.conf
+
+and is approximately equivalent to running 'lwsrv' as
+
+	lwsrv -N -a /usr/local/lib/cap/procsets
+		-f /usr/local/lib/cap/LW+Fonts
+		-n "Technical Services Spool"
+		-p lw.tsa
+
+The 'include "LaserWriter IIf"' entry includes information from the DB
+database that describes features associated with the printer, in this
+case a LaserWriter IIf. The DBfile entry for a IIf is
+
+	"LaserWriter IIf" = (
+		include "LaserWriter Plus";
+		FeatureQuery *ColorDevice Unknown;
+		FeatureQuery *LanguageLevel '"2"';
+		FeatureQuery *PSVersion '"(2010.113) 1"';
+		FeatureQuery *FreeVM '"2381689"';
+		FeatureQuery *TTRasterizer Type42;
+		FeatureQuery *Product '"(LaserWriter IIf)"';
+		Query ADORamSize '"8388608"';
+	);
+
+Note that a base set of entries, including a font list, is included
+from the "LaserWriter Plus" DBfile description.
+
+There are some new compile time options for 'lwsrv8'.  One new option is
+-DJOBNOPAREN (append to CFLAGS in makefile).  This option replaces any
+parenthesis () in the job string with square brackets [].  The only reason
+for this if you have a spooler (like that for the DEC PrintServer 20)
+that doesn't handle parenthesis very intelligently when printing the
+job string on the banner page.
+
+Another new compile time option is -DTIMESTAMP (append to LWFLAGS in
+makefile).  This puts a time stamp on log messages.
+
+
+lwsrvconfig
+-----------
+
+The program 'lwsrvconfig' has two main uses.  First, it is used to create
+databases of templates, using the ndbm routines (if you don't have ndbm,
+but do have the older dbm routines, use -DNONDBM).
+
+	% lwsrvconfig -c DB DBfile
+
+will read the file "DBfile" and then create a set of dbm database DB.dat,
+DB.dir and DB.pag (where the "DB" root in the name is the argument after
+the -c).
+
+Secondly, 'lwsrvconfig' can be used to scan configuration files for syntax
+errors.  'lwsrvconfig' reads a configuration file and parses it the same
+way as 'lwsrv8' does and reports any errors it finds.  It outputs the
+printer options to standard output.  The -v option will, in addition,
+output all templates used.
+
+	% lwsrvconfig lwsrv.conf
+	% lwsrvconfig -v lwsrv.conf
+
+
+Terminology
+-----------
+
+Options are divided into two types.  Global options pertain to all printers
+spooled by a lwsrv process.  Per-printer options usually pertain to each
+particular printer spooled by a lwsrv process. Refer to the lwsrv.8 manual
+entry for command line option details.
+
+      Global	 Option
+      Options	  Name
+
+	-C	LPRCommand
+	-S	Singlefork
+	-X	AUFSSecurity
+	-d	Debug
+	-l	Logfile
+	-v	Verbose
+
+    Per-Printer  Option
+      Options	  Name
+
+	-A	DSC
+	-L	LPRArgument
+	-N	NoCollect
+	-P	PassThru
+	-R	NeXTResolution
+	-T	TranScriptOption
+	-a	ProcsetDir
+	-e	AllowEEXEC
+	-f	FontFile
+	-h	SuppressBanner
+	-k	NoChecksum
+	-q	QueryFile
+	-r	KeepSpoolFile
+	-t	TraceFile
+
+
+Each 'lwsrv8' spooler is specified by a spooler name and a lpr printer name.
+These correspond with the -n and -p options.  Global options are those that
+come before the first -n and -p options.  The per-printer options come
+after the -n and -p options, but before the next -n and -p set.
+
+A per-printer option specified before the first -n and -p options becomes
+global and so applies to all printers, unless overridden by on a per-printer
+basis.  A global option specified after the first -n and -p options still
+has global scope.  (Note: there is currently no way to turn off the effect
+of a per-printer option used globally on a per-printer basis.)
+
+
+Examples
+--------
+
+	% lwsrv8 -S -n "My Spooler" -p lp2 -a myprocsets -f myfonts \
+		-n "Another Spooler" -p lp4 -a procset3 -f morefonts
+
+The two spoolers have their own set of procset directories and font files.
+The -S specifies singleforking for both spoolers.
+
+	% lwsrv8 -a procsets -f fonts -n "Jane's Spooler" -p janelp \
+		-n "John's Spooler" -p johnlp -f johnfonts -l logfile -T crtolf
+
+The two spoolers share the same procset directory and would have shared the
+same font file if "John's Spooler" had not overridden the font file using
+"johnfonts".  "John's Spooler" also specifies the -T crtolf option, whereas
+"Jane's Spooler" does not.  Even though -l logfile is specified for
+"John's Spooler", since it is a global option, it still applies to both
+spoolers.
+
+
+Using a Configuration File
+----- - ------------- ----
+
+You can specify a configuration file which lwsrv uses for all its options:
+
+	% lwsrv lwsrv.conf [db]
+
+where db is an optional library of templates (created by lwsrvconfig).
+
+In the configuration file, statements have the following syntax:
+
+	Name = Value;
+
+Statements with multiple values are included in parenthesis or curly brackets:
+
+	Name = (
+		Value1;
+		Value2 argument;
+		 (etc...)
+	);
+
+(The parser is free-form; indentation is used for readability only.)
+
+Names, values and arguments can be quoted if they contain whitespace or other
+special characters.  Either single or double quotes can be used, especially
+to quote the other kind:
+
+	Value '"Quoted Argument"';
+
+Two single or double quotes in a row means a single occurrence of that
+character:
+
+	Value John''s;
+
+The configuration file is composed of three parts, of which only the last
+part is required.  The first (optional) part is the Library section, specified
+with the "Library" keyword:
+
+	Library = DB;
+
+If specified, the Library option specifies a library of templates (this is
+overridden by the command line argument).  In this example, DB is taken to
+be the root of the ndbm files, DB.dat, DB.dir and DB.pag.
+
+The second (option) part are the global options, specified with the "Options"
+keyword:
+
+	Options = (
+		-S;
+		LogFile logfile;
+	);
+
+Options can be either the commandline option (like -S) or the option name
+(like SingleFork, matched case-insensitively).
+
+The last part of the configuration file includes templates and printer
+definitions.  Here is the above examples in configuration file format:
+
+	Options = -S;
+
+	"My Spooler" = (
+		-p lp2;
+		-a myprocsets;
+		-f myfonts;
+	);
+
+	"Another Spooler" = (
+		-p lp4;
+		-a procset3;
+		-f morefonts;
+	);
+
+Using option names for the second example:
+
+	Options = (
+		ProcsetDir procsets;
+		FontFile fonts;
+	);
+	
+	"Jane's Spooler" = PrinterQueue janelp;
+
+	"John's Spooler"  = (
+		PrinterQueue johnlp;
+		FontFile johnfonts;
+		LogFile logfile;
+		TranScriptOption crtolf;
+	);
+
+These examples don't use templates, nor do they include the ability to
+respond to LaserWriter 8.0 queries.  Here is an example of both the use
+of templates and queries:
+
+	Options = (
+		ProcsetDir procsets;
+		LogFile logfile;
+	);
+
+	"LaserWriter Plus" = (
+		Query ADOIsBinaryOK? True;
+		FeatureQuery *ColorDevice False;
+		FeatureQuery *FaxSupport None;
+		FeatureQuery *LanguageLevel '"1"';
+		FeatureQuery *TTRasterizer None;
+		Query ADOSpooler spooler;
+		FeatureQuery *?Resolution 300dpi;
+		FeatureQuery *PSVersion '"(42.2) 3"';
+		FeatureQuery *FreeVM '"172414"';
+		FeatureQuery *Product '"(LaserWriter Plus)"';
+		font (
+			AvantGarde-Book,
+			AvantGarde-BookOblique,
+			AvantGarde-Demi,
+			AvantGarde-DemiOblique,
+			Bookman-Demi,
+			Bookman-DemiItalic,
+			Bookman-Light,
+			Bookman-LightItalic,
+			Courier,
+			Courier-Bold,
+			Courier-BoldOblique,
+			Courier-Oblique,
+			Helvetica,
+			Helvetica-Bold,
+			Helvetica-BoldOblique,
+			Helvetica-Narrow,
+			Helvetica-Narrow-Bold,
+			Helvetica-Narrow-BoldOblique,
+			Helvetica-Narrow-Oblique,
+			Helvetica-Oblique,
+			NewCenturySchlbk-Bold,
+			NewCenturySchlbk-BoldItalic,
+			NewCenturySchlbk-Italic,
+			NewCenturySchlbk-Roman,
+			Palatino-Bold,
+			Palatino-BoldItalic,
+			Palatino-Italic,
+			Palatino-Roman,
+			Symbol,
+			Times-Bold,
+			Times-BoldItalic,
+			Times-Italic,
+			Times-Roman,
+			ZapfChancery-MediumItalic,
+			ZapfDingbats,
+		);
+	);
+
+	"My Spooler" = (
+		include "LaserWriter Plus";
+		printerqueue lp1;
+	);
+
+"LaserWriter Plus" is a template, because it does not include a printerqueue
+(-p) option, and so does not correspond to a real printer.  Templates can
+be included in the definition of a real printer (or another template) by
+the use of the include keyword.  Templates can be nested to any depth, and
+can even be forward-referenced in the file (the scan is two pass in nature,
+so forward references are taken care of).
+
+	Note that the "font" resource definition is used instead of
+	the FontFile option.
+
+An important aspect of templates is that when a printer (or another template)
+definition includes a template, the value structures in memory are actually
+shared, thus saving on memory usage.  When a value is overridden, a new
+value structure is created in memory.
+
+Note that printers can also be included, like any other template:
+
+	"My Trace Spooler" = (
+		include "My Spooler";
+		TraceFile TRACE;
+	);
+
+The library file contains printer template definitions, which can be used
+by a configuration file:
+
+	Library = DB;
+
+	Options = (
+		LogFile logfile;
+		ProcsetDir procsets;
+	);
+
+	"My Printer" = (
+		include "QMS-PS 410";
+		printerqueue qmslp;
+	);
+
+	"Another Printer" = (
+		include "LaserWriter IIg";
+		printerqueue lp5;
+		FeatureQuery *FreeVM '"3579932"';
+		Query ADORamSize '"5242880"';
+	);
+
+Note that you can override queries, as in the above example, where "Another
+Printer" has only 5 MB of memory instead of the 8 MB specified in the database.
+
+
+Creating Templates
+-------- ---------
+
+There is a file, "query.ps", that contains PostScript code that will print
+the answers to the LaserWriter 8.0 queries.  Just send the file to the printer.
+Or you can edit the query.ps file and remove the beginning section of the
+file, so that the responses go to the printer's standard output and then
+(usually) into the log file.  This is especially useful if you have lots
+of fonts.
+
+Edit your database file (DBfile in the above examples, and as shipped with
+this software), and add the next template.  Then run lwsrvconfig to rebuild
+the database:
+
+	% lwsrvconfig -c DB DBfile
+
+
+Future Possibilities
+------ -------------
+
+lwsrvconfig could be made to build its database from a set of files in a
+directory rather than a single file.  This could make maintaining the database
+a bit easier.
+
+lwsrvconfig should have a option to dump the contents of the database into
+a text format that can be used to recreate the database.
+
+
+Summary of Changes from the Original lwsrv
+------- -- ------- ---- --- -------- -----
+
+Many existing routines, as well as all the new routines rely on a set of
+functions provided in list.c.  The List structure is a variable length list
+of arbitrary objects.  Normally, the order of objects in a List is significant,
+or it can be sorted and a binary search can be used to search through the List.
+The KVTree structure is an AVL (self-balancing, binary) tree of key-value pairs.
+This is used for binary searching and replacement of key-values.
+
+The printer_instance structure has been moved to query.h, and has been expanded
+to allow many more options to be specified on a per-printer basis.  Now only
+the -X, -C, -S, -d, -v and -l options apply to all printers, while -T, -e, -N,
+-r, -h, -k, -a, -f, -t, -A, -L, -P and -R are per-printer flags.  The -n and -p
+flags are used to specify a printer.  When the other per-printer flags are
+specified before the first -n or -p, they are taken as defaults values for all
+subsequent printers.  The per-printer options used after the -n and -p options
+will override the default options.
+
+lwsrv8 can be called without options as in:
+
+	lwsrv8 lwsrv.config [database]
+
+where "lwsrv.config" is the name of a text file that contains configuration
+information.  This not only includes the normal options to lwsrv, but also
+the answers to PostScript queries, as used in LaserWriter 8.0.  For example,
+the line:
+
+	FeatureQuery *ColorDevice False;
+
+in "lwsrv.config" for a particular printer, causes the PostScript query:
+
+	%%?BeginFeatureQuery: *ColorDevice
+		(PostScript code...)
+	%%?EndFeatureQuery: Unknown
+
+to be answered with "False".  Resources (such as fonts, patterns, but not
+procsets, since we still use the original lwsrv way of doing this, namely
+to scan a specified directory for procset resources) can also be specified:
+
+	font = (
+		Times-Roman,
+		Times-Italics,
+		...
+	);
+
+A template is a set of options and/or query responses, and may include other
+templates and override values, but can not specify a Unix printer name (-p).
+
+	"LaserWriter Plus" = (
+		include LaserWriter;
+		FeatureQuery *Product '"LaserWriter Plus"';
+		...
+	);
+
+A printer is like a template, but does include the Unix printer name.
+
+	"My Spooler" = (
+		include "LaserWriter IIg";
+		PrinterQueue lp;
+		...
+	);
+
+Options can be entered using the original lwsrv option (like -p) or with a
+case-insensitive name (like PrinterQueue).
+
+The option second argument "database" is a ndbm (or dbm) database of templates
+that will be used to satisfy unknown template references in the "config" file.
+The database can also be specified in the configuration file itself, as the
+first line:
+
+	Database db;
+
+The reading of the configuration file and the building of the templates and
+printers is handled by parse.c, parsey.y (yacc) and parsel.l (lex).  There is
+also an include file parse.h.
+
+The program lwsrvconfig is designed to do several things.  First, it reads a
+configuration file the same way that lwsrv would, and can be used to detect
+syntax errors and other problems (syntax error checking is primitive, as it
+aborts on the first error).  lwsrvconfig can also be used to create the ndbm
+(or dbm) database of templates.
+
+Set mode 0600 on normal temp file and 0644 on trace file.
+
+Variable "tracing" set to true if we are doing tracing.
+
+Tracing now includes responses sent back to client.  These lines begin with
+"--lwsrv=>".
+
+scantoken() has been totally re-written, mainly to support binary data that
+can be sent by LaserWriter 8.0, but also to make it more modular and efficient.
+In addition, tokens are normally passed through (before, some were and some
+were not passed through) so that better post-processing of the document
+structure can be done.
+
+tokval() was rewritten to do binary searching of the toktbl[] (it was a linear
+search before).
+
+The toktbl[] has been changed to include a variable called changeecho, which
+tells scantoken() to either leave echoing the same (ECHO_UNCHANGED), turn
+off echoing before dumping out the current token (ECHO_OFF) or turn on echoing
+but after trying to dump out the current token (ECHO_ON).
+
+A new flag -q specifies a file in which unknown queries are written.  This can
+show you when you haven't specified all the necessary queries for a printer,
+should allow more easy updates to the query responses when future LaserWriter
+driver come out.
+
+NewStatus() now works even multi-forked.  Status is written to a shared file
+named .lwsrvstatusXXXXX, where XXXXX is the process id of the original server.
+abpaps.c has been modified to provide a callback function when a status reply
+or an open reply occur.  The callback function for the status calls checks to
+see if the requesting node is one with an open connection.  If so, the status
+is read from the shared file and returned.  For all other nodes, the status
+is either "idle" if there are no children running for that spooler, or
+"processing job(s)" if it is.  scantoken() was also changed so that NewStatus()
+is called at the beginning of each page.
+
+The open reply callback function is used for LWSRV_AUFS_SECURITY.  Just as the
+connection is to be opened, the callback does the usual LWSRV_AUFS_SECURITY
+checks and returns an error message if it fails, or sets a boolean in the
+aufssecurity array.  The array is checked in the main loop, and the connection
+closed if the appropriate flag is not set.  (This has not been tested.)
+
+childjob() was modified to set requname if LWSRV_AUFS_SECURITY is not set
+and LWSRV_LPR_LOG is set (otherwise, requname is never set and the log
+message contains <unknown> as the user).
+
+unparen() is a routine that removes the leading left and trailing right
+parenthesis from a string.  This is used in getjob() to remove the parenthesis
+in the %%For: and %%Title: fields, which LaserWriter 8.0 now adds.  Without
+this, RUN_AS_USER fails, since there isn't a user name with parenthesis.
+
+If you define JOBNOPAREN, all (remaining) parenthesis are converted to
+square brackets.  This is useful for spooler that print the jobname on
+the banner page, but don't handle parenthesis well (the DEC PrintServer 20
+has problems with this, so changing to square brackets fixes the problem).
+
+You can specify a printer specified denied access message (LWSRV_AUFS_SECURITY)
+by specifying a "DeniedMessage" line in the configuration file:
+
+	printer = (
+		AUFSSecurity /tmp/xxx;
+		DeniedMessage "No can do from %s";
+		...
+	);
+
+This string is passed through fprintf, with %s being replaced by the hostname.
+(Note: you will need to escape percent signs by doubling %%.)
+
+Now, when a child is forked, all other PAP connections are closed.  Before,
+one child would wait until another child was done, even if the children
+were for different printers.  Now the children act independently, as they
+should.

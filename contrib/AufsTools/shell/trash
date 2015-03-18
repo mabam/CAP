@@ -1,0 +1,4 @@
+#
+foreach i ($argv)
+   rm -f $i .finderinfo/$i .resource/$i
+end

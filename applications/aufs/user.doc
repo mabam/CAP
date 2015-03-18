@@ -1,0 +1,163 @@
+Brief introduction to the AppleShare Unix File Server (AUFS)
+
+Introduction
+
+This document explains what you must do before you attempt to use Aufs
+from a mac.  In addition, it explains some of the design decisions
+that will affect you.
+
+Setup
+
+This describes the initial setup.
+
+Create some subdirectory, let's assume it is "unix" in your top-level
+directory.  This will be the repository for your MacIntosh files.
+Assuming you are connected to your top level directory, type:
+	"mkdir unix"
+
+You must also create two subdirectories in this directory called
+.finderinfo and .resource.  e.g. type:
+	"mkdir unix/.finderinfo"
+	"mkdir unix/.resource"
+
+AppleShare has a concept of something called volumes.  Under the
+MacIntosh AppleShare, each volume would be a different disk drive.
+Under aufs, you are allowed to set various directories as "volumes".
+Thus, you must create a file called "afpvols" or ".afpvols" (Aufs will
+take "afpvols" over ".afpvols" first) in your top level (home) directory that
+tells aufs what MacIntosh volumes you have.  (Yes, you may have more
+than one volume).  The format of lines in this file is:
+	<path>:<name to show>[:<optional password>] 
+ path is the specification of the directory that will store the unix
+files.  In the above example, it would be "~/unix".  <name to show> is
+the name the AppleShare client will show when it asks you which volume
+to mount.  The <optional password>, if set, is used when you attempt
+to mount the volume.  You probably don't want it - it is included for
+system volumes.
+
+We should note that ~/unix should be considered a "MacIntosh" volume
+and you should be very careful about changes you make to it with unix
+utilities.  (If you're not sure, do a "Get Info" from the Finder on
+the Folder/Volume) In generally, it's better to move things around,
+delete things, etc. using the Mac AppleShare client.
+
+
+Structure
+
+o How MacIntosh files are stored
+
+MacIntosh Operating System files have two parts known as the data and
+resource "fork" (these forks have nothing to do with processes, etc).
+Suffice it to say, that data is usually stored in the data fork and
+programs and associated resources in the resources fork.  In addition,
+there is also an "information" fork which keeps information like the
+file creator, file type, and location on the desktop, etc.
+
+However, Unix doesn't expect a file to be of more than one part.  So,
+to get around this, we store a MacIntosh file in a particular
+directory as follows.  Each directory that stores MacIntosh files will
+have a ".finderinfo" and ".resource" subdirectory created.  The file
+information and resource forks of a file are stored in the respective
+subdirectories while the data fork is stored in the directory.  For
+example, given the MacIntosh file "MacWrite" stored in the directory
+"macfiles", the listing of the directory would be as follows:
+	mac/MacWrite
+	mac/.resource/MacWrite
+	mac/.finderinfo/MacWrite
+
+Normally, you will find it more difficult to use or see the resource
+or finder information files; however, since the data in those files are
+really very specific to the MacIntosh, this shouldn't pose a great
+problem.
+
+There is one more peculiar thing that happens.  Directories need to
+have "finder information" stored.  Well, a directory is treated almost
+the same as a file - we simply store the finder information in the
+.finderinfo subdirectory of the containing directory.  No resource
+file/fork is created though.  For example, suppose we create the
+directory "paints" in the directory "mac", then the structure would
+look like:
+	mac/paints		<- a directory
+	mac/.finderinfo/paints	<- finder infomation file
+
+To obfusctiate the issue even more, we should note that the directory
+paints also has ".finderinfo" and ".resource" forks.
+
+
+o How Unix files and directories are treated
+
+Unix directories are directories without a .finderinfo or .resource
+subdirectory.  The main things to know here are:
+  o you cannot copy a macintosh file with a resource fork to a
+    directory without a .resource subdirectory.
+  o "New Folder" will create a new directory.  It will have a
+    .finderinfo or .resource directory if the superior directory does.
+
+Unix-only files are essentially files with only a data fork.
+Following are some notes about them.
+ - Unix files used to come up locked, THEY NO LONGER DO.
+ - Unix files come up with creator "unix" and type "TEXT" by default.
+ - Unix files use line feed (lf) as a line terminator while the
+   Macintosh Operating System uses carriage returns (cr) - this can
+   cause problems.  To work around this, if a file has creator "unix"
+   and type "TEXT", then lf's are mapped to cr's on reads and vice
+   versa on writes.  The way to stop this is to set the file's creator
+   or type to something else using DiskTop, ResEdit or whatever (note,
+   if it is a file in a directory without a .finderinfo directory,
+   then the modified file creator/type may reset to unix/TEXT at any
+   time).
+ - In the same vein, anytime "line at a time" reads with "cr"
+   (mac line terminator) as the end of line terminator are done, then
+   both "cr" and "lf" are used as end of line terminators regardless
+   of the file creator and type.   An example of a program that does
+   this is BinHex.
+ - Copying a Unix file to or rewriting a Unix file in a directory
+   with .resource and .finderinfo subdirectories will cause the
+   resultant  file to be a MacIntosh file. 
+ - The Finder really needs to be able to store the finderinfo to work
+   efficiently.  If you have a unix directory that you plan to
+   manipulate a lot, then you can speed up things a lot by creating a
+   .finderinfo subdirectory - however, remember this will cause Aufs
+   to create a .finderinfo file for each file in the directory.
+
+o Volumes
+
+As we noted before, volumes on a MacIntosh AppleShare server
+correspond to disk drives and on under Aufs they correspond to
+directories listed in the afpvols file.
+
+If the top level directory of an Aufs volume has a .finderinfo
+subdirectory, Aufs assumes that the volume will primarily be used for
+Macintosh files.  In this case, it will create two files in that
+directory called: .ADeskTop and .IDeskTop.  The two files correspond
+to the "DeskTop" file on the MacIntosh and are seperated for efficency
+reasons.
+
+The .IDeskTop file maintains a database of the icons.  The .ADeskTop
+file records the file creator to application mappings - basically, it
+tells what application to launch when you double click on a document
+with that file creator.  Like the Desktop on the Macintosh, neither of
+these files shrink.  Unlike the Desktop on the Macintosh, if you want
+to rebuild the desktop with only entries on the volume, you must first
+remove these files.
+
+You can have volumes in your afpvols file that overlap.  You should be
+careful about operation between the two volumes when mounted at the
+same time.
+
+o Other notes
+
+Unix distinguishes case when opening and getting information about
+files.  The MacIntosh Operating System doesn't.  This will cause
+problems with some applications (such as MPW).
+
+The specification for the Appletalk Filing Protocol used by AppleShare
+and AUFS and the specification for the Hierachial File System used by
+MacIntoshes state that directory ids are fixed across the lifetime of
+a volume.  In addition, directory ids are not reused.  Unfortunately,
+aufs breaks this rule.  Directory ids are unique only for a particular
+session.  Some programs and packages store away directory ids and you
+may see some unexpected things happening (but it shoudn't be anything
+bad).
+
+

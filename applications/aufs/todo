@@ -1,0 +1,76 @@
+
+Tue Mar 31 19:33:34 1987
+
+High:
+
+
+Medium:
+Setting directory owner is a bad idea under unix?  (Allow under SysV)
+do something to the DT if the magic number is wrong
+
+Low:
+make xbin do the correct file names and finder info format.
+Add OpenDir, CloseDir
+Make conflicting aufs processes handle conflicts with .finderinfo,
+  desktop for systems without flock, lockf 
+
+Clean:
+
+run lint on the whole mess and get rid of any unused routines
+cleanup interface
+system admin manual page, user manual page
+modules needing init should be called from InitServer(), name Init_xxx();
+
+Bugs:
+
+Folders gets locked/in use and can't get rid of it.
+
+Done 
+
+4/1/87 Bill - move afperr() from aufs into (new) afperr.c do char *afperr() 
+4/1/87 Bill - error codes prefixed aeX to prevent conflict with other codes.
+4/1/87 Bill - clean up command line args/help
+4/2/87 Bill - Icon database resides in each volumes root directory
+4/2/87 Bill - Make tilde available in path name on volumes in afpvols file.
+4/2/87 Bill - Volume passwords.
+4/2/87 Bill - Clean up os interface some.
+4/2/87 Bill - don't show desktop files...
+4/2/87 Bill - APPL database (afpdt) mostly working
+4/3/87 Bill - default finder information should have TEXT...
+4/3/87 Bill - if no finderinfo, item is locked, comment is "Unix created.."
+4/3/87 Bill - Comment strings (afpdt).
+4/3/87 Bill - write returns bad offset on return (cck fix)
+4/3/87 Bill - abmisc2 should be moved into other ab modules (cck did most) 
+4/4/87 Bill - fpenumerate should use the max replysize instead of current hack
+4/4/87 Bill - fpenumerate does not count an item when request bitmap is 0.
+4/4/87 Bill - OSFileDirInfo doesn't consider bitmap, does unnecessary work
+4/4/87 Bill - SetFileParms, SetDirParms, SetFileDirParms
+4/4/87 Bill - SetDirParms for access mode
+4/4/87 Bill - move/rename for dirs needs to modify IDir structure better!
+4/4/87 Bill - volmodified should be set in more places.
+4/4/87 Bill - APPL information should be written to disk.
+4/4/87 Bill - some routines are doing packing by hand, they should be modified.
+4/4/87 Bill - packing routines searches a table for AFPCmd... chuck it
+4/6/87 B&C  - name mapping... disallow characters which confuse unix.
+4/6/87 CCK  - add spawning on login.  Debug server prevents this.
+4/16/87 Bill - implement FPCopyFile
+4/16/87 Bill - use a master afpvols files; switch is -V
+4/16/87 CCK - log login/logout to a log file.
+4/16/87 Bill - make very quite if debugging turned off.
+4/16/87 Bill - allow newlinechar in read
+4/16/87 Bill - see if most OS error codes are translated ok.
+4/16/87 Bill - using the path name for volume problems; use component name 
+4/16/87 Bill - move table out of afpcmd.c
+4/16/87 Bill - build a combined common header file... keep others seperate
+6/24/87 cck - Add SetForkParms and allow setfiledirparms to set fork lengths.
+		bunch of other changes too.
+6/24/87 cck - Setting directory group forks off the chgrp program if neces.
+6/26/87 cck - allow guest login, cmd line option to set guest id?
+7/22/87 cck - use citi mechanism for converting files - change default
+		file type to TEXT, creator "unix".  Files like this will
+		have lf mapped to cr on read and vice versa on write
+8/01/87 cck - time conversion is off because mac does not use AFP
+		time - only in Appleshare verison 1.0
+ 
+1/88 - Fix problems with byte order in .ADeskTop, .IDeskTop and
+.finderinfo files.

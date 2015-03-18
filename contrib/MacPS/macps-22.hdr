@@ -1,0 +1,44 @@
+30-Oct-89 19:09:02-GMT,38908;000000000001
+Return-Path: <edmoy@violet.berkeley.edu>
+Received: from violet.berkeley.edu by sumex-aim.stanford.edu (4.0/inc-1.0)
+	id AA19660; Mon, 30 Oct 89 11:09:02 PST
+Received: by violet.berkeley.edu (5.61/1.31)
+	id AA10825; Mon, 30 Oct 89 11:07:00 PST
+Date: Mon, 30 Oct 89 11:07:00 PST
+From: edmoy@violet.berkeley.edu
+Message-Id: <8910301907.AA10825@violet.berkeley.edu>
+To: info-mac@sumex-aim.stanford.edu
+Subject: New version of macps/prepfix (2.2)
+
+[Note to info-mac moderator: This version replaces the current version
+in the info-mac/unix directory.  Thanks.  Ed]
+
+I've just posted the latest version of macps & prepfix (2.2) to
+comp.sources.unix and comp.sources.mac and it should soon be available
+by anonymous ftp from sumex-aim.stanford.edu, in the info-mac/unix
+directory.  Here is a brief description:
+
+Macps is a Unix program that takes an uploaded PostScript file created
+on a Macintosh (by typing Command-F at the LaserWriter dialog box) and
+includes an appropriately modified LaserPrep file so that the result
+can be sent to a PostScript printer from Unix.  Since the Apple
+LaserPrep files are copyrighted, I've included a program, prepfix, that
+reads version 4.0 and up LaserPrep files, and edits them so that they
+are compatible with macps, and are even electronically mailable.
+
+CHANGES IN VERSION 2.2
+
+Version 2.2 of macps/prepfix adds support of LaserWriter 6.0, and contains
+some minor bug fixes.  Printing under NeXT 1.0 to the NeXT laser printer
+works well for LaserWriter 4.0 - 5.2 (except for the inherent problems
+of printing patterns at 400 dpi), but under LaserWriter 6.0, some things
+just don't print, and I don't know why (the exact same file prints fine
+on a LaserWriter).
+
+Edward Moy				Principal Programmer - Macintosh & Unix
+Workstation Support Services		Workstation Software Support Group
+University of California
+Berkeley, CA  94720
+
+edmoy@violet.Berkeley.EDU
+ucbvax!violet!edmoy

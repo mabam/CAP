@@ -1,0 +1,40 @@
+.\" troff -man
+.TH MACWHO 1L Mac/UNIX_Messages CAP
+.SH NAME
+macwho \- list macUsers for a network of Macintoshes.
+.SH SYNOPSIS
+.BI macwho
+[zone ...]
+.SH DESCRIPTION
+.BI macwho
+provides the equivalent of
+.BI who(1)
+for a network of Macintoshes. Usage is the same as
+for the
+.BI who(1)
+command, except that there are no flags.
+.PP
+Output from
+.BI macwho(1l)
+gives a line for each user on the AppleTalk network (who has the "Messages"
+package installed on a Macintosh, or who is running macuser(1l) under UNIX).
+.SH FILES
+None.
+.SH SEE ALSO
+CAP (Columbia AppleTalk Package)
+.br
+macuser(1l) \- Register a Unix user on the AppleTalk network
+.br
+macwho(1l) \- list macUsers, see also who(1)
+.br
+macwall(1l) \- send stdin message to all macUsers, see also wall(1)
+.br
+macwrite(1l) \- send stdin message to macUser, see also write(1)
+.br
+macto(1l) \- send argument list message to macUser, see also to(1)
+.br
+macmail(1l) \- notify macUser of UNIX mail arrival, see also biff(1)
+.SH DIAGNOSTICS
+None.
+.SH AUTHOR
+djh\@munnari.OZ.AU, May 1990. Updates via FTP from munnari.OZ.AU

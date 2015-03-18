@@ -1,0 +1,38 @@
+#!/bin/sh
+# Simple script to generate makefiles from the templates
+#  -f specifies a different setup file
+#  -o specifies a different output file
+appdirs="applications applications/aufs applications/papif applications/lwsrv"
+supportdirs="support/uab support/ethertalk support/capd"
+libdirs="lib lib/afp lib/afpc lib/cap"
+dirs="netat contrib samples extras etc ${libdirs} ${appdirs} ${supportdirs}"
+m4setup=`pwd`/m4.setup
+m4features=`pwd`/m4.features
+output=makefile
+while test $# != 0
+do case "$1" in
+	-f)
+		 shift
+		 m4setup=`pwd`/$1
+		 echo "Using $1 to configure makefiles"
+	;;
+	-o)
+		shift
+		output=$1
+	;;
+	*)
+		break
+	;;
+	esac
+	shift
+done
+if [ -n "$*" ]; then
+  dirs=$*
+fi
+for i in ${dirs}
+do
+	echo Creating ${output} for $i
+	(cd $i;	/bin/rm -f ${output}; \
+		cat ${m4features} ${m4setup} Makefile.m4 | m4 | \
+		sed -e "1,/##########MARKER##########/d" > ${output})
+done

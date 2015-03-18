@@ -1,0 +1,24 @@
+Public Domain Aufs Tools Package
+================================
+
+Nigel Perry, Dec 90.
+
+This package contains programs for use by users of the CAP aufs system.
+Programs are provided to convert downloads direct into aufs files, handle
+StuffIt archives and manage aufs files. Most programs are modified versions
+of exisiting public domain utilites. To build just run make:
+
+	make
+		builds binaries in their own directories
+	make install
+		builds binaries & moves them to $(BIN), default
+		/usr/local/cap. Also copies shell scripts to $(BIN).
+	make format
+		builds formatted versions of all the manual pages
+		in the directory formatted.
+	make clean
+		cleans up .o files etc.
+	make reallyclean
+		as clean + wipes aufslib & formatted
+
+Enjoy.

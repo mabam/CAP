@@ -1,0 +1,86 @@
+Herewith 10 easy steps to installing CAP with UAR:
+
+1. Get the UAR package (mac/uar.tar.Z) via anonymous FTP from munnari.OZ.AU
+and place it in a local directory 'uar'.  'cd uar', un-compress and un-tar
+the package with 'compress -d uar.tar.Z' and 'tar -xvf uar.tar'
+
+2. Check the README to ensure that your host is supported, currently UAR
+supports Phase 1 and Phase 2 EtherTalk networks connected to SUN, DEC ULTRIX,
+SGI IRIX, Sony NEWS 4.2, HP-UX and IBM RS6000 AIX workstations, and Phase 1
+only on Sony NEWS pre-4.2 workstations.
+
+3. Edit the 'Makefile' to add the necessary info to CFLAGS= and LIBS=
+The requirements are listed per machine type (only NEWS, AIX & Solaris 2.N).
+
+4. Compile the program by typing 'make'.  If compilation procedes without
+error, type 'make install'. This step copies the binary to /usr/local/cap/uar
+
+5. Decide on whether or not you are going to run UAR as a "seed router".
+That is, if UAR is to be configured with details of your local AppleTalk
+network or is to determine information empirically from the network.  For
+UAR to function as a "seed router", you must create a uar.conf file that
+contains network number(s) and zone name(s) for each of the participating
+ethernet interfaces on your UAR host (see the sample uar.conf provided).
+The information in uar.conf *must* be identical to the configuration in
+any other AppleTalk routers on the local networks, this is not optional!
+Normally your campus/institution network manager is the best source of
+such information.
+
+6. If you are absolutely certain that there are no other local AppleTalk
+routers then you may choose numbers for the "network", "networklo" and
+"networkhi" entries.  A "node" entry is optional.  Network numbers are
+16-bit quantities and can range from 1 to 65534 (the values 65280 to
+65534 are reserved as the "startup range" on Phase 2 networks, don't
+assign a network number in this range).  These 16-bit numbers can also
+be represented as two decimal numbers separated by a dot.  In this
+notation, 56284 is represented as 219.220 (ie: 219 x 256 + 220). The
+node number is an 8-bit number, the valid range is 1 - 254 on Phase 1
+AppleTalk networks and 1 - 253 on Phase 2 AppleTalk networks (assume
+Phase 2 for recent Macintoshes unless you know otherwise).  Node numbers
+specified for UAR should be towards the high end of the range, ie: 253.
+You must also choose a zone name or list of zone names for your network,
+in the latter case specify one of them as the "default" zone name.  The
+interface names are the device names for your ethernet interfaces and
+can be listed using the command 'netstat -i'.  Under AIX, use "ent0",
+"ent1" rather than the listed "en0", "en1".
+
+7. Ensure that your CAP distribution is at least at patch level 144.
+Run the Configure script and answer 'y' or 'yes' to the question
+"Do you wish to use UAR (Unix AppleTalk Router) (default no) ?" and 'y'
+or 'n' as necessary to "Do you want Phase 2 compatibility (no) ? "
+Run 'gen.makes', 'make include' and 'make programs'.  See the CAP
+documentation for more details.
+
+8. To use UAR with CAP you must specify an interface for CAP to be
+"attached" to.  With a uar.conf file, this is achieved with a "cap on"
+entry, all other interfaces should have "cap off".  If no uar.conf file
+exists then run UAR with a -C option.  This attaches CAP to the first
+interface name listed in the UAR arguments.
+
+9. Run UAR.  For example, on a single interface machine where UAR is used
+only to support CAP (and not in it's usual function as an AppleTalk Router)
+you would use
+
+	uar -C le0
+
+or, on a multiple interface machine
+
+	uar -C ie1 ie0
+
+where CAP is attached to "ie1", or with a uar.conf file
+
+	uar et0 enp0
+
+where "et0" and "enp0" are listed in the uar.conf file with "interface"
+entries containing network and node numbers, zones and one "cap on" entry.
+
+10. Check for "/etc/etalk.local" created by UAR.  Normally this takes up
+to 15 seconds to appear (so in a start-cap-servers file insert a "sleep 20"
+after starting UAR before starting the rest of the CAP programs).  With CAP
+compiled for use with UAR it should now be possible to run test programs such
+as 'cap60/samples/getzones' and 'cap60/samples/atlook' and see meaningful
+results.  If not, consult your local network administrator or send email to
+uar@munnari.OZ.AU.  Please note that UAR vers 1.0 is FreeWare. A ShareWare
+or site-license fee is payable for UAR version 1.1.
+
+

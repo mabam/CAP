@@ -1,0 +1,222 @@
+PAPIF notes and installation
+
+papif is the formatted text "input" filter for the BSD lpd spooling
+system.  (It is assumed you have a basic knowledge of how this works).
+You should examine the papif manual page in cap/man/papif.8 before
+proceeding.
+
+A sample entry for the /etc/printcap file is in printcap.samp1.
+
+See the section "LP under A/UX" below for directions on using papif on
+A/UX.
+
+papif has been redesigned since CAP distribution 4.  One of the
+advantages is that its behavior is much closer to that of "pscomm" --
+the Adobe Transript filter for serial line LaserWriters.  You should
+be able to use papif in place of pscomm without ill effects in the
+"psif" shell script.
+
+In addition, papif no longer forks off a process to deal with the
+status information.  papif will run in a single fork unless the pstext
+or psrv filters are used.  If the pstext or psrv filters are used,
+papif will normally place these filters in front of itself (in that
+order) unless the input is not from a disk file.  Since papif must
+read the beginning of the file, it is necessary to be able to backup
+in the input stream.  To do this when the input is not "rewindable",
+papif will fork off a "<stdin>" process in front of itself to
+"virtually" rewind the input.  Though papif could do this internally
+for itself, it cannot do this for the pstext and psrv filters.  When
+the "<stdin>" process is invoked, pstext and psrv are run from the
+"<stdin>" process and place between "<stdin>" and papif.
+
+papif now "selects" on its input to keep it from blocking when the
+input is from a pipe.  This is suspected as being one  of the main
+causes of the "idle bug".
+
+Note: you may wish to reset the LaserWriter "timeout" variable.  The
+"timeout" value specifies the amount of time to wait for input before
+issuing a "timeout" error.  If you have page reversal on, this could
+be more than the default of 30 seconds.  You can change it to 300
+seconds with the following postcript code:
+	%!
+	serverdict begin 0 exittoserver
+	statusdict begin
+	defaulttimeouts pop 300 setdefaulttimouts
+This should permanently install the value into the eeprom.
+
+
+DEFINES/SETTABLE OPTIONS
+------------------------
+
+Defines are used to set the "standard" behavior of papif.  Most of the
+defines are not "hard" in that they may be modified via the use of
+environment variables (see manual page).
+
+Defines are best set by changing m4.setup and reconfiguring your
+makefiles.  See [psrevloc], [pstextloc], [papflags], [papbanner] in
+m4.setup.
+
+In the following, a binary option is set:
+	in defines by defining the specified option
+
+TRANSCRIPT COMPATIBLITY
+-----------------------
+
+A number of options have been installed to make papif compatible with
+Transcript filters and scripts.
+
+* BANNERFIRST, BANNERLAST and CHARGEBANNER: define in psbanner
+
+BANNERFIRST says to printer the banner first and BANNERLAST to
+print it after all other printing.  The default is neither.
+
+CHARGEBANNER is a papif specific binary option.  If set, banner pages
+will be charged to the user if accounting is being done.  The default
+is off.
+
+Note if you wish to define banner pages as on, you must have an
+"output" filter that presents a ".banner" file in PostScript format.
+CAP includes a filter "psof" that accomplishes this.  You should also
+be able to use the standard Transcript filter for this as well.
+
+* VERBOSELOG: default is always on, cannot be defined, but may be
+modified via the environment.
+
+VERBOSELOG tells papif to be verbose in its logging
+
+* REVERSE: set psrevloc in m4.setup or define WPSREVERSE in the makefile
+
+REVERSE contains the location of the page reversal filter.  This is a
+standard part of Transcript.  The default is none.
+
+* PSTEXT: set psrevloc in m4.setup or define WPSREVERSE in the makefile
+
+PSTEXT contains the location of the text filter that translates plain
+text to PostScript.  This is a standard part of Transcript.  The
+default is none.
+
+* TRANS3: defined in m4.features
+
+TranScript 3.0 compatibility.  Assumes that psdman will be used
+instead of pstext, and so it automatically gives psdman the required
+-P printer argument.  Also assumes that RUTGERS is not defined.
+
+* DUPLEXMODE: defined in m4.features
+
+support full-duplex printing.  This code was written and tested with
+an HP LaserJet IIIsi with a PostScript card.  What it does is if papif is
+given the -2 switch, or if the printer name ends in -dup* (e.g. lw-duplex,
+lj-dup, lpr-dupsomething), it will add the following bit of PostScript code
+to the prolog:
+
+	statusdict begin true setduplexmode end
+
+OTHER NON Transcript OPTIONS
+----------------------------
+
+* CAPPRINTERS: defined in papflags, m4 macro: capprinters
+
+defines the name of the cap.printers file.  The default is
+/etc/cap.printers. 
+
+* NO_STRUCT: defined in papflags
+
+PAPIF has a minimal understanding of the Adobe Systems Document
+Structuring Conventions (to wit, it understands the "%%EOF" marker).
+If this cause problems, you can turn it off by defining NO_STRUCT when
+compiling (in papflags).
+
+* NOACCT: defined in papflags
+
+Setting this turns accounting off by default.
+
+* IDLESTUFF: defined in papflags
+
+Some sites have reported seeing an "idle" bug where papif doesn't do
+anything while the LaserWriter is idle.  You can define "IDLESTUFF"
+when compiling papif to enable some code to get around this problem.
+It is unclear if this option works properly anymore.
+Note: with the new release of papif, this problem shouldn't be there
+anymore, but it is included just in case.
+
+* SFLOWQ: defined in papflags
+* RFLOWQ: defined in papflags
+
+PAPIF has a settable "Send Flow Quantum multiplier" called SFLOWQ that
+tells them how many pkts it should be sending in a single write.  You
+should set this to 1 if you have problems with the FastPath or
+LaserWriter dropping packets.  The odds are that you want it set to 1.
+The default is 8.
+
+RFLOWQ is the same thing but in the other direction.  You can probably
+leave it set to the default of 8 (the maximum).
+
+* ATPRESPONSETIMEOUT: may be defined in papflags
+
+This defines the ATP response cache timeout in ticks (1/4 second
+intervals).  (Note: zero is infinity: it never times out).  This is
+used to extend the time that a response from the LaserWriter may take.
+The default is 2 minutes.
+
+* WATCHTIME: may be defined in papflags
+
+This defines the minimum interval in seconds that will take place
+before papif polls the LaserWriter for its status (and updates the
+status file in the spool directory).  The default is 10 seconds.
+
+* DEBUG: may be defined in papflags
+
+tells papif to print out debugging information.  default is off.
+
+The following two options are considered dangerous because they may
+interfere with binary data, etc.
+
+* STRIPCONTROLD: may be defined in papflags
+
+tells papif to strip control-d -- mainly for use with pcnfsd.  Default
+is off.
+
+* MAPCRTOLF: may be defined in papflags
+
+tells papif to map carriage return to line feed for input from a
+Macintosh.  Default is off.
+
+
+USING PAPIF WITH LP ON A/UX (Release 1)
+---------------------------------------
+
+There is already some lp support for an AppleTalk LaserWriter (from
+Adobe's TranScript for System V).  It just needs some adjusting.  If
+you used Configure, then papif should have the proper parameters set
+under A/UX.
+
+Most of these steps require you to run as root.
+
+The first step is to install a printer using the ADD_AT_LW script in
+/usr/spool/lp.  For example:
+	/usr/spool/lp/ADD_AT_LW ps8
+where ps8 is the printer name.
+
+After this, the interface file that derives from the atpsiface model
+must be editted.  With a printer name of ps8 as above, the interface
+file can be found in /usr/spool/lp/interface/ps8.
+
+Do the following:
+	o set "send" to point a system copy of papif
+	o set "sendopts" to "-P $pr -n $2 -h <your hostname>"
+	  [both -n and -h are optional, but it does make things]
+	  [look better]
+	o change all (three) occurances of REVERSE to "DOREVERSE"
+	  [REVERSE is used as flag here, but as a pointer to the
+	   the name of the page reversal filter in the BSD version
+	   of TranScript.  Not doing this will just cause papif to
+	   print out some unnecessary warning messages]
+
+The printer should now work!
+
+You might also want to remove the sections that send the banner file
+and set "BANNER" (remembering to "export" it) to the banner file name
+--papif will then send the banner file in the same job stream as the
+print requests.  This has the side effect that multiple copies will
+result in a banner file per copy.
+

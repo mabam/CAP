@@ -1,0 +1,65 @@
+.\" troff -man
+.TH AUFSMKKEY 8L "Jun 20 1995" "AUFS Distributed Passwords"
+.SH NAME
+aufsmkkey \- AUFS distributed password global key tool
+.SH SYNOPSIS
+.B aufsmkkey
+.SH DESCRIPTION
+.I aufsmkkey
+is the administrative tool used to create or edit the global key file
+used for AUFS Randnum or 2-Way Randnum user authentication (this replaces
+the current AUFS authentication code which uses cleartext passwords). This
+feature must be enabled in CAP AUFS by defining DISTRIB_PASSWDS at CAP
+configuration time.
+.sp
+.I aufsmkkey
+must be run by the UNIX superuser.
+.sp
+The global key is kept in the file /usr/local/lib/cap/afppass
+(or an alternate file defined by AFP_DISTPW_FILE) and is used to encrypt
+the contents of each user password file. The global file also stores default
+values for password expiry (either an expiry period up to 10 years
+or a global cutoff date), minimum AUFS password length and maximum failed
+login attempts. This file is also encrypted and is expected to be owned by
+user root and set to mode 0600.
+.sp
+User password files are created or edited by the
+.I aufsmkusr
+tool and are normally kept in ~user/.afppass, set to mode 0600 and owned by
+the user. The location and mode of the user password file may be customised
+at compile time using the defines AFP_DISTPW_PATH and AFP_DISTPW_MODE
+(useful, for example, if user home directories are mounted via NFS from
+another machine). The user password files contain the current password
+expiry date, minimum password length, maximum failed login attempts (all
+can be set to zero to disable the feature), number of failed login attempts
+and the user's AUFS password.
+.sp
+AUFS passwords can only be altered by the user using the AppleShare
+Workstation software (using the 'Set Password' button in the AppleShare
+login dialog box). The software will not permit the new password to be
+identical to the old password or to be the same as the user's UNIX
+password.
+.sp
+The minimum password length may be set to values between 0 (disabled) and 8.
+Maximum failed login attempts to between 0 (disabled) and 255.
+.sp
+The expiry date may be set to a period measured in days or months, for
+example: 60d, 60, 2m are equivalent input values or to a specific date
+using a string of the form YY/MM/DD and an optional HH:MM:SS. EG:
+95/06/20 16:44:55 is Tuesday June 20, 1995 at 4:44:55pm.
+.sp
+When the password has expired, the AppleShare user may still connect, but
+the only command available is 'Set Password'. If the maximum number of login
+failures have occurred, the user is advised that the account has been
+disabled and to contact the server administrator.
+.sp
+.SH FILES
+~/.afppass - user password file.
+.br
+/usr/local/lib/cap/afppass - global key file.
+.SH SEE ALSO
+aufsmkusr(8), CAP (Columbia AppleTalk Package)
+.SH AUTHOR
+djh\@munnari.OZ.AU, June 1995.
+.SH NOTICE
+Copyright (c) 1995, The University of Melbourne.

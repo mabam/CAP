@@ -1,0 +1,29 @@
+%!
+% fix.serial.ps
+%
+% This file changes the parity setting of a serially-connected PostScript 
+% printer to 8-bit, no parity, so that the upper 128 characters of a font
+% (the special characters like bullets, diacritics, etc) will print and so
+% binary data (usually color and gray-scale images produced by some programs)
+% will also work.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Change the 0 below to match the system administrator password of the printer
+% (zero is the default)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+serverdict begin 0 exitserver
+statusdict begin
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Change the 25 below to 9 if you are using the 9-pin serial connector
+% instead of the 25-pin.
+%
+% Change the 9600 below if needed to match the baud rate of the serial
+% connection (see the printer's user manual for appropriate values).
+%
+% The 3 below specifies 8-bit, no parity.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        25 9600 3 setsccbatch
+end

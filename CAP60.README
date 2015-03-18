@@ -1,0 +1,559 @@
+CAP 6.0
+-------
+
+This distribution of CAP is an attempt to collect together all of the patches
+available for cap50 and provides an opportunity to perform some very necessary
+maintenance. The code contains the original "official" patches plus bug fixes
+and extra features contributed by *many* people.  Local configuration of the
+extra features is controlled by the file 'm4.features'. For more details,
+see Features below.
+
+Other changes
+-------------
+
+	* AUFS support for AFP 2.0 is (practically) complete (see below).
+	* 'Configure' will automatically recognize the host byte ordering.
+	* 'Configure' has support for more machines and custom local features.
+	* UAB is now bundled and configured with this CAP distribution.
+	* UAB now supports Asynchronous AppleTalk on a UNIX host.
+	* The format of 'atalk.local' has been extended for async appletalk.
+	* Zone names in 'atalk.local' MUST now be quoted to include spaces.
+	* A "free format" 'etalk.local' is used by EtherTalk LAPs (& UAB/UAR).
+	* atis is now Phase 2 NBP compatible (partial obj/type matches).
+	* There are more (& updated) manual entries and documentation.
+	* There are more contributed packages bundled with CAP.
+
+
+Features
+--------
+
+Additional features have been incorporated into CAP. Most of these were
+supplied as patch files from a variety of sources.  In addition, some changes
+were made at The University of Melbourne, these changes concentrated on making
+AUFS comply with AFP2.0 specifications and adding extra facilities and host
+support to Configure. Currently, AUFS supports ProDOS* (Apple IIgs)
+workstations running AppleTalk, the extended directory and volume attributes
+and the additional error result codes. AUFS supports user editable encrypted
+passwords using the DISTRIB_PASSWDS feature.
+
+  * ProDOS requires the NOCASEMATCH feature, or use of upper-case
+    application filenames only.
+
+Specific host support that was new with CAP 6.0 includes ...
+
+	A/UX 2.0 Native AppleTalk	William Roberts <liam@cs.qmw.ac.uk>
+	IBM Risc 6000 AIX System V	David Hornsby <djh@munnari.OZ.AU>
+	Silicon Graphics IRIS-4D/IRIX	David Hornsby <djh@munnari.OZ.AU>
+	SCO Xenix System V 		Chip Salzenberg <chip@tct.com>
+	Sequent Balance			William Roberts <liam@cs.qmw.ac.uk>
+	ICL DRS6000			Michael Brown <mgb@geol.utas.edu.au>
+	DEC OSF/1 Alpha			Scooter Morris <scooter@genie.gene.com>
+	Amdahl UTS			Mark Haynie <mnh@cat.amdahl.com>
+	Sun Solaris 2.N			Andy Polyakov <appro@fy.chalmers.se>
+	Sony NEWS			TAYA Shin'ichiro <taya@sm.sony.co.jp>
+	Control Data CD4000-EP/IX	John Huntley <John.Huntley@zeus.cdc.com>
+	386/BSD, FreeBSD 2.0		Dave Matthews <dcjm@dcs.ed.ac.uk>
+	NetBSD 1.0			Paul Nash <paul@frcs.alt.za>
+	BSDI BSD/386 1.1		David Hornsby <djh@munnari.OZ.AU>
+	HP/Apollo Domain BSD 4.3	Darrell Skinner
+					<skinner@lpmi.polytechnique.fr>
+
+The features file ("m4.features") can be edited from within Configure by
+answering yes to the question "Do you wish to customise the feature list ?".
+The contents of the file are not processed by Configure so you can edit the
+feature list at any time then (re)generate the makefiles with "./gen.makes".
+To include a particular feature, uncomment (remove '#') the definition line.
+
+The available flags, their meanings and original authors are:
+
+	SHORT_NAMES
+		Include AUFS code to support short file names as required by
+		AppleShare client implementations on PCs.
+				Bridget Rogers <brogers@ub.d.umn.edu>
+	NOCASEMATCH
+		Make AUFS filenames case insensitive as in other AppleShare
+		servers and Mac applications.
+				Edward Moy <edmoy@violet.berkeley.edu>
+	SIZESERVER
+		Compile 'sizeserver' daemon for AUFS to obtain volume size
+		information.  Useful with operating systems that have no
+		support for getmnt() or statfs() to determine the amount of
+		free space on a filesystem.
+				Edward Moy <edmoy@violet.berkeley.edu>
+	FIXED_DIRIDS
+		Implement server and AUFS code to provide support for
+		fixed directory and file IDs. The 'afpidsrvr' daemon must
+		be started before any AUFS processes. Refer to the file
+		"applications/aufs/afpid.notes" for more information.
+				John Forrest <jf@ap.co.umist.ac.uk>
+				Scooter Morris <scooter@gene.com>
+	LWSRV_AUFS_SECURITY
+		Require LWSRV LaserWriter spooler users to have an AUFS
+		volume connected (and therefore be password validated).
+				Phil Budne <phil@shiva.com>
+	LWSRV_LPR_LOG
+		Include stdout/stderr messages from lpr in the lwsrv log.
+				Rakesh Patel <rapatel@khnphwzhn.njin.net>
+	AUTHENTICATE
+		AUFS or LWSRV connections must comply with the rules
+		specified in "/etc/cap.auth".  This may specify permit
+		or deny permission by network number and/or server type.
+		Refer to the file cap60/doc/cap.auth.doc for details.
+				Edward Moy <edmoy@violet.berkeley.edu>
+	STAT_CACHE
+		Provide a speed enhancement by caching UNIX stat(2) calls
+		within AUFS.
+				Dan Oscarsson <dan@dna.lth.se>
+	TREL_TIMEOUT
+		ATP transaction release packets (TREL) can sometimes be
+		lost. AUFS will timeout after 30 seconds and continue with
+		the next request.  This option adds a second request
+		listener to avoid the timeout delays.
+				Dan Oscarsson <dan@dna.lth.se>
+	ATPREQCACHE
+		Cache ATP TREQ packets to avoid 2 second wait if request
+		control block (RqCB) not set up in time by AUFS.
+				Rudy Nedved <Rudy_Nedved@RUDY.FAC.CS.CMU.EDU>
+	RUTGERS
+		Include Rutgers specific code.  You probably don't want
+		either this or MELBOURNE unless you check the sources.
+
+	MELBOURNE
+		Include Melbourne specific code.
+
+	USE_HOST_ICON
+		If available, the AUFS volume ICON will represent the
+		underlying  machine hardware (instead of the BSD daemon).
+
+	PERMISSIVE_USER_NAME
+		Allow the AUFS login name (from the Chooser User Name) to be
+		partially matched to the gecos field in the password entry.
+		IE: you can login with full user name, first name or surname.
+				Jean-Luc Mounier <mounier@masi.ibp.fr>
+	ULTRIX_SECURITY
+		Activate AUFS login security based on an authorisation
+		file.  Check this file if normal password field is "*".
+				Rusty Wright <rusty@groan.berkeley.edu>
+	DIGITAL_UNIX_SECURITY
+		Use Digital UNIX enhanced security for AUFS logins.
+				Andrew Greer <andrew@totara.its.vuw.ac.nz>
+				Richard Rogers <r.m.rogers@staffs.ac.uk>
+	USE_MAC_DATES
+		Keep the modification date of the Mac file intact when
+		copied to an AUFS volume (otherwise it is the latter of
+		the UNIX creation and modify times).
+				David Hornsby <djh@munnari.OZ.AU>
+	DEV_NIT
+		Allow an alternate name for the NIT interface. The default
+		name is "/dev/nit".
+				Austin Shelton <austin@chalmers.se>
+	APPLICATION_MANAGER
+		Control the maximum number of times an Application may be
+		run and optionally prevent Finder copying for AUFS mounted
+		volumes. More details in contrib/AppManager/README
+				David Hornsby <djh@munnari.OZ.AU>
+	DENYREADWRITE
+		Implement AFP Access/Deny modes on AUFS file accesses.
+				David Hornsby <djh@munnari.OZ.AU>
+	AUFS_README
+		Add '-r <arg>' option to AUFS. The <arg> is expected to
+		be a full path name to an explanatory README file and is
+		linked into the top level volume of a new AUFS user.
+				Edward Moy <edmoy@violet.berkeley.EDU>
+	AUFS_IDLE_TIMEOUT
+		Add -i and -I options to AUFS to disconnect users who
+		exceed the specified idle time.  -I includes all users,
+		-i is for guest sessions only.
+				David Hornsby <djh@munnari.OZ.AU>
+	REREAD_AFPVOLS
+		A SIGUSR1 signal sent to AUFS causes the global AFP volumes
+		file to be re-read.
+				Eugene Bogaart <bogaart@serc.nl>
+	CLOSE_LOG_SIG
+		A SIGUSR2 signal sent to AUFS causes the log file to be
+		closed and then re-opened (allows the file to be truncated,
+		for example, by a script which regularly does something like
+		'cat > logfile; kill -USR2 <pid>'). See also PID_FILE.
+				Scooter Morris <scooter@gene.com>
+	PID_FILE
+		Cause AUFS to write a (named) process-ID file.
+				Scooter Morris <scooter@gene.com>
+	XDEV_RENAME
+		Allows AUFS to copy/move files across file systems.
+				Mark Abbott <m.abbott@ucl.ac.uk>
+	NOCHGRPEXEC
+		Make AUFS use the third argument to chown(2) instead of
+		exec'ing chgrp(1) to change group membership of file.
+		NB: Unavailable under System V, recommended for others.
+				Edward Moy <edmoy@violet.berkeley.EDU>
+	USEDIRSETGID
+		Set the group ID bit on directories whose group is not the
+		primary group of the AUFS user. Under SunOS and System V,
+		new files and directories are by default created with the
+		primary group unless the group ID bit of the parent is set.
+				David Hornsby <djh@munnari.OZ.AU>
+	USR_FILE_TYPES
+		Map UNIX filename suffix to Mac Type/Creator. The map file
+		may be global (specified with -F option to AUFS) or per
+		user (~/.afpfile or ~/afpfile). The mapping also controls
+		the file translation method used (ascii, text or raw). See
+		the sample file in cap60/extras/afpfile.
+				David Hornsby <djh@munnari.OZ.AU> et. al.
+	CREATE_AFPVOL
+		Create the .afpvols file, .finderinfo and .resource
+		directories in a subdirectory (default 'mac') of the home
+		directory of a new AUFS user (if they don't already exist).
+		An alternate subdirectory/volume name is specified with
+		the string -DCREATE_AFPVOL=\"other\" in m4.features
+				Heather Ebey <hebey@ucsd.edu>
+	CREATE_AFPVOL_NAME (now CREAT_AFPVOL_NAM)
+		Modifies the CREATE_AFPVOL option to use the user/account
+		name for the volume label instead of the value of the
+		CREATE_AFPVOL variable.  Assumes CREATE_AFPVOL.
+				Craig Zook <zook@pat.mdc.com>
+	NETWORKTRASH
+		Under System 7.0, the "Network Trash Folder" mode is set
+		to 0x707 (world writeable). Defining NETWORKTRASH sets the
+		mode to that of the parent (top level) directory.
+				Edward Moy <edmoy@violet.berkeley.EDU>
+	ISO_TRANSLATE
+		Translate ISO 8859 characters in command line arguments
+		and configuration files into their Macintosh equivalents.
+		Likewise translate Macintosh characters to ISO 8859 for
+		etalk.local zone name, log file entries.
+				Austin Shelton <austins@cdg.chalmers.se>
+	ISO_FILENAMES
+		Extend ISO/Mac character translation to AUFS file names
+		(assumes ISO_TRANSLATE is in use)
+				Dan Oscarsson <Dan.Oscarsson@malmo.trab.se>
+	ISO_FILE_TRANS
+		Translate ISO 8859 characters in Creator "unix", Type
+		"TEXT" AUFS files into Mac characters on read and vice
+		versa on write (assumes ISO_TRANSLATE is in use).
+				Dan Oscarsson <Dan.Oscarsson@malmo.trab.se>
+	NCS_ALL_TEXT
+		Apply ASCII or ISO 8859 file translation to all files of
+		type "TEXT", regardless of Creator.
+				Dan Oscarsson <Dan.Oscarsson@malmo.trab.se>
+	LOGIN_AUTH_PROG
+		Allows AUFS -L command line argument to specify an external
+		authorization program for AUFS logins.  See man/AUFS.8
+				Irwin S. Tillman <irwin@phoenix.Princeton.EDU>
+	PSJOBHEADER
+		If defined, PAPIF will check for an environmental variable of
+		the same name.  The variable specifies a file which contains
+		a postcript header (for example to change paper trays or
+		print double sided) to be sent before the print job.
+				Jay Plett <jay@silence.princeton.nj.us>
+	DUPLEXMODE
+		If defined, PAPIF accepts a -2 option (also if the printer
+		name contains -dup*) to set double sided printing.  Duplex
+		printing must be supported by the printer hardware.
+				Dan Mosedale <mosedale@genome.stanford.edu>
+	TRANS3
+		Setup PAPIF for 'psdman' from the TranScript 3.0 package.
+				Dan Mosedale <mosedale@genome.stanford.edu>
+	PASS_THRU
+		If defined for LWSRV, print jobs will be passed through
+		with no Adobe pre-processing. This is useful for spoolers
+		providing service for PCs.
+				Gavin Longmuir <gavin@coombs.anu.edu.au>
+	DONT_PARSE
+		If defined for LWSRV, print jobs will be passed through
+		with no Adobe pre-processing at all. This is useful for
+		spoolers which require an unaltered file, as the PASS_THRU
+		option does not disable some Adobe handling. The crtolf
+		option will continue to work if it is enabled with this
+		option.
+				Rakesh Patel <rapatel@rutgers.edu>
+	LPRARGS
+		Allows LWSRV -L command line arguments to be passed directly
+		to lpr. For example, printing via TransScript without
+		-T quote8bit set causes option-key characters to be printed
+		incorrectly. Setting -T quote8bit causes binary PostScipt
+		(usually gray scale images) to fail. In this situation use
+		LWSRV argument "-L-l" to pass "-l" to lpr.
+				Edward Moy <edmoy@violet.berkeley.EDU>
+	RUN_AS_USER & USER_REQUIRED
+		Attempt to map Mac Chooser/Owner name to a real UNIX user
+		name (based on map file, eg: cap60/extras/lib.cap.macusers)
+		then setuid() the lwsrv session as this user. IE: lpr can be
+		lprm'd as normal. USER_REQUIRED must find a match otherwise
+		it prints a failure message eg: cap60/extras/lib.cap.refused.
+		NB: no password authentication is provided.
+				Maarten Carels <maarten@fwi.uva.nl>
+	PROCSET_PATCH
+		If defined for LWSRV, procset "patches" are not passed
+		through to the printer. These patches are code changes
+		for Apple LaserWriters and can have strange effects if
+		used on non-Apple printers.
+				Alexander Dupuy <dupuy@tiemann.cs.columbia.edu>
+	ULT42PFBUG
+		Workaround for ULTRIX 4.2 packet filter problem (see Gotchas)
+				David Hornsby <djh@munnari.OZ.AU>
+	STEAL_PORTS
+		Extend DDP Dynamic Socket range down into the experimental
+		AppleTalk socket range 64 - 128. Adds another 64 possible
+		sockets for server use.
+				Rakesh Patel <rapatel@rutgers.edu>
+				David Hornsby <djh@munnari.OZ.AU>
+	USING_FDDI_NET
+		Includes code to determine if interface is running on
+		FDDI network and adjust packets accordingly. Digital UNIX
+		and Ultrix only at this stage.
+				Conrad Huang <conrad@cgl.ucsf.edu>
+	NOCAPDOTPRINTERS
+		If defined, PAPIF will not use /etc/cap.printers, instead
+		the first line of the file /etc/lp/printers/lw/comment (for
+		printer "lw") is expected to contain a fully qualified
+		AppleTalk NBP name for the printer, ie: lw:LaserWriter@Zone
+		This option is intended for use on Solaris 2.N hosts only.
+				Andy Polyakov <appro@fy.chalmers.se>
+	USESYSLOG
+		If defined, PAPIF will send Information, Warning and Debug
+		messages to syslog().
+				Andy Polyakov <appro@fy.chalmers.se>
+	DISTRIB_PASSWDS
+		If defined, CAP will use AUFS authentication methods that
+		involve exchanging encrypted random numbers instead of
+		sending passwords in clear text over the network. Refer to
+		manual entries aufsmkkey.8 and aufsmkusr.8 in cap60/man.
+				David Hornsby <djh@munnari.OZ.AU>
+	AFP_DISTPW_PATH
+		Specifies that the distributed password files used in
+		DISTRIB_PASSWDS be kept in a directory other than the
+		user's home directory. For example, you could use the
+		following -DAFP_DISTPW_PATH=\"/usr/local/lib/cap/upw\"
+				David Hornsby <djh@munnari.OZ.AU>
+	AFP_DISTPW_MODE
+		Modifies the file mode being enforced with DISTRIB_PASSWDS.
+		For use when user home directories are mounted via NFS. Uses
+		mode 0600 by default, use 0644 with NFS.
+				David Hornsby <djh@munnari.OZ.AU>
+	DEBUG_AFP_CMD
+		If defined, AUFS will dump detailed logs of AFP command I/O
+		parameters in the file specified with the AUFS -Z option.
+		Use in conjunction with Inside AppleTalk 2nd edition for
+		debugging the AUFS AFP implementation.
+				David Hornsby <djh@munnari.OZ.AU>
+	LOG_WTMP
+		If defined, AUFS will write an entry into the wtmp log file
+		on each successful AUFS connection. Allows usage tracking.
+				Gavin Longmuir <Gavin.Longmuir@anu.edu.au>
+				Heather Ebey <heather@sdcc6.ucsd.edu>
+	LOG_WTMP_FILE
+		Specifies alternate name for the wtmp file used in LOG_WTMP.
+				Heather Ebey <heather@sdcc6.ucsd.edu>
+	ADMIN_GRP
+		If defined, AUFS will check if the user is a member of a
+		special admin group and connect them with superuser privs.
+				Tim Leamy <ccctim@rocky.ucdavis.edu>
+	TEMPFILE
+		Allow the LWSRV temporary file path to be specified.
+				Serge <serge@zooks.ME.berkeley.edu>
+	USELPRSYM
+		Option to allow optional lpr '-s' (broken under OSF/1).
+				Serge <serge@zooks.ME.berkeley.edu>
+
+
+	The following were originally to be defined in m4.setup, they have
+	been moved to m4.features for convenience.
+
+	NONLXLATE - don't translate newlines on "line-at-a-time" reads
+	FULL_NCS_SUPPORT - National Character Support
+	GGTYPE="gid_t" - Host type definition for groups
+	DOCNAME - include document name in lpr job name
+	PAGECOUNT - include page count in lpr job name
+	ADOBE_DSC2_CONFORMANT - Conform to Adobe DSC2 specs
+
+
+CAP Patches
+-----------
+
+The primary source of CAP information is, as always, the network newsgroup
+comp.protocols.appletalk.  This forum will continue to be used to disseminate
+information about CAP 6.0 updates, but we would very much like to encourage a
+slightly more formal approach to the process of propogating CAP patches.
+
+Therefore, please send patches for CAP bug-fixes and new features to
+
+	cap@munnari.OZ.AU
+
+Context diffs (from 'diff -c') are preferred, but not essential.  Patches
+received will be assigned a patch number, a priority and will be included in
+regular (but not too frequent) CAP releases.  In addition to then being sent
+to comp.protocols.appletalk, the patches will be available via FTP from
+
+	munnari.OZ.AU		(in mac/cap.patches)
+	ftp-ns.rutgers.edu	(in pub/cap/cap.patches)
+	gatekeeper.DEC.COM	(in pub/net/appletalk/cap/cap.patches)
+	ftp.kuis.kyoto-u.AC.JP	(in net/cap/cap60.patches)
+	src.doc.ic.AC.UK	(in mac/multigate/cap.patches)
+
+The intent is to minimise the nightmare of trying to apply useful patches
+that have come from divergent versions of the source code.  Another goal is
+to reduce the maintenance needed for CAP code, if the incremental patches are
+applied in order, the result will be identical to any new release.
+
+To apply the patches with an absolute minimum of effort, it is recommended
+that you use the 'patch' program written by Larry Wall. This can be obtained
+from sites that archive postings from the newsgroup comp.sources.unix in the
+directory volume7/patch2. It is important to ensure that any patches for the
+patch sources are applied, some CAP patches can fail if the unmodified patch
+code is used.
+
+The current patch level is recorded in the cap60/README file.  New patches
+are applied from the top level directory with the command
+
+		% patch -p < cap60.patches/cap60.patch0NN
+
+where NN is the patch number. The -p option tells patch to obtain
+information about which file to alter from the patch header (use -p0 on
+a DEC Alpha under OSF/1). If you attempt to apply a patch more than once,
+patch will enquire about "a reversed or previously applied patch", answering
+yes to this will remove the patch, leaving the original file (and bug), this
+is not good ...
+
+
+CAP and AppleTalk Phase 2
+-------------------------
+
+CAP 6.0 supports EtherTalk Phase 2 using the SunOS NIT interface, the enet
+packet filter (requiring kernel mods, see cap60/support/enet) and the ULTRIX
+packet filter (ULTRIX 4.0 or later). It also is possible to use CAP in a
+Phase 2 environment with IPTalk as indicated below.
+
+Traditionally, the CAP transport mechanism uses UDP/IP packets. This is
+called IPTalk (also known as KIP) and is a "non-extended" (1 net number
+and 1 zone name) network. CAP with IPTalk can run on a LARGE variety of
+UNIX platforms.
+
+On some machines, CAP can also produce EtherTalk Phase 1 packets directly
+(using Native EtherTalk, Kernel AppleTalk or UAB - the UNIX AppleTalk
+Bridge). EtherTalk Phase 1 is also a "non-extended" network.
+
+Macintoshes on EtherNet can speak EtherTalk Phase 1 or Phase 2. EtherTalk
+Phase 2 networks are always "extended", allowing multiple network numbers
+and zone names on a single cable. An "extended" network can be "restricted"
+to have one net number and one zone name. This permits the Phase 2 routing
+information to be translated into Phase 1 routing packet format. This is
+not otherwise possible.
+
+For completeness, LocalTalk networks can use either Phase 1 or Phase 2
+AppleTalk packets, but such networks are always "non-extended".
+
+In a brief summary of AppleTalk Phase 1 and Phase 2 differences on LocalTalk,
+routing information (RTMP) packet formats are different. NBP packets allow a
+new character (approxEquals or 0xc5) for partial NBP name and type matching.
+Nodes are no longer required to send to the last RTMP sender that they heard
+from, rather, they can choose to send to the "best" router. There are other
+differences for Phase 1 and Phase 2 EtherTalk packets on EtherNet. These
+differences relate mainly to delivery mechanisms.
+
+If you use CAP with IPTalk and *NO* AppleTalk routing over IP (ie: via an
+IP link between IP gateways) then you can use CAP with Phase 2, "extended"
+networks with no restrictions (except of course, that you must have an
+AppleTalk Gateway capable of talking IPTalk and EtherTalk Phase 2).
+
+On the other hand, if you are using CAP and IPTalk with AppleTalk routing
+over IP, or CAP with EtherTalk Phase 1, then your Phase 2 networks must all
+be "restricted" and you need to have a gateway capable of operating in
+"transition" mode (the problem with the first case is due to the way IPTalk
+works rather than CAP. IPTalk 2 is under development and will solve this).
+
+The gateway translates the packets from one format to another. Suitable
+IPTalk/Phase 2 gateways are the Webster MultiPort Gateway (running Megan
+2.1 or later) and the Shiva FastPath 4 (running KSTAR 8.0 or later). Most
+earlier versions of the gateway code will happily translate from IPTalk to
+either Phase 1 or LocalTalk.
+
+
+See Also
+--------
+
+	Manual entries		cap60/man/*
+	Various documentation	cap60/doc/*
+	Native EtherTalk	cap60/support/ethertalk/README
+	Kernel AppleTalk	lib/cap/abkas.c, netatalk-1.2 distribution
+
+	http://www.cs.mu.OZ.AU/appletalk/atalk.html
+
+Gotchas
+-------
+
+There are various problems known to exist with CAP and particular UNIX
+systems or programs.
+
+	ULTRIX:
+		You may see the error message
+			open: ln0: No such file or directory
+		when running aarpd. The problem is due to missing packet
+		filter devices in /dev/pf. For details on how to make the
+		devices, refer to the manual entry for 'packetfilter'.
+
+	ULTRIX 4.1:
+		There is a problem with packet filter code in ULTRIX 4.1
+		that prevents CAP writing packets to the network. Before
+		running CAP with 4.1 (on any hardware platform), request
+		the patched version of the file "net_common.o" from your
+		DEC Customer Support Center. You may also need to obtain
+		the updated "if_ln.o" to prevent problems with LAT.
+
+	ULTRIX 4.2/4.2A:
+		There are three known "problems" with packet filter code
+		and unicast/802.3 packet handling under ULTRIX 4.2. The
+		problems have been identified and fixed. Contact your
+		local DEC Customer Support Center and query the status
+		of patches for "net_common.o" and "pfilt.o". The problems
+		and WORKAROUNDS for UNPATCHED systems are as follows:
+
+		"unicast packets are not delivered properly to PF clients"
+			define COPYALL mode using 'ifconfig ... +copyall'
+
+		"802.3 (phase 2) AARP packets converted to EtherNet equiv."
+			apply CAP patch 75, define ULT42PFBUG in Configure
+
+		"3rd-party Mac EtherNet cards that round up odd 802.3 packets"
+			no workaround, requires new net_common.o, pfilt.o
+			with less stringent 802.3 length sanity checking.
+
+	ULTRIX 4.3
+		under ULTRIX V4.3 you may need to obtain a patched version of
+		/etc/lockd to use DENYREADWRITE code. A possible workaround is
+		to 'nfssetlock off' ... this will impact NFS mounted volumes.
+
+	HP/Apollo Domain BSD 4.3
+		Avoid using the //node/path syntax in afpvols, either
+		explicitly or from expansion of ~.  If such a definition
+		appears in afpvols, the volume corresponding to it may
+		be visible in the Chooser but be unmountable or may not
+		appear in the Chooser.  Other volumes defined after such
+		a line also may not show up in the Chooser.  You may use
+		directories mounted on other nodes using soft links or
+		a path such as /../node/path.  It is not clear how much of
+		the file locking carries over directories on other nodes.
+		See NOTES for avoiding the //node/path construction.
+
+	NFS
+		In some circumstances, CAP AUFS using NFS mounted
+		filesystems may complain about files being locked when
+		they are not obviously so.  Ensure that you have the latest
+		NFS bugfixes for your UNIX platform.
+
+
+Bug Fixes
+---------
+
+The following CAP 5.0 bug fixes were incorporated into CAP 6.0.
+
+	abpap.c.tickletimer	Jim Guyton <guyton@rand.org>
+	abpaps.c.flowquantum	William Roberts <liam@cs.qmw.ac.uk>
+	procset.c.looping	William Roberts <liam@cs.qmw.ac.uk>
+	mips.ultrix.byteswap	<rob@cs.aukuni.ac.nz>
+	snitch.c.stringlength	Phil Farrell <farrell@pangea.stanford.edu>
+	papif.c.atpresponse	Phil Farrell <farrell@pangea.stanford.edu>
+	papif.c.variousbugs	Jeff Stearns <jeff@tc.fluke.COM>
+	papif.c.reverse		Robert McLay <mclay@emx.utexas.edu>
+	afpos.c.strcmp		JQ Johnson <jqj@duff.uoregon.edu>
+	simple.c.comment	Mark Rawling <rcomr@koel.co.rmit.oz.au>
+	rtmp.c.nocase		John Sellens <jmsellen@watmath.waterloo.edu>

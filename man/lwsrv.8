@@ -1,0 +1,276 @@
+.TH lwsrv 8 "24 July 1990" "Columbia University"
+.SH NAME
+lwsrv \- simple LaserWriter spooling agent
+.SH SYNOPSIS
+.B lwsrv
+.BI \-n " <object>"
+.BI \-p " <printer queue>"
+.BI \-a " <dictionary directory>"
+.BI \-f " <FontFile>"
+[
+.BI \-e
+] [
+.BI \-h
+] [
+.BI \-k
+] [
+.BI \-A " < on | off >"
+] [
+.BI \-S
+] [
+.BI \-T " < crtolf | quote8bit | makenondscconformant >"
+] [
+.BI \-X " < directory name >"
+] [
+.BI \-L<lprArg>
+] [
+.BI \-N
+] [
+.BI \-P
+]
+.SH DESCRIPTION
+.I lwsrv
+is a multi-threaded LaserWriter spooler (e.g. multiple incoming jobs
+are allowed) that advertises itself on the AppleTalk internetwork and
+accepts print jobs from Macintosh computers as if it were a real
+LaserWriter.
+.I lwsrv
+allows these jobs to be queued for printing via the standard Berkeley
+lpd spooling software (it is easily modified for other systems).
+.I lwsrv
+assumes that it is spooling for a particular type of LaserWriter printer as
+defined by an input file that specifies the font coordination list.
+.PP
+A generic problem with
+LaserWriter spoolers is that the proper Apple dictionary must be
+downloaded to the LaserWriter.  An Apple dictionary is the "prologue"
+code termed a "Procedure Set" or "ProcSet", sent by the LaserWriter
+driver on a Macintosh (contained in
+LaserPrep), that defines a "set" of routines for use by Macintosh
+applications.
+.PP
+.I lwsrv
+attempts to resolve this problem by inserting the proper dictionary in the
+incoming jobs before spooling them.
+Unfortunately,
+.I lwsrv
+does not know about these ProcSets a priori.  They must be supplied
+to it, though it does attempt to retrieve them from the client.
+.PP
+.I lwsrv
+will be able to record an unknown ProcSet if it follows Version 2 of the
+.I
+Adobe Systems PostScript Document Structuring Conventions (DSC).
+Any Apple LaserPrep of
+version 4.0 or higher should do this.  (Warning: the ProcSet as
+uploaded is not usable unless the "-e" flag is used, cf. Installation
+instructions).
+.PP
+With System 7.0, the handling of ProcSets changes somewhat. If you wish to
+use lwsrv with System 7.0 Printer Drivers, you should run lwsrv with the -N
+option. This causes lwsrv to not capture new ProcSets but to pass them
+through unedited. If edited ProcSets for earlier versions of the Printer Drivers
+are found, they will used where appropriate (edited System 7.0 Procsets from
+lwsrv sessions without -N should be removed). The result is that lwsrv can
+be used successfully in a mixed driver environment without the necessity of
+having the printer reinitialized each time.
+.PP
+.I lwsrv
+is normally started automatically at boot time from /etc/rc.local.
+Unless debug flags are set, it will automatically put itself into 
+the background to run as a daemon.
+.SH REQUIRED ARGUMENTS
+.TP 10
+.BI \-n " <object>"
+is used to specify the printer name that will be registered (e.g. that
+will show up in Chooser).  It may be up to 31 characters long.
+.TP 10
+.BI \-p " <printer queue>"
+specifies the name of the Unix printer queue to which lwsrv will send the
+spooled print requests.  <printer queue> should exist in
+/etc/printcap. Multiple pairs of \-n and \-p flags can be used to provide
+multiple printer queues per lwsrv process.
+.TP 10
+.BI \-a " <dictionary directory>"
+specifies the name of the directory that will hold the various
+Procedure Sets (of which an AppleDict in a LaserPrep is a particular
+instance).  The first line of a ProcSet must be
+"%%BeginProcSet: <procsetname>".  In addition,
+unknown ProcSets will be recorded in this directory if possible.
+Received ProcSets will probably require some editing.
+.TP 10
+.BI \-f " <FontFile>"
+specifies the file that contains a Font Coordination List.  It
+essentially tells the Macintosh or other devices spooling to
+.I lwsrv
+what fonts exist on the actual print device.
+Sample FontFiles are included with the source distribution.
+.SH OPTIONS
+.TP 10
+.B \-e
+tells lwsrv that it should allow an "eexec" to occur in a
+ProcSet.  This option may cause problems!  See the lwsrv 
+source distribution README file
+for more information.
+.TP 10
+.B \-h
+means to suppress the printing of the burst or banner page 
+by passing the "-h" option to
+.I lpr
+when printing the spooled file.
+.TP 10
+.BI \-k
+specifies that DDP checksums are not to be used, the field is set to zero.
+.TP 10
+.BI \-C " <Spool Command>"
+specifies an alternate print spooler, the default is normally "/usr/ucb/lpr"
+or "/usr/bin/lp".
+.TP 10
+.BI \-A " <" "on | off" >
+defines whether lwsrv should suppose that all client programs speaking
+to it will properly follow the Adobe Document Structuring Convention
+version 2.0.  For now, all it really does is define where the
+procedure set definitions are loaded.  Turning this on, when there is
+a client program that doesn't quite follow the conventions, may cause
+the procedure set not to be loaded or to be loaded in the wrong place.
+(Specifically, it looks for an IncludeProcSet instruction).
+The default value is set at installation time (see LOCAL CONFIGURATION
+section, below).
+.TP 10
+.B \-S
+tells lwsrv that it should run in a single fork.  Normally, lwsrv
+forks off a child to deal with each print request to minimize
+contention.  Unfortunately, status information returned to the client
+programs is not as detailed when lwsrv is running multiforking.
+.TP 10
+.BI \-N
+tells lwsrv to not collect new ProcSets. This is required for use with
+System 7.0 (see above).
+.TP 10
+.BI \-P
+specifies that no Adobe pre-processing be carried out. Use this option on a
+print spooler dedicated to PC printing.
+.TP 10
+.BI \-T " <" "crtolf | quote8bit | makenondscconformant" >
+are TransScript compatibility options.  Since the names are so long,
+spaces, hyphens (-), underscores (_), and tabs are allowed to 
+enhance readability, for example:
+.nf
+	-T "cr to lf" -T "quote 8-bit"
+.fi
+.RS 10
+.TP 10 
+.B quote8bit
+is used to quote 8
+bit characters since TransScript masks characters to 7 bits.  Warning:
+this could potentially cause problems if the PostScript interpreter
+does not decode the quoted characters in some circumstances.
+.TP 10
+.B crtolf
+is used to translate the Macintosh end of line terminator CR (carriage
+return) to the UNIX end of line terminator LF (line feed).  This is
+necessary if the spooled file will be run through TranScript filters
+like 
+.I psrv
+or
+.I psrev
+that assume the UNIX end of line terminator.  Warning: this can
+potentially cause problems with binary data streams.
+.TP 10
+.B makenondscconformant
+should be used when 
+.I lwsrv
+is spooling to a UNIX printer queue that filters files through
+.I psrv
+(a page reversal filter).
+This is standard for serial
+TranScript printers and may have been configured that way for 
+.I papif.
+This option causes the printed file to be prepended with a line
+containing "%!" so that it looks like it does not conform to the DSC.
+The problem is that in version 2.0 of TranScript
+.I psrv
+leaves out part of the file when handling DSC version 2.0 documents.
+.RE
+.TP 10
+.BI \-X " <directory name>"
+(must be specifically included with -DLWSRV_AUFS_SECURITY at compile time)
+is used to allow access control such that only those users who have mounted an
+.I aufs
+volume will be able to print via the spooler.
+The directory specified will be used to access temporary information
+stored there by
+.I aufs.
+That information is used by lwsrv to control who has permission to access
+the printer being spooled for. The Berkeley
+.I lpr
+program is invoked as the user that was specified when logging in through
+.I aufs.
+.I Aufs
+must also be started with the
+.BI \-X
+option, and the same directory, otherwise no one will have access to the spooler.
+Generally, /tmp is the directory used. See the
+.I aufs (8)
+man page for the setup requirements for the directory if you are not using /tmp.
+.TP 10
+.BI \-L<lprArg>
+passes <lprArg> directly to lpr. Typically used to specify the \-l option
+to allow gray scale PostScript to be printed. Note: there is no space
+between the -L and the lpr argument.
+.SH DEBUGGING OPTIONS
+.TP 10
+.B \-r
+keeps the file spooled from the Macintosh for inspection
+instead of removing it after printing. 
+.TP 10
+.BI \-t " <TraceFile>"
+is used to record all data received from the remote side in
+<TraceFile>.  The remote side is also forced to send any ProcSets
+used.  The result is not printed.
+.TP 10
+.BI \-l " <LogFile>"
+is used to specify an activity log file.
+.TP 10
+.BI \-d " <cap debug flags>"
+can be used to specify standard cap library debugging flags.  See
+CAP(3) for valid flags.
+.SH EXAMPLE
+For example, to publish a LaserWriter spooler "Laser" that prints on the UNIX
+printer "ps" with Procedure sets recorded in /usr/lib/adicts and using
+the font coordination list /usr/lib/LW+Fonts, you would start 
+.I lwsrv
+as follows:
+.nf
+.I
+	lwsrv -n Laser -p ps -a /usr/lib/adicts -f /usr/lib/LW+Fonts
+.fi
+.SH LOCAL CONFIGURATION
+
+.SH NOTES
+The Apple LaserPrep ProcSets (dictionaries) are not supplied
+in the CAP distribution
+as they are copyrighted property of Apple Computer. 
+.PP
+There are a number of "font list files" that are used in the dialog
+with the spooling client.  These tell the client (Macintosh) what
+fonts are available on the "supposed" printer.
+The laser font files supplied may not work for all LaserPreps.  They
+are known to work for LaserPreps 3.0 through 4.0.
+.SH BUGS
+.I lwsrv
+cannot properly update the status message.
+When printing from a
+Macintosh, you will see the message "Starting job" until it completes.
+.SH FILES
+Sample font list files in the CAP distribution:
+.nf
+.ta \w'extras/LWPlusFonts     'u
+extras/LWFonts	fontfile list for LaserWriter
+extras/LWPlusFonts	fontfile list for LaserWriter Plus
+.fi
+.SH AUTHOR
+lwsrv was written by Bill Schilit, Computer Science Department,
+and Charlie C. Kim, User Services, Columbia University
+.SH SEE ALSO
+atis(8), CAP(3), CAP(8), lpr(1), papif(8)

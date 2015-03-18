@@ -1,0 +1,97 @@
+.TH instappl 1 "26 July 1990" "Columbia University"
+.SH NAME
+instappl \- install a UNIX generated file consisting of a Macintosh resource fork into an AUFS volume.
+.SH SYNOPSIS
+.B instappl
+[
+.BI \-c " <creator>"
+] [
+.BI \-t " <type>"
+] [
+.B \-l
+.B \-m
+] [
+.B \-i
+]
+.I <inputfile> <directory>
+.RI [ <name> ]
+.SH DESCRIPTION
+.I instappl
+is a UNIX program to install a file consisting of a
+Macintosh resource fork (e.g., a downloaded Macintosh application) into an
+.I AUFS
+AppleShare volume on the same UNIX host.
+The 
+.I AUFS
+volume must be one that has been configured to store 
+Macintosh files and applications (see AUFS(1)).
+.I AUFS
+stores the three "forks" of a Macintosh file into separate UNIX files.
+A file consisting of only a data fork resembles a UNIX stream file 
+and can be copied directly into the
+.I AUFS
+directory.
+A file that consists of a Macintosh resource fork
+cannot be simply copied into the
+.I AUFS
+volume directory.
+Finder information must also be set so that this file will be recognized
+as an application when the
+.I AUFS
+volume is accessed by a Macintosh.
+.I instappl
+correctly installs the file consisting of a resource fork, creating
+a null data fork and correct finder information.
+It allows you to set the Macintosh creator and filetype with the
+.I \-c
+and
+.I \-t
+options.
+Additional file attributes can be set with the
+.IR "\-l, \-m," " and " \-i
+options.
+.SH REQUIRED ARGUMENTS
+.TP
+.I <inputfile>
+specifies the path name of the input resource fork file that is to be 
+installed in
+the
+.I AUFS
+volume.
+.TP
+.I <directory>
+specifies the path name of the
+.I AUFS
+volume directory where the file will be installed.
+.SH OPTIONS
+.TP
+.I <name>
+By default, the name to be used by
+.I AUFS
+when it serves this file to a Macintosh client is
+simply the last component of the input file name.
+If you wish it be different than that,
+then specify the desired name as an optional argument.
+.TP
+.BI -c " <creator>"
+specify a one to four character string to be used to set the Macintosh 
+creator value for this file.
+The default value is "????" (unknown).
+.TP
+.BI -t " <type>"
+specify a one to four character string to be used to set the Macintosh
+file type value for this file.
+The default value is "APPL" (application).
+.TP
+.B \-l
+sets the read-only (or locked) attribute for the file.
+.TP
+.B \-m
+sets the multi-user attribute for the file.
+.TP
+.B \-i
+sets the invisibile attribute for the file.
+.SH SEE ALSO
+AUFS(1), AUFS(8), CAP(3), CAP(8)
+.SH AUTHOR
+Manual entry by Phil Farrell, Stanford University School of Earth Sciences

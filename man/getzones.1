@@ -1,0 +1,51 @@
+.TH getzones 1 "26 July 1990" "Columbia University"
+.SH NAME
+getzones \- display the AppleTalk zones visible to this host.
+.SH SYNOPSIS
+.B getzones
+[
+.BI \-d " <capflags>"
+] [
+.BI \-l
+] [
+.BI \-m
+] [
+.BI \-s
+] [
+.BI \-v
+]
+.SH DESCRIPTION
+.I getzones
+queries the AppleTalk to Ethernet gateway listed in 
+.I atalk.local
+or
+.I etalk.local
+for the list of acccessible AppleTalk zones and then displays that list
+on standard output.
+.PP
+The options
+.I getzones
+accepts are:
+.TP
+.BI \-d " <capflags>"
+<capflags> are standard debugging flags for the
+.I CAP
+library.  See CAP(3) for a description of the valid flags.
+.TP
+.BI \-l
+lists the local zones for this network (Phase 2 networks only).
+.TP
+.BI \-m
+print the zone name for this host (myZone).
+.TP
+.BI \-s
+sort the zones list.
+.TP
+.BI \-v
+produces a more verbose output including a zone count and
+the zone name for this host marked with an asterisk.
+.SH SEE ALSO
+CAP(8), CAP(3), atalk.local(5), etalk.local(5)
+.SH AUTHOR
+Manual entry by Phil Farrell, Stanford University School of Earth Sciences.
+Updated by David Hornsby, The University of Melbourne.

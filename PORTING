@@ -1,0 +1,154 @@
+The following notes point out some of the items to watch out for when
+porting CAP to different variants of BSD and other machines.  Most of
+these are items that have been "hit" in the past.
+
+Index:	GENERAL COMPATIBILITY
+	SYSTEM V
+	LIBRARIES
+	APPLICATIONS
+	CONFIGURATION
+
+*********************
+GENERAL COMPATIBILITY
+*********************
+
+sysvcompat.h in netat/sysvcompat.h attempts to allow the various
+modules to mask incompatibilities between System V machines and bsd
+machines.  Except for some very basic translations (e.g. strchr vs.
+index), all the mappings are done under a machine dependency (e.g.
+ifdef hpux).  Many different parts of CAP make use of this file,
+though the largest client by far is Aufs.  Most of the samples and
+applications have not been tested or modified for System V
+compatibility.  NOTE: Aufs does not attempt to deal with the file name
+length restrictions in System V: file names are simply truncated.
+
+The machines in sysvcompat.h at present are: hpux and aux.  Note: some
+of the defintions for hpux are for older versions of hpux.  This
+points to a need to redo this file at a future point.
+
+compat.h in netat/compat.h attempts to masks differences between
+various bsd machine.  To be more specific, it defines an additional
+set of "macros", etc. that aren't found on all bsd based machines such
+as sigmask, etc.
+
+********
+SYSTEM V
+********
+
+You can use conf.sysv.sh to generate a set of "ifdefs" suitable for
+inclusion in sysvcompat.h for a particular machine.  conf.sysv.sh
+takes as an argument, the output file.  The default is sysv.cpp.
+
+Allowable ifdefs in sysvcompat.h are:
+
+ B2S_STRING_MAPON - Set if no strings.h or rindex or index.  Must have
+string.h and strrchr, strchr in this case.
+
+ B2S_BSTRING_MAPON - Set if no bcopy, bcmp, bzero.  Then you must have
+memcpy, memcmp, and memset.
+
+ USECHOWN - set you may chown a file to another
+
+ NEEDFCNTLDOTH - set if you need to include fcntl to get O_READONLY, etc.
+
+ USETIMES - use times to get process usage times instead of the
+preferred bsd getrusage.  Also assume that wait3 does not return usage
+information.
+
+ NOWAIT3 - set if no wait3 in system - use wait instead which isn't as
+flexible.
+
+ NODUP2 - No DUP2 call.  Emulate with "close/dup"
+
+ NOLSTAT - no lstat for symbolic links.  Use stat or don't use at all.
+
+ USERAND - don't use the bsd random call, use srand, rand instead
+
+ USEGETCWD - use the system 5 getcwd call to get the current working
+directory instead of the bsd getwd call.
+
+ NOUTIMES - use utime to set file times instead of bsd utimes
+
+ NOPGRP - set if either setpgrp or killpg is missing.  If one is, both
+probably are, but it might be like hpux where one is in libc and one
+in libBSD (in which case you need not define this, but modify
+libspecial to have libBSD (SLIB in makefiles))
+
+ NOVFORK - system doesn't have vfork - what a shame.  Use fork instead.
+
+*********
+LIBRARIES
+*********
+
+CAP LIBRARIES
+-------------
+Most of the machine dependencies are encoded into the modules and deal
+with issues of structure byte alignment, incompatibilities with BSD
+Unix, etc.  Most of these are dealt with by doing "ifdef machine" and
+triggering internal defines.  Following is a module by module
+description of some of the more important of these.
+
+abkip.c has four major "defines".  NORECVMSG and NOSENDMSG are set by
+Configure and say whether sendmsg and recvmsg exist in the system
+(they do scatter/gather io).  NEEDMSGHDR should also be set if
+<sys/socket.h> doesn't define it (as in old versions of aux).
+NOFFS means that the target machine does not have the "ffs" subroutine
+defined (find first set bit) and that we must use our own copy.  hpux
+and aux use NOFFS.
+
+abddp.c has one major "define": INLINECHKSUM.  INLINECHKSUM attempts
+to speed up the ddp checksumming by defining the code in-line.  This
+been optimized for a vax and only tested on a vax.  It is only set for
+a vax :-).  Note: it is possible to turn off ddp checksumming by
+compiling abddp.c with "DONT_DOCHKSUM".  This is NOT recommended.  If
+you have an application that requires turning off ddp checksumming,
+you can call "checksum_error" with FALSE to ignore checksum errors.
+
+abnbp.h in netat has an ifdef important for byteswapped machines.
+Specifically, there is a bitfield definition and the order of the
+items may depend upon the byte ordering of the target.  You may need
+to add an ifdef for your machine.
+
+AFP Libraries
+-------------
+The AFP libraries contain three main components at the present time:
+(1) a set of packing and unpacking routines that attempts to hide byte
+swapping and struct packing differences between machines, (2) the des
+subroutines, and (3) the locking routines.  There are all routines
+that might be used by either the client or server AFP software.
+
+ o Packing and unpacking
+
+afpcmd.c is a driver for the packing and unpacking routines that
+attempts to mask byte ordering and structure alignments.  Currently
+there are two defines in this module: BYTESWAPPED and
+LOOSE_BYTESWAPPED.  Like the defines in the libraries, these are also
+hidden.  The first simply says the machine is byte swapped like a vax.
+The second allows cheating in dealing with byte swapping and should
+only be defined if you are byte swapping and you can be sure that a
+pointer to a "byte" will be usuable as pointer to a word or double
+word.  Currently, both defines are set for a vax.  Sequents (nsxxxxx
+and 386 based machines) and ns16000/ns32000 machines have BYTESWAPPED
+on.  pyramids, ibm032 (ibm rt pc), and 680xx based machines (sun,
+aux/mac-ii, hpux/hp-9000 series) do not need either define.  Note: you
+should be able to turn on LOOSE_BYTESWAPPED for the nsxxxx processors,
+but it is not done by default.
+
+o locking
+
+The two defines for locking are "NOLOCKF" and "NOFLOCK" that should be
+set appropriately for you machine.  Most BSD systems should have flock
+available.  For the implications of what happens when you do or don't
+have these, see the documentation on the various client and server
+(Aufs) programs.
+
+
+************
+APPLICATIONS
+************
+
+Aufs has a seperate document on porting/installation in
+applications/aufs/INSTALLATION.  However, it is worth mentioning that
+most of the Aufs porting requirements are covered through the use of
+sysvcompat.h and compat.h as mentioned in "GENERAL COMPATIBILITY".
+

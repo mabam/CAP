@@ -1,0 +1,38 @@
+NOTICE
+
+The Columbia AppleTalk Package for UNIX, referred to as CAP
+and which consists of files in the enclosed MANIFEST, is Copyright
+1986, 1987, and 1988 by the Trustees of Columbia University in the
+City of New York.  CAP is provided with certain restrictions as
+outlined below.
+
+COPYRIGHT NOTICE
+
+Copyright (c) 1986, 1987, 1988, The Trustees of Columbia University in the
+City of New York.  Charlie C. Kim, User Services Group, Academic
+Information Services Division, Libraries and Center for Computing
+Activities & Bill Schilit, Computer Research Facilities, Computer
+Science Department.
+
+Permission is granted to any individual or institution to use, copy,
+or redistribute this software so long as it is not sold for profit,
+provided that this notice and the original copyright notices are
+retained.  Columbia University makes no representations about the
+suitability of this software for any purpose.  It is provided "as is"
+without express or implied warranty.
+
+
+The following notices apply to certain of the files in the CAP
+distribution and such files are clearly marked.
+
+Portions Copyright (c) 1985, Stanford Univ. SUMEX project.
+May be used but not sold without permission.
+
+Portions Copyright (c) 1984, Apple Computer Inc.
+Gene Tyacke, Alan Oppenheimer, G. Sidhu, Rich Andrews.
+
+Portions Copyright (c) 1988, Carnegie Mellon University.  Rob Chandhok,
+Computer Science Department.
+
+Portions Copyright (c) 1990, 1991, The University of Melbourne.
+

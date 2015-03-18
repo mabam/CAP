@@ -1,0 +1,231 @@
+CAP Installation notes
+
+The Columbia University Appletalk Package is actually a rather broad
+collection of libraries and programs.  Following are some guidelines
+in building the various programs and libraries.
+
+Following are notes about the various components of CAP that require
+special attention during installation or porting.  Hopefully, we've
+caught most of the major points, but there may be things missing.
+
+Index:
+	CONFIGURATION
+	INSTALLATION
+	MACHINE SPECIFIC
+	LIBRARIES
+	SAMPLE PROGRAMS
+	CONTRIB
+	APPLICATIONS
+	
+
+*************
+CONFIGURATION
+*************
+
+Configuration is somewhat automated. The configuration parameters are
+divided into features and major and minor parameters. The major parameters
+must be set to compile properly. The minor parameters are for
+configuration of programs, etc.
+
+To start off, you can run the "Configure" shell script to configure
+the main parameters. One of the options in Configure allows you to edit
+a file called 'm4.features'. This file is used to specify which of a set
+of alternate features are included. For more details about the features,
+see the README files in the patches subdirectories. Configure creates a
+file called m4.setup. If necessary, you should then modify the secondary
+(minor) parameters in this file.
+
+Makefiles are generated from templates.  m4.setup and m4.features define
+variables used in the template. The command gen.makes builds the Makefiles.
+
+Makefiles are included in all directories (Makefile) configured for
+a standard BSD system.  (Major configuration: bsd, no fastether,
+needgetopt, no quotas).  gen.makes creates "makefile" which should
+be used in preference to "Makefile" on most machines.
+
+Make sure you read "MACHINE SPECIFIC"!  It points out os/machine
+dependencies that are not handled by Configure.
+
+
+************
+DESTINATIONS
+************
+
+Or where do the files go?  Generally, the defaults are:
+	/usr/local/cap - general programs
+	/usr/local/lib/cap - programs not for general use, data files
+	/usr/local/lib - libraries
+	/etc - some configuration files
+
+Certainly machines do not search /usr/local/lib by default.
+In these cases, the libraries are place in /usr/lib.
+
+You should be modifying these in m4.setup.
+
+************
+INSTALLATION
+************
+
+A detailed procedure with testing mechanisms is defined in
+doc/install.ms (a formatted copy is doc/install.doc).
+However, you should peruse this document first.
+
+
+****************
+MACHINE SPECIFIC
+****************
+
+The current CAP distribution should work on:
+	BSD 4.2
+	BSD 4.3
+	Ultrix 1.0, 1.1, 1.2, 2.0 and hopefully 2.2
+	Sun OS 3.2 or higher
+	Pyramid's Unix under the BSD universe 
+	ACIS 4.2 or 4.3 for the IBM RT PC
+	A/UX (using native AppleTalk with 2.0)
+	HP-UX for the series 9000 (release 6.0)
+	Encore (Multimax) (version unknown)
+	IRIS/IRIX for Silicon Graphics
+	AIX for the IBM 6000
+and the majority should work under:
+	Convex Unix V6.1
+and most should work with some manual work under:
+	HP-UX - release before 6.0
+
+However, it should be noted that the baseline development system is
+Ultrix 2.0 and things are tuned for that environment.
+
+If your machine isn't listed, take a close look at the document
+"PORTING" for things to watch out for.
+
+On the pyramid, everything is compiled with the "-q" option to be
+safe.  "-q" tells it to pack the structures, possibly at the expense
+of speed.  SEE LOCKF below.
+
+On the Encore Multimax, there are reports that the optimizer may be
+overzealous.  It may be wise to compile without optimization (or try
+recompiling without optimization if there are problems).
+
+On HP-UX, if you have an old release, you will have to define
+"NEEDMSGHDR" in caposdefs in m4.setup as output by Configure.  (You
+can do it lib/cap/makefile, but that is not recommended).
+
+On MORE/BSD, getgroups may return an array of gid_t instead of type
+int.  If this happens to be the case, you should edit aufsosdefs in
+m4.setup and add:
+	-DGGTYPE="gid_t"
+ALSO SEE LOCKF BELOW.
+
+LOCKF - You should be careful here.  Lockf is known to work properly
+under Ultrix and A/UX.  It should work okay under SunOS.  There have
+been reports of problems with lockf under Pyramid OSx and MORE/BSD.
+If it is truly broken then you should comment out the "lockf in
+system" in m4.setup.  In other words, find the line:
+	define([X_LOCKF],1)
+and put a "#" in front of it.  If you do this and have already
+compiled, then you should regenerate your makefiles with gen.makes,
+regenerate libafp (lib/afp) making sure you recompile afposlock and
+relink any programs that use libafp (currently samples/ash and
+applications/aufs).  Note that some systems may require a special
+daemon for lockf to function (e.g. locking down outside the kernel).
+Another problem may simply be the number of allowable locks in the
+system.
+
+Paul Campbell reports that AUX 1.0 goes to the disk for every call to
+gettimeofday to validate the TZ information.  In absched, a larger
+number of gettimeofday calls are done that do not require TZ
+information (even if they did require this information there are
+better ways of doing things than going to disk on every call).  To get
+around this, the cap library LOCALTIME_GTOD says to call the function
+_gettimeofday to grab the time only.  This is noted here because
+future versions of aux will probably require slightly different
+handling.
+
+On HP/Apollo Domain OS, CAP builds under the BSD 4.3 environment,
+for Domain OS version 10.4.  The main applications (aufs and
+papif tested, lwsrv not tested) work on both 68K and 88K/PRISM
+machines.  The Domain OS syntax //node/path must be avoided in the
+afpvol file.  Note that this may result from the expansion of ~ if
+home directories are defined using the full network syntax.  The
+problem is purely one of syntax, directories on other nodes may be
+mounted using soft links or alternative syntax such as /../node/path.
+You may want to modify the aufs man page to communicate this.
+[Note: it is better for aufs (and other Unix software) if home
+directories are defined without reference to //node and soft links
+used between different nodes, so that ~ will never expand to the
+unusual Apollo syntax.]  Both flock, lockf and (if either the
+APPLICATION_MANAGER or DENYREADWRITE options are chosen, see
+netat/fcntldomv.h) undocumented fcntl range locking is used.  Since
+the underlying Domain file system handles locking, one hopes this
+may all work -- but, from restrictions in the Domain file sytem,
+perhaps not as well on files on remote nodes.  If you primarily use
+the System V environment but installed the BSD 4.3 environment, you
+could probably build aufs, at least, under the BSD environment and
+use it under System V.
+
+*********
+LIBRARIES
+*********
+
+There are three sets of libraries.  The first is the core Appletalk
+libraries.  The second is the generic AFP libraries.  The third is the
+AFP client libraries.  In the following we discuss some of the points
+you should be aware of when building these.
+
+CAP LIBRARIES
+-------------
+
+The core of CAP is the Appletalk libraries.  
+
+The major configuration parameter is for atalkdbm.c and tells it where
+to find the atalk.local file.  By default, it assumes
+/etc/atalk.local, but can be reconfigured in m4.setup.
+
+cap_conf.h contains a set of configuration parameters that defined
+standard timeouts, etc, for protocols.  At present, it only contains
+parameters for PAP.  You shouldn't need to touch this file.
+
+AFP Libraries
+-------------
+
+o locking
+
+The two defines for locking are "NOLOCKF" and "NOFLOCK" that should be
+set appropriately for your machine.  Most BSD systems should have
+flock available.  The only program that uses these calls is Aufs.  For
+the implications of what happens when you do or don't have these, see
+the documentation on the various client and server (Aufs) programs.
+In particular, see applications/aufs/INSTALLATION.
+
+
+AFP Client Libraries
+--------------------
+You should be able to build afpc without any configuration changes.
+
+
+***************
+SAMPLE PROGRAMS
+***************
+
+You should be able to get away without modifying the default
+compilation parameters.  See samples/README for futher information.
+
+***********
+CONTRIBUTED
+***********
+
+See contrib/README for further information.
+
+************
+APPLICATIONS
+************
+
+See the README files in the various directories for further
+information about configuration of these programs.
+
+It is highly recommended that you look at the default configuration
+for Aufs.  This holds in particular if you are not running a virgin
+BSD4.3 or BSD 4.2 system (have NFS added, etc): there is a good chance
+you can configure parameters in that will result in better performance
+and/or more functionality.
+

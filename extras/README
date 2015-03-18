@@ -1,0 +1,11 @@
+  des.c		- Public Domain routines for DES encryption
+
+  iwif.c	- input filter for BSD LPD for Imagewriter hooked up via
+		   a serial line
+
+  printcap.iw	- sample printcap entry for ImageWriter hooked up via
+		   a serial line
+
+  att_getopt.c  - an getopt from mod.sources for lwsrv and aufs (PUBLIC
+ 		   DOMAIN SOFTWARE)
+

@@ -1,0 +1,32 @@
+.\" troff -man
+.TH TIMELORD 1L TIMELORD CAP
+.SH NAME
+timelord \- time server daemon for Macintoshes running 'tardis'
+.SH SYNOPSIS
+.BI timelord
+[-d [CAPDebugFlags]] [-l logfile] [-n name]
+.SH DESCRIPTION
+.BI timelord
+provides the equivalent of the Macintosh cdev 'Timelord'
+for a network of Macintoshes. Timelord is a time server that can be used to
+set the Macintosh time at boot or from the Chooser using the rdev 'tardis'.
+.IP
+The -l option allows use to be monitored in 'logfile' (default is /dev/null).
+.IP
+The -n option names the server, the default is the machine host name.
+.IP
+If the -d option is used, Timelord stays in the foreground and
+prints debugging information about activity,
+otherwise it forks and runs silently in the background. The -d flag can
+also be used to set CAP debug flags (l lap, d ddp, a atp, n nbp, p pap, i
+ini, s asp, k scheduler).
+.SH FILES
+None.
+.SH SEE ALSO
+CAP (Columbia AppleTalk Package)
+.SH DIAGNOSTICS
+"Bad Argument" for unknown flags, -d option for more verbosity.
+.SH AUTHOR
+djh\@munnari.OZ.AU, May 1990. Updates via FTP from munnari.OZ.AU
+.br
+Copyright (c) 1990, The University of Melbourne.

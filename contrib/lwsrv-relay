@@ -1,0 +1,35 @@
+#!/usr/bin/perl
+
+# lwsrv-relay - relay PostScript jobs received by lwsrv to other hosts
+#
+# This Perl script is an example of what you can do with the -C option for
+# lwsrv.  It invokes rcp to copy the received file to a directory on another
+# host, renaming it as a cleaned up version of the job name with the process
+# id attached to prevent collisions.  We use it here to feed jobs to a
+# (non-lpr) typesetter.
+#
+# John J. Chew <poslfit@utcs.utoronto.ca>
+# 1991 12 10
+
+$dest = 'desire1:/tmp'; # change this to send the file elsewhere
+
+require 'getopts.pl';
+$opt_s = '-';
+do Getopts('J:P:rs:');
+$dest .= '/' unless $dest =~ m!/$!;
+($job = $opt_J) =~ tr/-.A-Za-z0-9//dc;
+$in = $opt_s;
+$out = "$dest$job'.'$$";
+
+print STDERR "lwsrv-relay: invoked as ", join(' ', $0, @ARGV), "\n";
+
+sub system {
+    print STDERR "lwsrv-relay: ", join(' ', @_), "\n";
+    print STDERR "lwsrv-relay: returned ", system(@_), "\n";
+  }
+
+# change these two lines to do something else with the job
+&system('/usr/ucb/rcp', $in, $out);
+&system('/bin/rm', $in);
+
+exit 0;

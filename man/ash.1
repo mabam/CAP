@@ -1,0 +1,108 @@
+.TH ash 1 "26 July 1990" "Columbia University"
+.SH NAME
+ash \- utility program to make AppleTalk afp client calls to test CAP access to AppleShare servers
+.SH SYNOPSIS
+.B ash
+[
+.BI \-d " <flags>"
+] [
+.I nbpentity
+]
+.SH DESCRIPTION
+.I ash
+acts as an afp client "shell" to allow the user to issue a few simple commands
+to an AppleShare (afp) server.
+This can be used to test the Columbia AppleTalk Package (CAP) afp client
+routines, or to test a CAP afp server (
+.I aufs
+program).
+.PP
+Basically, the user invokes
+.I ash
+with the AppleTalk NBP name of a server which it will attempt to contact.
+If no server name is specified, it will attempt to contact a default server
+name compiled into the program and probably non-existent at your site.
+After connecting to the server, you are prompted to log in with your
+server name and password, and then offered a list of volumes to select.
+Finally, you enter a loop which prompts for simple actions that can be 
+attempted on the server, such as listing a directory (folder) or changing
+directories (folders).
+You must terminate the program to end the loop (for example, with CTRL-C).
+If you are testing an
+.I aufs
+server, this may leave the
+.I aufs
+child process running on the UNIX host for you to kill separately.
+.SH OPTIONS
+.TP 10
+.BI \-d " <flags>"
+specify standard CAP debugging flags.  See CAP(3) for a list of valid flags.
+.TP 10
+.I nbpentity
+specify the fully-qualified NBP name of the afp server to be contacted,
+for example,
+.I "UNIX Aufs:AFPServer@*".
+If no NBP name is specified, a default server name compiled into the 
+program will be used.
+This will almost certainly not work at your site.
+Don't forget to enclose this argument in quotes if it contains any 
+embedded blanks.
+.SH SAMPLE SESSION
+This is a typescript of a sample session initiated on a UNIX host named
+"pangea" which is running a standard
+.I aufs
+server named "Pangea Aufs".
+My responses to prompts are in italics.
+.nf
+.RI pangea> " ash 'Pangea Aufs:AFPServer@*'"
+abInit: [ddp:   4.51, 31] starting
+Looking for Pangea Aufs:AFPServer@* ...
+Unix server name Pangea Aufs
+There are 3 AVO strings
+Entries in indexed string: 3
+1: 'AFPVersion 1.0'
+2: 'AFPVersion 1.1'
+3: 'AFPVersion 2.0'
+There is 1 UAM strings
+Entries in indexed string: 1
+1: 'Cleartxt passwrd'
+comp  = 0
+User name?
+.I farrell
+.BI Password: " [not echoed for security]"
+Found 3 volumes
+Volume Earth_Sciences has no password
+Volume Pangea-Mac files has no password
+Volume Pangea-Unix files has no password
+Returned server: 649031553
+Server time Thu Jul 26 15:32:33 1990
+What volume?
+.I Earth_Sciences
+VOLID = 1
+.RI > ?
+Valid commands are:
+d[irectory] - long file listing
+l[s] - short file listing
+c[d] - connect to directory
+g[et] - get a file
+p[ut] - put a file
+.RI > ls
+7 items
+Count = 7
+README [file 12289, 2], res 0 + dat 592 = 592
+Virus Prevention [dir - 320, 2, 4 entries]
+MacIP3.03 [dir - 321, 2, 4 entries]
+System 6.0.5 [dir - 322, 2, 4 entries]
+MacIP 4.0 [dir - 323, 2, 9 entries]
+Downloading Tools [dir - 324, 2, 4 entries]
+Hypercard v1.2.2 [dir - 325, 2, 6 entries]
+okay
+.RI > ^C
+.fi
+.SH SEE ALSO
+CAP(8), CAP(3), aufs(8), AUFS(1)
+.SH AUTHOR
+Manual entry by Phil Farrell, Stanford University School of Earth Sciences
+.SH BUGS
+Should provide a graceful way to exit that will properly close the server
+connection.

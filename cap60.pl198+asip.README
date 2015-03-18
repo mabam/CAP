@@ -1,0 +1,22 @@
+
+This is a very unofficial distribution of CAP, Columbia AppleTalk Package,
+that incorporates all the source patches thru 198 plus the
+AppleShare-IP patches that were not numbered after that -- mostly
+or all done by  David Hornsby.
+
+See ftp://iubio.bio.indiana.edu/util/cap/
+
+These unnumbered patches include asip1.patch, extnd.patch,
+desktop.patch, cicon.patch, and can be found at David Hornsby's
+CAP site, munnari.OZ.AU, if you hunt for them.  The latest patch
+date I could find for CAP is Aug  7  1998 for the asip and extnd
+patches (both are essential for proper CAP use with MacOS 8+).
+These are in the mac/unsupported/cap/ directory on munnari.
+
+If anyone has more recent news of CAP development or patches,
+please let me know.  I recently updated our CAP service to this
+cap60.pl198+asip group, and things seem to be hunky-dory (the
+unsupported patches were needed to fix an earlier asip problem).
+
+-- Don Gilbert, software@bio.indiana.edu, March 1999
+

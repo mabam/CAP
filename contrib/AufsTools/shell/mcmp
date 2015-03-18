@@ -1,0 +1,9 @@
+#
+set argc = $#argv
+if( $argc == 2 ) then
+	cmp $argv[1] $argv[2]
+	cmp .resource/$argv[1] .resource/$argv[2]
+	cmp .finderinfo/$argv[1] .finderinfo/$argv[2]
+else
+	echo "usage: mcmp file1 file2"
+endif

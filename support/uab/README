@@ -1,0 +1,65 @@
+UAB - Unix AppleTalk Bridge
+
+AppleTalk Bridge For Unix
+
+written by Charlie C. Kim
+    Academic Computing and Communications Group
+    Center For Computing Activities
+    Columbia University
+August 1988
+
+Copyright (c) 1988 by The Trustees of Columbia University 
+ in the City of New York.
+
+Portions Copyright (c) 1990 The University of Melbourne.
+
+Permission is granted to any individual or institution to use,
+copy, or redistribute this software so long as it is not sold for
+profit, provided that this notice and the original copyright
+notices are retained.  Columbia University nor the author make no
+representations about the suitability of this software for any
+purpose.  It is provided "as is" without express or implied
+warranty.
+
+-----
+
+See whatiswhat for a general description of modules.
+
+See desc.ms for general overview.
+
+See UAB.8 for info on running uab.
+
+-----
+
+Installation
+
+This version of UAB has been incorporated into CAP. Run Configure in the
+CAP top level directory and answer 'yes' to the using UAB question. The CAP
+libraries will be set up for UAB use and UAB will be compiled and installed
+automatically (in /usr/local/cap by default).
+
+YOU MUST STILL MANUALLY EDIT AND INSTALL THE FILE "bridge_desc" (by default
+this file is in /usr/local/lib/cap, unless the 'caplibdestdir' variable is
+modified [for example, to "/etc/"] in m4.setup).
+
+The file /etc/etalk.local is written by UAB when it discovers sufficient
+information about the connected networks. CAP programs will use this
+file to obtain network and bridge details.
+
+Installation on Sony NEWS
+
+1. make /dev/ether?
+
+UAB for the Sony NEWS uses the rawether interface. To make the device file,
+
+	% cd /dev; sh MAKEDEV ether0
+
+2. run Configure
+
+Ensure that Configure recognizes that it is running under NEWS. It will do
+this automatically if the directory '/usr/sony/bin' exists, otherwise type
+"newsos" for the Operating System type. Answer 'y' to the UAB question.
+
+3. add the appropriate entry to the bridge_desc file ... EG:
+
+ohio	[ELAP,/dev/ether:0]	mkip	[138.115,Mac-net]

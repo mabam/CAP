@@ -1,0 +1,136 @@
+.TH CAP 8 "24 July 1990" "Columbia University"
+.SH NAME
+CAP \- Columbia AppleTalk Package for Unix
+.SH DESCRIPTION
+.I CAP
+implements a portion of Apple
+Computer's AppleTalk protocols on a variety of UNIX hosts.  There are two
+distinct link access delivery mechanisms for CAP: IPTalk and Ethertalk.
+.PP
+IPTalk is the traditional CAP configuration.  It encapsulates
+Appletalk in UDP/IP packets, thus allowing you to
+install CAP on any system that supports IP.  It requires
+special Appletalk bridges that understand the IPTalk encapsulation.
+Suitable candidates are the Kinetics/Shiva FastPath, Webster MultiPort
+Gateway,
+Cayman GatorBox or Stanford University's Seagate box.
+.PP
+Ethertalk is the standard Apple way of using Appletalk on Ethernet.
+The three methods of producing EtherTalk packets with CAP are:
+.br
+"Native EtherTalk"
+using packet filters built on the Stanford ENET model. Currently available
+for NIT or ENET on SunOS and the ULTRIX Packet Filter only.  Native
+EtherTalk is both Phase 1 and Phase 2 compatible.
+.sp
+.br
+"Kernel AppleTalk" for systems that provide appropriate kernel AppleTalk
+support at the DDP level or where the 'netatalk-1.2' package from
+the University of Michingan is installed.  Currently supports Phase 1 only.
+.sp
+.br
+"UAB" is the Unix Appletalk Bridge.  The main use for UAB is as a bridge
+between two or more ethernet interfaces but it can also be used to provide
+access to CAP services.  With UAB, EtherTalk packets pass through a single
+gateway process which places fewer restrictions on the network interface.
+UAB currently runs under SunOS, ULTRIX, SGI IRIX, SONY NEWS and (soon) HP-UX.
+UAB is currently Phase 1 compatible only.
+.PP
+CAP routines are structured, for the most part, the same as the Apple
+routines described in "Inside AppleTalk" and "Inside LaserWriter."
+Refer to the Apple documents and the procedure comments for a complete
+description of the routines and how to call them.
+.PP
+Currently the AppleTalk protocols supported by CAP are:
+.br
+.I AppleTalk Transaction Protocol (ATP)
+.br
+.I Name Binding Protocol (NBP)
+.br
+.I Printer Access Protocol (PAP)
+.br
+.I AppleTalk Session Protocol (ASP)
+.br
+.I AppleTalk Filing Protocol (AFP) client side
+.br
+In addition, the 
+.I Datagram Delivery Protocol (DDP)
+and
+.I Zone Information Protocol (ZIP)
+are partially available.
+The structure of the Internet Appletalk Bridge software makes it
+impossible to provide full DDP service for IPTalk.  Only the Get Zone List ATP
+ZIP command is implemented for ZIP.
+.PP
+IPTalk CAP, is of course, highly dependent upon the availability of a
+Ethernet to Appletalk gateway which we term an Internet Appletalk
+Bridge.  Currently, CAP is based upon the KIP revision of the UDP
+code as done by Bill Croft of SUMEX at Stanford University.
+The K-STAR code, version 7.0 or higher, for the Shiva FastPath is 
+compatible as is any version of 'Megan', the gateway code for the Webster
+MultiPort Gateway.
+.PP
+Three main CAP applications are available:
+.TP
+.I papif
+acts as a line printer input filter spooling from a unix host to a
+LaserWriter. See
+.I papif(8)
+for more information.
+.TP
+.I lwsrv
+offloads spooling to the LaserWriter from the MacIntosh to a Unix host.
+See
+.I lwsrv(8)
+for more information.
+.TP
+.I aufs
+is an AppleTalk Filing Protocol unix file server (AppleShare
+compatible).  See
+.I AUFS(1)
+and
+.I AUFS(8)
+for more information. 
+.PP
+In addition, there are a number of sample programs.  These are included
+strictly to point out some of the functionality made available by CAP.
+.TP
+.I lwpr
+is a simple program which allows printing from a CAP host to a
+LaserWriter.  See
+.I atprint(1)
+for more information.
+.TP
+.I tlw
+accesses the interactive mode of the LaserWriter, known as the
+executive.
+See 
+.I atprint(1)
+for more information.
+.TP
+.I isrv, iwpr
+spool from and print to an AppleTalk ImageWriter.  See
+.I atprint(1) for more information.
+.TP 
+.I atlook, atlooklws, atpinger
+lookup Appletalk names.  See
+.I atlook(1)
+for more information.
+.SH AUTHOR
+Charlie C. Kim, User Services, Columbia University Center for
+Computing Activites and Bill Schilit, Computer Science Department,
+Columbia University.  Contributions from Bill Croft, Stanford
+University and Dan Tappan of Bolt, Bernak, and Newman.
+.SH NOTES
+Bill Croft's original work in this area provided the inspiration for
+CAP.
+.PP
+Unfortunately, the interfaces for CAP have diverged some from the Apple
+specifications (additional features, some code was written before Apple
+released their specifications, etc).  Most of the differences are
+documented in the "doc" directory that comes with CAP.
+.PP
+The ZIP functions work only with revision 1/88 or later of KIP.
+.SH "SEE ALSO"
+aarpd(8), atis(8), AUFS(1), AUFS(8), papif(8),
+lwsrv(8), atprint(1), atlook(1), CAP(3)

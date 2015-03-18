@@ -1,0 +1,481 @@
+.TH AUFS 1 "20 Jun 1990" "Columbia University"
+.SH NAME
+aufs 
+\- AppleTalk file protocol UNIX File Server
+.SH SYNOPSIS
+AUFS is an implementation of a file server on a UNIX host connected
+to an AppleTalk network, for client computers on AppleTalk that support AFP.
+Specifically, it works as a file server for Macintosh computers with 
+the AppleShare client code.
+.PP
+Any specified UNIX directory can be accessed as an AUFS volume.
+An AUFS volume can be used to store and use Macintosh files and applications;
+or to access UNIX files from the Macintosh in text-only mode.
+This manual entry explains the design of the AUFS system from the user
+point of view and the steps needed to set up your UNIX account for 
+Macintosh file service.
+See AUFS(8) for information on how to set up the 
+.I aufs
+daemon that establishes the server on the UNIX system.
+To use AUFS, you must have a valid login account on the UNIX system and
+write access to at least one directory. In some circumstances, it is
+possible to set up an AUFS server with "guest" access to allow read-only
+access to supplied files.
+.PP
+Here are the basics for using AUFS.
+More detailed descriptions of the implementation follow.
+.PP
+.B
+UNIX setup
+.RS 5
+.IP 1) 5
+Make sure your UNIX password is no more than eight characters long.
+.IP 2) 5
+Make a subdirectory of your UNIX home directory or work area 
+to be your Macintosh volume, say 'mac'.
+Create two 
+additional subdirectories named 
+.I .resource
+and
+.I .finderinfo
+at the same level, then change your working directory to the mac
+subdirectory and make the same subdirectories again.
+For example:
+.br
+.sp
+.I
+	% mkdir mac
+.br
+.I
+	% mkdir .finderinfo .resource
+.br
+.I
+	% cd mac
+.br
+.I
+	% mkdir .finderinfo .resource
+.br
+.sp
+The top level .finderinfo directory is used to store information about
+the volume window size, position and layout. You can do without the top
+level .finderinfo and .resource
+directories but the window will always open with default settings, changes
+to which will not be saved.
+.IP 3) 5
+Make a file named
+.I afpvols
+or
+.I .afpvols
+in your home directory to designate your Macintosh directory,
+with a line like:
+.br
+.sp
+.I
+	~/mac:UNIX_mac_files:
+.br
+.sp
+where the part before the colon is the UNIX pathname (here relative
+to my home directory) and the part after is the volume name that the 
+Macintosh will use and display.
+.RE
+.PP
+.B
+Macintosh setup and use
+.RS 5
+.IP 1) 5
+Make sure you have installed AppleShare client code (version 1.1 or later)
+and Chooser (version 3.0 or later) on your Macintosh startup disk.
+Your Macintosh must be connected to an AppleTalk net that is bridged
+to the Ethernet.
+.IP 2) 5
+Follow these steps to mount your AUFS volume:
+.RS 5
+.IP a) 5
+Select 
+.I Chooser
+from the Apple menu.  
+When the Chooser menu window comes up, click on the AppleShare icon in 
+the upper left corner (if you do not have this icon, you have not 
+properly installed AppleShare).
+Activate AppleTalk if it is not already activated.
+.IP b) 5
+Chooser will query the net for available file servers and list their 
+names.
+Double click on the file server you wish to use.
+You may need to select another AppleTalk zone to find the server.
+.IP c) 5
+A connection request menu window will now appear.
+Click the button for 
+.I registered user
+if it is not already clicked.
+Type your UNIX login account name in the 
+.I Name:
+field (Chooser will supply the name from its name field as the default).
+Click in the 
+.I Password:
+field to activate text entry there and type in either your UNIX password
+("Clear text" is specified in the login dialog box) or your AUFS password
+(asterisks will show instead of the characters you typed for security).
+Press the RETURN key or click on OK.
+.I guest 
+connections may also be allowed at your site (see LOCAL CONFIGURATION, below).
+.IP d) 5
+The AUFS server logs you in and a final menu window appears, listing 
+the available "volumes" (directories) that you may mount. 
+This list consists of the entries in your 
+.I afpvols
+or 
+.I .afpvols
+file, plus any volumes that the UNIX system manager has made available 
+for general use.
+Click on the desired volume name and then click OK to mount it
+(you may shift-click to select several volumes).
+The AUFS volume icon (a UNIX "daemon") should appear on your desktop.
+.IP e) 5
+You are returned to the Chooser main menu.  
+Click its close box to return to your application.
+.RE
+.IP 3) 5
+You work with this AUFS volume as if it were an attached Macintosh hard disk.
+Note that the figures for space used and available refer to the entire
+UNIX disk partition, not just your Macintosh volume directory.
+.IP 4) 5
+To dismount an AUFS volume, simply drag its icon to the trash can. 
+AUFS volumes will also be dismounted if you select 
+.I Shutdown
+from the Finder's 
+.I Special
+menu.
+.RE
+.SH DESCRIPTION
+.B 
+How Files Are Stored
+.PP
+The Macintosh and UNIX operating systems use very different structures
+for storing files.  
+This section describes how the Macintosh structure is mapped into the 
+UNIX structure.
+.PP
+Macintosh files consist of two separate parts known as the 
+"data" and "resource" forks.
+In addition, there is "finder" information kept for the file.
+Roughly speaking, the resource fork stores programs, the data fork stores
+text or data, and the finder information stores file creator,
+file type, etc.
+Under UNIX, all files are simply single streams of bytes whose meaning is 
+interpreted according to how they are used (the file system does have 
+additional structures equivalent to the finder information, but they
+are not separately accessible).
+.PP
+To store a three-part Macintosh file in the UNIX file system,
+AUFS adopts the following scheme.
+Each UNIX directory that will store Macintosh files must contain two 
+subdirectories named 
+.I .finderinfo
+and 
+.I .resource.
+The Macintosh data fork is stored directly in the main directory with
+the same name as seen on the Macintosh (see below for name translation
+exceptions).
+The Macintosh resource fork and finder information are stored (with the same
+name as the data fork) in the 
+.I .resource
+and
+.I .finderinfo
+subdirectories, respectively.
+For example, if the Macintosh user stores the application "MacWrite" on the 
+AUFS volume "mac", it could be seen in the UNIX file system as the three 
+files:
+.br
+.sp
+	~/mac/MacWrite
+.br
+	~/mac/.resource/MacWrite
+.br
+	~/mac/.finderinfo/MacWrite
+.br
+.sp
+.PP
+Macintosh folders are simply mapped to UNIX subdirectories.
+For example, if the AUFS volume "mac" contained the folder "paintings",
+the UNIX directory ~/mac would contain additional subdirectories
+.br
+.sp
+	~/mac/paintings
+.br
+	~/mac/paintings/.resource
+.br
+	~/mac/paintings/.finderinfo
+.br
+.sp
+Finder information for the folder itself 
+is stored in the parent UNIX directory .finderinfo 
+subdirectory, but folders have no resource fork.
+.PP
+The top-level UNIX directory that serves as the root of the AUFS 
+volume (e.g., "~/mac") also contains two files ".ADeskTop" and ".IDeskTop"
+that are the equivalent of the Macintosh DeskTop file.  .IDeskTop contains
+information about icons and .ADeskTop contains information for 
+"applications mappings".  Applications mappings allow you to double click
+on a document and have the correct application mapped.
+In general, you should keep these files around to maintain the highest
+level of performance;
+however, they do grow without bounds, so it might be worthwhile to 
+periodically delete them with the UNIX
+.I rm 
+command (when the volume is not mounted) and rebuild your desktop
+with the 'builddt' command in the contrib/DeskTop directory.
+.PP
+The AFP protocol does not handle file protections.
+Instead, it implements a limited set of directory protections.
+Unfortunately, these protections do not map directly into UNIX
+protections.
+In AUFS, both of the AppleShare protections "See Folder" and 
+"See Files" are mapped to the UNIX directory protections "read"
+and "search"; and the AppleShare protection "Make changes" maps
+to UNIX write access.
+Individual UNIX file protections are also honored, so you don't have
+access to files from the Macintosh unless you also have access from UNIX.
+Changing directory protections with AppleShare results in modifying 
+the protections of the files in the directory to match, if possible.
+.PP
+The names of control files and subdirectories purposely begin with
+a period (.) character, because then they are not shown by the standard
+UNIX 
+.I ls
+command,
+thus presenting a less cluttered view from the UNIX side of your 
+Macintosh files.
+Use the 
+.I -a
+option to the
+.I ls
+command to see them.
+.PP
+.B 
+How AUFS Volumes Are Set Up on UNIX
+.PP
+Real Macintosh volumes are normally separate disk drives.
+Under AUFS, any UNIX directory tree (e.g., some directory plus all its
+subdirectories) may be used as a volume.
+You must specify which of your directories may be mounted by AUFS as 
+Macintosh volumes.
+This is done by creating a file named
+.I afpvols
+or
+.I .afpvols
+in your UNIX home directory (the first form overrides the second).
+Each directory that is to be mountable by AUFS is represented in this file
+by a single line with the following format:
+.br
+.sp
+	UNIX_path_name:Macintosh_volume_name[:optional_password]
+.br
+.sp
+For example, I could create the subdirectory "mac" in my UNIX home 
+directory and then include this line in my "afpvols" file:
+.br
+.sp
+	~/mac:UNIX_mac_files
+.br
+.sp
+If you do not have an afpvols file in your home directory, your home
+directory will be made available for mounting by default.
+.PP
+The UNIX system manager may also specify a system-wide afpvols file 
+when he installs AUFS, to describe volumes that may
+be mounted by any Macintosh client.
+.PP
+It is possible to have AUFS volumes in your afpvols file that overlap.
+That is, a subdirectory of one AUFS volume directory could be separately
+mounted as its own volume.  
+It is dangerous to have overlapping volumes mounted simultaneously on 
+the Macintosh.
+.PP
+.B
+AUFS Color Volume Icons
+.PP
+Color icons for AppleShare volumes (and, in fact, any directory) are stored
+in an invisible Macintosh file named "Icon^M". The ^M is a carriage return
+character. Under AUFS this file is renamed to the UNIX file "Icon:0d". When
+the AUFS volume owner (or any user with write permission) first mounts the
+volume, AUFS creates an approriate color icon file - if none already exists.
+When configuring CAP, you can define USE_HOST_ICON to have the volume icon
+associate with the underlying UNIX hardware or operating system.
+.PP
+There are two methods for creating a new color icon file. Using the
+Macintosh utility 'ResEdit' (make sure that the file contains resources
+'icl4', 'icl8', ICN#', 'ics#', 'ics4' and 'ics8' and that all of the
+resource IDs are set to -16455. The 'Invisible' bit should also be set).
+You can also paste a new icon into the 'Get Info' window of an AUFS
+directory and then move the three forks of the "Icon:0d" file into the
+root of the AUFS volume.
+.PP
+.B
+Macintosh Volumes vs. UNIX volumes under AUFS
+.PP
+AUFS maintains a distinction between "Macintosh" volumes and "UNIX" 
+volumes.
+The first are intended to store and use standard Macintosh files and
+applications.
+The second provide a mechanism for seeing standard UNIX files from 
+the Macintosh.
+The presence of the
+.I .resource
+and 
+.I .finderinfo
+subdirectories in the UNIX root directory of the volume is used by AUFS to 
+distinguish the two types of volumes.
+.I Both
+subdirectories must be present to make this directory a "Macintosh"
+volume.
+AUFS will 
+.I not
+create these subdirectories for you in the volume root directory; you must do
+that if you want to use it as a Macintosh volume.
+Subdirectories (folders) created by AUFS (with the Macintosh "New Folder"
+command) will be made with the 
+.I .resource
+and 
+.I .finderinfo
+subdirectories only if the root directory has them.
+.PP
+UNIX directories that you create to serve as Macintosh volumes 
+under AUFS should be managed solely from the Macintosh client. 
+Using UNIX file utilities to move, rename, etc., files or subdirectories
+is dangerous.
+The only exception to this is occasionally removing the desktop files
+(.ADeskTop and .IDeskTop in the volume root directory) which otherwise
+grow without limit; they will be rebuilt when the directory is next
+mounted by AUFS.
+.PP
+If either of these subdirectories is missing from the UNIX root directory
+of the volume, then AUFS treats it as a "UNIX" volume, containing
+normal UNIX files that may be accessed as "text-only" by the Macintosh.
+AUFS shows files in such volumes as having creator "unix" and file 
+type "TEXT" and uses a special gothic U icon to represent them on the 
+desktop.
+.PP
+For "UNIX" volumes,
+AUFS does automatic conversion between the UNIX line terminator LF (the 
+line feed character) and the Macintosh line terminator CR (the carriage
+return character) when reading or writing UNIX files from the Macintosh.
+In addition, any time that "line at a time" reads with CR as the end of
+line terminator are done by the Macintosh, then both CR and LF are 
+recognized as end of line terminators by AUFS regardless of the file creator
+and type.
+BinHex is an example of a program that does this.
+.PP
+You can turn off automatic CR/LF translation for a UNIX file by setting 
+the file type/creator to other than TEXT/unix (with a Macintosh utility
+like DiskTop, for example).
+"Line at a time" translation can only be turned off by the system 
+administrator when installing AUFS.
+.PP
+The system administrator can also configure AUFS to look in UNIX files
+to determine file type and provide either alternative finder information
+or text translations.
+See the LOCAL CONFIGURATION section (below) to see if this has been done.
+.PP
+Although a directory intended as a UNIX volume under AUFS cannot have 
+both the
+.I .resource
+and
+.I .finderinfo
+subdirectories, it can have a 
+.I .finderinfo
+subdirectory alone, which speeds up access to UNIX files by allowing
+AUFS to store finder information, rather than having to construct it
+every time the volume is accessed.
+In this case, Macintosh documents that have no resource fork can also
+be saved into the UNIX volume, although their contents may not be 
+intelligible to any UNIX program.
+.PP
+.B
+Macintosh -- UNIX File Name Translations
+.PP
+File naming rules differ slightly between the UNIX (BSD version) 
+and Macintosh operating systems, therefore these translation rules are used.
+The Macintosh system does not distinguish between upper and lower case 
+letters in names; UNIX does.
+AUFS only does case translation if configured to do so.
+Macintosh file names may not exceed 31 characters in length; Berkeley 
+UNIX names may be up to 255 characters long.
+No truncation of Macintosh names is necessary when stored on UNIX, but
+if AUFS encounters a UNIX file in the mounted directory with a name longer
+than 31 characters, it simply skips it (not visible to the Macintosh).
+Macintosh file names may contain any character, including special 8 bit
+character codes (like those for the trademark symbol), except for a colon;
+UNIX names may contain any 7 bit character except for the slash.
+Thus, AUFS translates colons found in UNIX file names into slashes as viewed
+by the Macintosh; and 8 bit special characters or the slash found in
+Macintosh names into a colon followed by the two digit hex code for the 
+character when stored on UNIX.
+In general, if you expect to use a file on both the UNIX and Macintosh
+systems, stick to file names of 31 characters or less, using only letters,
+numbers, period, underscore, and hyphen.
+.SH LOCAL CONFIGURATION
+.br
+.sp
+.SH KNOWN BUGS
+DeskTop files grow without bounds. 
+The only way to prune them is to delete them from the UNIX side 
+and rebuild the desktop using the 'builddt' command in the contrib/DeskTop
+directory.
+.PP
+Applications mappings in the DeskTop files can quickly get out of sync
+with reality.
+Not enough information is stored to keep everything in sync, and it 
+would be costly to recover anyway if available.
+Problems may occur when you move around directories holding applications.
+A work-around is to delete and rebuild the DeskTop files as described
+above.
+.PP
+The file creator "unix" and the file type "TEXT" are not registered 
+with Apple.
+.PP
+You cannot change the owner of a file; thus drop folders do not work 
+well.
+.PP
+AUFS will follow symbolic links for directories and files.
+However, for directories, no more than about four symbolic links can 
+be followed in any path.
+.PP
+Read/writes and many other operations are blocking.
+.PP
+AUFS uses a complete path name specification when handling files.
+There is no checking that path names are within system length limits.
+.PP
+File dating is different under UNIX and the Macintosh OS.
+In the distributed vanilla CAP code,
+Macintosh modification time is mapped to the later of the UNIX
+"last status change time" and "last modification time"; 
+creation time is unknown on UNIX and is approximated by the earliest of
+"last status change time", "last modification time", and "last access time".
+By setting the USE_MAC_DATES flag in the features file at Configure time,
+code is included that maintains the file create time correctly.
+.PP
+Specifications for the Macintosh Hierarchical Filing System and AppleShare
+require that directory ids be fixed across the lifetime of a volume, and 
+not be reused. Code to implement fixed directory ids is only included by
+setting the FIXED_DIRIDS flag in the features file at Configure time.
+.PP
+In a directory used as an AUFS volume, path names can get very long.
+Some implementations of the UNIX 
+.I tar
+program may have problems with these names when used to archive the directory.
+.PP
+Dumping a AUFS directory on one UNIX machine and restoring on another 
+may not work correctly if the machines have different byte orderings.
+.PP
+See the source directory for more design and bug notes.
+.SH AUTHOR
+Bill Schilit and Charlie C. Kim, Columbia University.
+.br
+This manual entry by Phil Farrell, Stanford University School of Earth Sciences.
+.br
+This manual entry additionally updated by Rakesh Patel, Rutgers University.
+.br
+This manual entry additionally updated by David Hornsby, Melbourne University.
+.SH SEE ALSO
+AUFS(8), CAP(3), CAP(8), atis(8) 

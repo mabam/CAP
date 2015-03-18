@@ -1,0 +1,41 @@
+# $Author: djh $ $Date: 91/02/15 20:46:01 $
+# $Header: conf.sysv.lst,v 2.1 91/02/15 20:46:01 djh Rel $
+# $Revision: 2.1 $
+# 
+# List of system call/include file prereqs for System V.  Used
+# by conf.sysv.sh to generate a list for inclusion into sysvcompat.h
+# (Needs to be manual so can be checked and possibly customized).
+#
+# see conf.func.sh for format of file
+#
+# make sure empty fields have null entry "x" for systems that strip
+# multiple deliminators
+#
+O-,ISINDEX,/usr/include/strings.h,index,"if no index or strings.h"
+O-,ISINDEX,/usr/include/strings.h,rindex,"or no rindex then use use system v funcs"
+N+-,B2S_STRING_MAPON,x,x,"use string.h and strchr, strrchr"
+E,B2S_STRING_MAPON,x,x,"else use bsd rindex, index, and strings.h"
+O-,ISMEM,x,bcopy,"if no bcopy"
+O-,ISMEM,x,bcmp,"or no bcmp"
+O-,ISMEM,x,bzero,"or no bzero, then use system v funcs"
+N+-,B2S_BSTRING_MAPON,x,x,"Use memcpy, memcmp, memset"
+E,B2S_BSTRING_MAPON,x,x,"else use bsd bcopy, bzero, bcmp"
+N-+,USETIMES,/usr/include/sys/resource.h,getrusage,"use times not rusage"
+E,USETIMES,x,x,"SYSV: use times instead of getrusage"
+N-+,NOWAIT3,/usr/include/sys/wait.h,wait3,"no wait3, use wait"
+E,NOWAIT3,x,x,"SYSV: no wait3"
+N-+,NODUP2,x,dup2,"no dup2"
+E,NODUP2,x,x,"SYSV: no dup2"
+N-+,NOLSTAT,/usr/include/sys/stat.h,lstat,"no stat"
+E,NOLSTAT,x,x,"SYSV: no lstat for symlinks"
+N-+,USERAND,x,random,"use rand,srand not random"
+E,USERAND,x,x,"SYSV: use srand, rand not random"
+N-+,USEGETCWD,x,getwd,"use getcwd not getwd"
+E,USEGETCWD,x,x,"SYSV: use getcwd, not getwd"
+N-+,NOUTIMES,x,utimes,"use utime not utimes"
+E,NOUTIMES,x,utime,"SYSV: use utime not utimes"
+A+,HAVESETPG,x,setpgrp,"BSD: have setpgrg"
+N-+,NOPGRP,x,killpg,"missing setpgrp or killpg"
+E,NOPGRP,x,x,"SYSV: missing setpgrg or killpg"
+N-+,NOVFORK,x,vfork,"novfork, use fork"
+E,NOVFORK,x,x,"SYSV: no vfork in system"

@@ -1,0 +1,22 @@
+    afpc.c - primary library 
+    afpc.mss - documentation for afpc.c
+    afpcc.c - set of "easy" access routines (not documented)
+    probs - noted problems with appleshare client
+
+The afpc libraries are consist of two major parts.  The first is a set
+of routines (afpc) that adheres closely to the Apple standards for
+argument passing, etc.  The second is a set of routines (afpcc) that
+attempts to simplify using the above mentioned routines.  afpc.mss
+shows the structures and special calling conventions for routines in
+(afpc) - be wary of this file - it is out of date.
+
+Note: if libafp has des routines encoded you will be able to use
+randnum exchange in login sequences - otherwise not.
+
+The afpc libraries are installed into /usr/local/lib/libafpc.a.  See
+the samples directory for examples of how to load or how to program
+using these libraries.
+
+These routines are braindamaged and unmaintainable the way there are
+done.  They really need to be rewritten.
+

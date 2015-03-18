@@ -1,0 +1,14 @@
+# File to convert those fancy macintosh names into normal unix names
+# for the laserwriter server (lwsrv compiled with RUN_AS_USER/USER_REQURED).
+
+# lines that start with # are comments lines
+# no other comments allowed
+# all characters are significant
+# spaces are mapped onto underscores, as well as all unprintables
+# everything is mapped to lowercase and all letters with diacriticals
+# are mapped to normal letters before lookup.
+
+# We map macuser onto something nonexistent to discourage using that name.
+nonexisting:macuser
+# more names below...
+# unixname:macname

@@ -1,0 +1,1975 @@
+#!/bin/sh
+# $Author: djh $ $Date: 1996/09/10 14:11:08 $
+# $Header: /mac/src/cap60/RCS/Configure,v 2.107 1996/09/10 14:11:08 djh Rel djh $
+# $Revision: 2.107 $
+# CAP configuration shell script.  This ain't perfect, but it's a start.
+# Execute with /bin/sh Configure if your system won't run it (ksh is okay too)
+# 
+# Usage: Configure [output file name]
+#
+fastether="define([fastether],1) # For papif and samples"
+needselfdef="define([selfdefinetypes],1)"
+# ccompiler="define([thecompiler],[cc])"
+if [ -z "${CC}" ]; then
+  ccompiler=cc
+else
+  ccompiler=${CC}
+fi
+export ccompiler
+# lpd system "bsd" or sys v "lp"
+lpd="bsd"
+mydir=`pwd`
+PCAT=/bin/cat
+PGREP=grep
+if [ -f /bin/nm ]; then
+  PNM=/bin/nm
+else
+  if [ -f /usr/ccs/bin/nm ]; then
+    PNM=/usr/ccs/bin/nm
+  else
+    PNM=/usr/bin/nm
+  fi
+fi
+# define to sh or /bin/sh if shell scripts can't be "executed" for some reason
+USESH=""
+export PGREP
+os=""
+ossecondary=""
+
+echo 
+echo "This is the CAP configuration script. It will attempt to help"
+echo "you get the CAP libraries and component programs configured."
+echo
+if [ -f /etc/atalk.local ]; then
+  ${PGREP} _ /etc/atalk.local > /dev/null
+  rc=$?
+  if [ $rc -eq 0 ]; then
+    echo "WARNING: Your /etc/atalk.local file MAY need to be edited."
+    echo "Zone names must now be quoted to include spaces. The use"
+    echo "of underscores to denote a space is no longer supported."
+    echo 
+  fi
+fi
+
+echo
+echo "MAJOR CONFIGURATION"
+
+useatis=1
+# Configure OS
+echo "Checking for Ultrix 4.0, OSF1, or later versions of Ultrix"
+# Ultrix4.0
+if [ -f /bin/uname ]; then
+	case "`/bin/uname`" in
+	"ULTRIX")
+		if [ `/bin/uname -r` -ge 4 ]; then
+			osdefault="ultrix40"
+		fi
+	;;
+	"OSF1")
+	    osdefault="osf1"
+	;;
+	esac
+fi
+# Ultrix2.0
+if [ -z "${osdefault}" ]; then
+	echo "Checking for Ultrix 2.0"
+	if [ -f /vmb.exe ]; then
+		if [ -d /var ]; then
+			ossecondary="ultrix22"
+			echo "Ultrix 2.2 or later version of Ultrix"
+		else
+			echo "Ultrix 2.0 or later version of Ultrix"
+		fi
+		osdefault="ultrix20"
+	fi
+fi
+# sunos
+if [ -z "${osdefault}" ]; then
+	echo "Checking for SunOS/Solaris"
+	if [ -f /bin/uname ]; then
+		if [ `uname -s` = "SunOS" ]; then
+			if [ -f /bin/uname ]; then
+				if [ `uname -r` -ge "5.0" ]; then
+					echo "Solaris"
+					osdefault="solaris"
+				else
+					echo "SunOS"
+					osdefault="sunos"
+				fi
+			else
+				echo "SunOS"
+				osdefault="sunos"
+			fi
+		fi
+	fi
+fi
+# Encore Multimax
+if [ -z "${osdefault}" ]; then
+	echo "Checking for Encore MultiMax"
+	if [ -f /Umax.image ]; then
+		osdefault="encore"
+	fi
+fi
+# IBM RT
+if [ -z "${osdefault}" ]; then
+	echo "Checking for IBM RT running ACIS 4.2/4.3"
+	if [ -f /lib/ropt ]; then
+	  if [ -d /usr/ibm ]; then
+		osdefault="bsd"
+		echo "IBM RT with ACIS 4.x"
+		ossecondary="acis 4.x"
+	   if [ -f /bin/pcc ]; then
+echo "I see /bin/pcc - I will use this instead of cc in case"
+echo "you have the MetaWare High C compiler set as default"
+		ccompiler="pcc"
+	   else
+echo "WARNING: the MetaWare High C compiler and CAP are not compatible"
+echo "modify the thecompiler define to point to the portable C compiler"
+echo "if the default happens to be hc"
+	   fi
+	  fi
+	fi
+fi
+# Pyramid
+if [ -z "${osdefault}" ]; then
+	echo "Checking for Pyramid"
+	if [ -f /bin/pyr ]; then
+		/bin/pyr
+		rc=$?
+		if [ $rc -eq 0 ]; then
+			echo "Pyramid"
+			osdefault="pyr"
+		fi
+	fi
+fi
+#Amdahl
+if [ -z "${osdefault}" ]; then
+	echo "Checking for UTS"
+	if [ -f /bin/uts ]; then
+		/bin/uts
+		rc=$?
+		if [ $rc -eq 0 ]; then
+			echo "uts"
+			osdefault="uts"
+			lpd="lp"
+		fi
+	fi
+fi
+#ICL DRS6000 with DRS/NX 4.0
+if [ -z "${osdefault}" ]; then
+	echo "Checking for DRS/NX"
+	if [ -f /bin/uname ]; then
+	    if [ `uname -m` = "DRS6000" ]; then
+		if [ `uname -s` = "unix" ]; then
+			echo "drsnx - ensure /usr/ucb comes before /usr/bin"
+			osdefault="drsnx"
+			lpd="lp"
+		fi
+	    fi
+	fi
+fi
+useauxappletalk=0
+# A/UX, hpux, SCO Xenix System V
+if [ -z "${osdefault}" ]; then
+	echo "Checking for System V based machines"
+	if [ -f /bin/uname ]; then
+		case "`uname`" in
+		"A/UX")
+			echo "A/UX"
+			osdefault="aux"
+			if [ `uname -r` -ge 2 ]; then
+			  echo "Release 2.0 or greater"
+			  echo "(defaulting to native AppleTalk)"
+			  useauxappletalk=1
+			  useatis=0
+			  lpd="lpr"
+			else
+			  echo "Release 1.1.1 or less"
+			  lpd="lp"
+			fi
+			break
+		;;
+		"HP-UX")
+			echo "HP-UX"
+			osdefault="hpux"
+			lpd="lp"
+			break
+		;;
+		"XENIX")
+			echo "SCO Xenix System V"
+			osdefault="xenix5"
+			lpd="lp"
+			break
+		;;
+		"AIX")
+			echo "IBM AIX System V"
+			osdefault="aix"
+			lpd="lp"
+			break
+		;;
+		"DomainOS")
+			osdefault="domainossysv"
+			echo "HP/Apollo Domain OS System V"
+			echo "Sorry, I do not build under Sys 5.3 environment."
+			echo "Try building under BSD 4.3 environment."
+			exit
+			break
+		;;
+		esac
+	fi
+fi
+# Sequent Balance
+if [ -z "${osdefault}" ]; then
+	echo "Checking for Sequent Balance"
+	if [ -f /dynix ]; then
+		echo "Sequent Balance"
+		osdefault="dynix"
+	fi
+fi
+# Silicon Graphics
+if [ -z "${osdefault}" ]; then
+	echo "Checking for Silicon Graphics IRIS/IRIX"
+	if [ -f /bin/4d ]; then
+		/bin/4d
+		rc=$?
+		if [ $rc -eq 0 ]; then
+			echo "Silicon Graphics IRIS/IRIX"
+			osdefault="irix"
+		fi
+	fi
+fi
+# Sony NEWS
+if [ -z "${osdefault}" ]; then
+	echo "Checking for Sony NEWS"
+	if [ -d /usr/sony/bin ]; then
+		echo "Sony NEWS"
+		osdefault="newsos"
+	fi
+fi
+# Control Data EP/IX V1/V2
+if [ -z "${osdefault}" ]; then
+	echo "Checking for Control Data EP/IX V1/V2"
+	if [ -f /bin/uname ]; then
+		if [ "`/bin/uname -v`" = "UMIPS" \
+		  -o "`/bin/uname -v`" = "RISCos" ]; then
+			echo "Control Data EP/IX"
+			osdefault="epix"
+			echo "Compile using bsd43 environment"
+			ccompiler="cc -systype bsd43"
+		fi
+	fi
+fi
+# 386bsd, FreeBSD 1.n and derivatives
+if [ -z "${osdefault}" ]; then
+	echo "Checking for 386bsd etc."
+	if [ -x /386bsd ]; then
+		echo "386BSD and derivatives"
+		osdefault="386bsd"
+	fi
+fi
+# NetBSD 1.0
+if [ -z "${osdefault}" ]; then
+	echo "Checking for NetBSD 1.0"
+	if [ -x /netbsd ]; then
+		echo "NetBSD 1.0"
+		osdefault="netbsd"
+	fi
+fi
+# FreeBSD 2.0
+if [ -z "${osdefault}" ]; then
+	echo "Checking for FreeBSD"
+	if [ -f /usr/bin/uname ]; then
+		if [ "`/usr/bin/uname -s`" = "FreeBSD" ]; then
+			echo "FreeBSD"
+			osdefault="freebsd"
+		fi
+	fi
+fi
+# BSDI 1.1
+if [ -z "${osdefault}" ]; then
+	echo "Checking for BSDI BSD/386 1.1"
+	if [ -f /bsd ]; then
+		echo "BSDI BSD/386 1.1"
+		osdefault="bsdi"
+	fi
+fi
+# Linux 1.3.N
+if [ -z "${osdefault}" ]; then
+	echo "Checking for Linux"
+	if [ -f /vmlinuz ]; then
+		echo "Linux"
+		osdefault="linux"
+	fi
+fi
+# HP/Apollo Domain
+if [ -z "${osdefault}" ]; then
+	echo "Checking for HP/Apollo Domain 10.4"
+	if [ -f /lib/clib -a -f /lib/libc ]; then
+	    if [ "${SYSTYPE}" = "bsd4.3" ]; then
+	    	domainvers=none
+	    	domainvers=`/usr/apollo/bin/bldt | { read ln; read ln; read d1 d2 d3 ver ln; echo $ver; }`
+	    	case "$domainvers" in
+	    	    10.0, | 10.0.1, )		domainvers=10.0;;
+	    	    10.1, )			domainvers=10.1;;
+	    	    10.2, | 10.2.[0-9]*, )	domainvers=10.2;;
+	    	    10.3, | 10.3.[0-9]*, )	domainvers=10.3;;
+	    	    10.4, | 10.4.[0-9]*, )	domainvers=10.4;;
+	    	esac
+	    	echo "HP/Apollo Domain Version ${domainvers} under BSD 4.3 env."
+		osdefault="domainosbsd"
+		echo "Read NOTES about //node/path syntax in afpvols"
+		if [ "${domainvers}" != "10.4" ]; then
+		    echo "WARNING: untested under Domain OS other than 10.4"
+		fi
+	    fi
+	fi
+fi
+# NeXTstation
+if [ -z "${osdefault}" ]; then
+	echo "Checking for NeXT."
+	if [ -x /NextApps ]; then
+		echo "NeXT"
+		osdefault="next"
+	fi
+fi
+# Default
+if [ -z "${osdefault}" ]; then
+  echo "Establishing default as BSD"
+  echo "Warning: unable to guess unix variant, setting to bsd standard."
+  echo "bsd should be good for the following:"
+  echo "  IBM-RT (ACIS 4.2,4.3), Ultrix 1.0, Ultrix 1.1, BSD 4.2,"
+  echo "  and BSD 4.3"
+  osdefault="bsd"
+fi
+echo
+valid=0
+echo -n test | ${PGREP} n > /dev/null
+rc=$?
+if [ $rc -ne 0 ]; then
+  PROMPT="echo -n"
+elif [ -x /usr/ucb/echo ]; then
+  PROMPT="/usr/ucb/echo -n"
+else
+  PROMPT="echo"
+fi
+while [ ${valid} -eq 0 ];
+do
+  ${PROMPT} "Operating System type? (default ${osdefault}, ? for valid items) "
+  read os arg1
+  if [ -z "${os}" ]; then
+	os=${osdefault}
+  fi
+  case ${os} in
+	"osf1") valid=1;;
+	"ultrix20") valid=1;;
+	"ultrix40") valid=1;;
+	"ultrix12") valid=1;;
+	"bsd") valid=1;;
+	"hpux") valid=1;;
+	"aux") valid=1;;
+	"xenix5") valid=1;;
+	"aix") valid=1;;
+	"uts") valid=1;;
+	"pyr") valid=1;;
+	"sunos") valid=1;;
+	"solaris") valid=1;;
+	"encore") valid=1;;
+	"next") valid=1;;
+	"dynix") valid=1;;
+	"irix") valid=1;;
+	"newsos") valid=1;;
+	"drsnx") valid=1;;
+	"epix") valid=1;;
+	"386bsd") valid=1;;
+	"netbsd") valid=1;;
+	"freebsd") valid=1;;
+	"bsdi") valid=1;;
+	"linux") valid=1;;
+	"domainosbsd") valid=1;;
+	"?"|*)
+		if [ "${os}" != "?" ]; then
+			echo "unknown type ${os}, valid are:"
+		fi
+		echo "	bsd - try if you aren't sure";
+		echo "	ultrix12 - Ultrix 1.2";
+		echo "	ultrix20 - Ultrix 2.0 or later";
+		echo "	ultrix40 - Ultrix 4.0 or later";
+		echo "	osf1 - DEC-OSF/1 1.3 or later";
+		echo "	hpux - HP-UX for series 9000";
+		echo "	aux - A/UX";
+		echo "  uts - Amdahl UTS";
+		echo "	xenix5 - SCO Xenix System V";
+		echo " 	aix - IBM AIX System V";
+		echo "	pyr - pyramid";
+		echo "	sunos - suns under SunOS 4.N or less";
+		echo "  solaris - suns under Solaris 2.0 or greater";
+		echo " 	encore - Encore MultiMax";
+		echo " 	next - NeXT/MACH";
+		echo " 	dynix - Sequent Balance"
+		echo " 	irix - Silicon Graphics IRIS/IRIX"
+		echo "  newsos - Sony NEWS"
+		echo "  drsnx - ICL DRS/NX V4.0"
+		echo "  epix - Control Data EP/IX"
+		echo "  386bsd - 386/BSD, FreeBSD 1.n and derivatives"
+		echo "  netbsd - NetBSD 1.0"
+		echo "  freebsd - FreeBSD 2.0"
+		echo "  bsdi - BSDI BSD/386 1.1"
+		echo "  linux - Linux"
+		echo "  domainosbsd - HP/Apollo Domain BSD 4.3"
+	 ;;
+  esac
+done
+echo "Will configure for ${os}"
+echo
+echo
+uabprogs="define([uabprogs],[])"
+uabplibs="define([uabplibs],[])"
+uabpobjs="define([uabpobjs],[])"
+etherprogs="define([etherprogs],[])"
+etherpobjs="define([etherpobjs],[])"
+capdprogs="define([capdprogs],[])"
+capdpobjs="define([capdpobjs],[])"
+lapobj="define([lapobj],[abkip.o abddp.o abnbp.o atalkdbm.o])"
+usingphase2="# define([usephase2],1)"
+usingatis="# define([useatis],1)"
+singletree="# define([debug],1)"
+includefile="# define([includef],1)"
+result=0
+usephase2=0
+uabsupport=0
+uarsupport=0
+ethersupport=0
+kernelsupport=0
+case ${os} in
+	"sunos"|"ultrix40"|"ultrix20"|"ultrix12"|"osf1")
+  		uabsupport=1
+		uarsupport=1
+		ethersupport=1
+		;;
+	"solaris")
+		uarsupport=1
+		ethersupport=1
+		;;
+	"aix")
+		uarsupport=1
+		;;
+	"pyr")
+# later, someone should try this.
+#  		uabsupport=1
+		ethersupport=1
+		;;
+	"irix")
+		uabsupport=1
+		uarsupport=1
+		ethersupport=0
+		;;
+	"newsos")
+		uabsupport=1
+		uarsupport=1
+		ethersupport=0
+		;;
+	"hpux")
+		uabsupport=1
+		uarsupport=1
+		ethersupport=0
+		;;
+	"386bsd")
+		uabsupport=1
+		uarsupport=1
+		ethersupport=1
+		;;
+	"netbsd")
+		uabsupport=1
+		uarsupport=1
+		ethersupport=1
+		;;
+	"freebsd")
+		uabsupport=1
+		uarsupport=1
+		ethersupport=1
+		;;
+	"bsdi")
+		uabsupport=1
+		uarsupport=1
+		ethersupport=1
+		;;
+	"linux")
+		uarsupport=1
+		kernelsupport=1
+		;;
+	"next")
+		uarsupport=1
+		ethersupport=1
+		;;
+	*)
+  		uabsupport=0
+		uarsupport=0
+		ethersupport=0
+		;;
+esac
+# Tell people their list of choices...
+if [ ${uabsupport} -eq 1 -o ${uarsupport} -eq 1 \
+	-o ${ethersupport} -eq 1 -o ${kernelsupport} -eq 1 ]; then
+  echo "In addition to IPTalk (the default), this operating system"
+  echo "can also support CAP AppleTalk packets over EtherTalk via:"
+  echo
+  if [ ${uabsupport} -eq 1 ]; then
+      echo "    UAB (Unix AppleTalk Bridge)"
+  fi
+  if [ ${uarsupport} -eq 1 ]; then
+      echo "    UAR (Unix AppleTalk Router)"
+  fi
+  if [ ${ethersupport} -eq 1 ]; then
+      echo "    Native EtherTalk"
+  fi
+  if [ ${kernelsupport} -eq 1 ]; then
+      echo "    Kernel AppleTalk"
+  fi
+  echo
+  echo  "See the README files and other documentation for further info."
+  echo
+fi
+
+if [ ${uabsupport} -eq 1 ]; then
+  result=0
+  while :
+  do
+    ${PROMPT} "Do you wish to use UAB (Unix AppleTalk Bridge) (default no) ? "
+    read ans
+    if [ -z "${ans}" ]; then
+	  ans="no"
+    fi
+    case ${ans} in
+	  "yes"|"y") result=1; break;;
+	  "no" |"n") result=0; break;;
+	  *) echo "you must answer yes or no or carriage return for no." ;;
+    esac
+  done
+  if [ $result -eq 0 ]; then
+    echo "Not using UAB."
+    uabprogs="define([uabprogs],[])"
+    uabplibs="define([uabplibs],[])"
+    uabpobjs="define([uabpobjs],[])"
+    lapobj="define([lapobj],[abkip.o abddp.o abnbp.o atalkdbm.o])"
+  else
+    uabprogs="define([uabprogs],[uab])"
+    uabplibs="define([uabplibs],[libuabcap.a])"
+    lapobj="define([lapobj],[abmkip.o abddp.o abnbp.o atalkdbm.o])"
+    case ${os} in
+         "ultrix20"|"ultrix12")
+      		  echo "OK, setting things up for UAB."
+  		  uabpobjs="define([uabpobjs],[dlip.o])";;
+	 "ultrix40")
+      		  echo "OK, setting things up for UAB."
+  		  uabpobjs="define([uabpobjs],[spfiltp.o])";;
+	 "osf1")
+      		  echo "OK, setting things up for UAB."
+  		  uabpobjs="define([uabpobjs],[spfiltp.o])";;
+	  "pyr")
+      		  echo "OK, setting things up for UAB."
+    		  uabpobjs="define([uabpobjs],[senetp.o])";;
+	  "irix")
+      		  echo "OK, setting things up for UAB."
+    		  uabpobjs="define([uabpobjs],[snooppf.o])";;
+	  "newsos")
+      		  echo "OK, setting things up for UAB."
+    		  uabpobjs="define([uabpobjs],[srawetherp.o])";;
+	  "hpux")
+      		  echo "OK, setting things up for UAB."
+    		  uabpobjs="define([uabpobjs],[sllap.o])";;
+	  "386bsd"|"netbsd"|"freebsd"|"bsdi"|"next")
+      		  echo "OK, setting things up for UAB."
+    		  uabpobjs="define([uabpobjs],[bpfiltp.o])";;
+          "solaris")
+      		  echo "OK, setting things up for UAB."
+                  uabpobjs="define([uabpobjs],[sdlpi.o])";;
+	  "sunos")
+  		  ${PROMPT} "Have you installed the 'enet' driver (no) ? "
+      		  read ans
+      		  if [ -z "${ans}" ]; then
+  	  		ans="no"
+      		  fi
+  		  case ${ans} in
+  			"yes"|"y") aresult=1;;
+  			*) aresult=0;;
+  		  esac
+  		  if [ $aresult -eq 0 ]; then
+  			echo "OK, using the NIT ethernet interface."
+    		  	uabpobjs="define([uabpobjs],[snitp.o])"
+  		  else
+  			echo "OK, using the 'enet' ethernet interface."
+    		  	uabpobjs="define([uabpobjs],[senetp.o])"
+  		  fi
+    esac
+  fi
+fi
+echo
+if [ $result -eq 0 ]; then
+  if [ ${uarsupport} -eq 1 ]; then
+    result=0
+    while :
+    do
+      ${PROMPT} "Do you wish to use UAR (Unix AppleTalk Router)(default no) ? "
+      read ans
+      if [ -z "${ans}" ]; then
+  	  ans="no"
+      fi
+      case ${ans} in
+  	  "yes"|"y") result=1; break;;
+  	  "no" |"n") result=0; break;;
+  	  *) echo "you must answer yes or no or carriage return for no." ;;
+      esac
+    done
+    if [ $result -eq 0 ]; then
+      echo "Not using UAR."
+      uabprogs="define([uabprogs],[])"
+      uabplibs="define([uabplibs],[])"
+      uabpobjs="define([uabpobjs],[])"
+      lapobj="define([lapobj],[abkip.o abddp.o abnbp.o atalkdbm.o])"
+    else
+      uabprogs="define([uabprogs],[])"
+      uabplibs="define([uabplibs],[])"
+      uabpobjs="define([uabpobjs],[])"
+      lapobj="define([lapobj],[abmkip.o abddp.o abnbp.o atalkdbm.o])"
+    ${PROMPT} "Do you want Phase 2 compatibility (yes) ? "
+      read ans
+      if [ -z "${ans}" ]; then
+        ans="yes"
+      fi
+      case ${ans} in
+        "yes"|"y")
+          usephase2=1
+          echo "OK, setting things up for UAR, Phase 2."
+          ;;
+        *)
+          echo "OK, setting things up for UAR, Phase 1."
+          ;;
+      esac
+    fi
+  fi
+fi
+echo
+if [ $result -eq 0 ]; then
+  if [ ${ethersupport} -eq 1 ]; then
+    result=0
+    while :
+    do
+      ${PROMPT} "Do you wish to use Native EtherTalk (default no) ? "
+      read ans
+      if [ -z "${ans}" ]; then
+  	  ans="no"
+      fi
+      case ${ans} in
+  	  "yes"|"y") result=1; break;;
+  	  "no" |"n") result=0; break;;
+  	  *) echo "you must answer yes or no or carriage return for no." ;;
+      esac
+    done
+    if [ $result -eq 0 ]; then
+      echo "Not using Native EtherTalk."
+      etherprogs="define([etherprogs],[])"
+      etherpobjs="define([etherpobjs],[])"
+      lapobj="define([lapobj],[abkip.o abddp.o abnbp.o atalkdbm.o])"
+    else
+      etherprogs="define([etherprogs],[aarpd])"
+      lapobj="define([lapobj],[abetalk.o abddp.o abnbp.o atalkdbm.o])"
+      case ${os} in
+         "ultrix20"|"ultrix12")
+      		  echo "OK, setting things up for Native EtherTalk."
+    		  etherpobjs="define([etherpobjs],[dlip.o])";;
+	 "osf1"|"ultrix40")
+		  ${PROMPT} "Do you want Phase 2 compatibility (yes) ? "
+		  read ans
+		  if [ -z "${ans}" ]; then
+			ans="yes"
+		  fi
+		  case ${ans} in
+		    "yes"|"y")
+		      usephase2=1
+      		      echo "OK, setting things up for Native EtherTalk, Phase 2"
+                      ;;
+                    *)
+      		      echo "OK, setting things up for Native EtherTalk."
+                      ;;
+                  esac
+		  case ${os} in
+		    "osf1")
+    		      etherpobjs="define([etherpobjs],[spfiltp.o])"
+		      ;;
+		    "ultrix40")
+    		      etherpobjs="define([etherpobjs],[spfiltp.o])"
+		      ;;
+		  esac
+		  ;;
+	  "pyr")
+      		  echo "OK, setting things up for Native EtherTalk."
+    		  etherpobjs="define([etherpobjs],[senetp.o])";;
+	  "386bsd")
+      		  echo "OK, setting things up for Native EtherTalk."
+    		  etherpobjs="define([etherpobjs],[bpfiltp.o])";;
+	  "netbsd"|"freebsd"|"bsdi"|"next")
+		  ${PROMPT} "Do you want Phase 2 compatibility (yes) ? "
+		  read ans
+		  if [ -z "${ans}" ]; then
+			ans="yes"
+		  fi
+		  case ${ans} in
+		    "yes"|"y")
+		      usephase2=1
+		      echo "OK, setting things up for Native EtherTalk, Phase2."
+		      ;;
+		    *)
+		      echo "OK, setting things up for Native EtherTalk."
+		      ;;
+                  esac
+    		  etherpobjs="define([etherpobjs],[bpfiltp.o])";;
+   	  "solaris")
+                  ${PROMPT} "Do you want Phase 2 compatibility (yes) ? "
+                  read ans
+                  if [ -z "${ans}" ]; then
+                        ans="yes"
+                  fi
+                  case ${ans} in
+                    "yes"|"y")
+                      usephase2=1
+                      ;;
+                    *)
+                      ;;
+                  esac
+   		  ${PROMPT} "OK, using the Streams ethernet interface "
+                  if [ $usephase2 -eq 1 ]; then
+                   	echo "for Phase 2 support."
+ 		  else
+                   	echo "for Phase 1 support."
+                  fi
+    		  etherpobjs="define([etherpobjs],[sdlpi.o])";;
+  	  "sunos")
+		  ${PROMPT} "Do you want Phase 2 compatibility (yes) ? "
+		  read ans
+		  if [ -z "${ans}" ]; then
+			ans="yes"
+		  fi
+		  case ${ans} in
+		    "yes"|"y")
+		      usephase2=1
+		      ;;
+		    *)
+		      ;;
+                  esac
+		  ${PROMPT} "Have you installed the 'enet' driver (no) ? "
+      		  read ans
+      		  if [ -z "${ans}" ]; then
+  	  		ans="no"
+      		  fi
+  		  case ${ans} in
+  			"yes"|"y") aresult=1;;
+  			*) aresult=0;;
+  		  esac
+  		  if [ $aresult -eq 0 ]; then
+  			${PROMPT} "OK, using the NIT ethernet interface"
+    		  	etherpobjs="define([etherpobjs],[snitp.o])"
+  		  else
+  			${PROMPT} "OK, using the 'enet' ethernet interface"
+    		  	etherpobjs="define([etherpobjs],[senetp.o])"
+  		  fi
+                  if [ $usephase2 -eq 1 ]; then
+                  	echo " with Phase 2."
+		  else
+                  	echo "."
+                  fi
+		  ;;
+      esac
+    fi
+  fi
+fi
+echo
+if [ $result -eq 0 ]; then
+  if [ ${kernelsupport} -eq 1 ]; then
+    result=0
+    while :
+    do
+      ${PROMPT} "Do you wish to use Kernel AppleTalk (default no) ? "
+      read ans
+      if [ -z "${ans}" ]; then
+  	  ans="no"
+      fi
+      case ${ans} in
+  	  "yes"|"y") result=1; break;;
+  	  "no" |"n") result=0; break;;
+  	  *) echo "you must answer yes or no or carriage return for no." ;;
+      esac
+    done
+    if [ $result -eq 0 ]; then
+      echo "Not using Kernel AppleTalk."
+      capdprogs="define([capdprogs],[])"
+      capdpobjs="define([capdpobjs],[])"
+      lapobj="define([lapobj],[abkip.o abddp.o abnbp.o atalkdbm.o])"
+    else
+      echo "OK, setting things up for Kernel AppleTalk."
+      capdprogs="define([capdprogs],[capd])"
+      capdpobjs="define([capdpobjs],[capd.kas.o])"
+      lapobj="define([lapobj],[abkas.o abddp.o abnbp.o atalkdbm.o])"
+      usephase2=1
+    fi
+  fi
+fi
+if [ $useauxappletalk -ne 0 ]; then
+  lapobj="define([lapobj],[abauxddp.o abauxnbp.o])"
+fi
+if [ $usephase2 -ne 0 ]; then
+  usingphase2="define([usephase2],1)"
+fi
+if [ $useatis -ne 0 ]; then
+  usingatis="define([useatis],1)"
+fi
+echo
+echo "CAP can be setup to occupy a single directory tree (for testing)."
+result=0
+while :
+do
+  ${PROMPT} "Do you wish to restrict CAP to this subdirectory (default no) ? "
+  read ans
+  if [ -z "${ans}" ]; then
+    ans="no"
+  fi
+  case ${ans} in
+    "yes"|"y") result=1; break;;
+    "no" |"n") result=0; break;;
+    *) echo "you must answer yes or no or carriage return for no." ;;
+  esac
+done
+if [ $result -ne 0 ]; then
+  ${PROMPT} "Which directory (" `pwd` ") ? "
+  read ans
+  if [ ! -z "${ans}" ]; then
+    if [ -d "${ans}" ]; then
+      mydir=${ans}
+    else
+       echo "Warning: the directory" ${ans} "doesn't exist."
+    fi 
+  fi
+  echo "OK, using" ${mydir} "as the CAP root directory."
+  singletree="define([debug],1)"
+else
+  echo
+  result=0
+  while :
+  do
+    ${PROMPT} "Look for my include files in other than /usr/include (no) ? "
+    read ans
+    if [ -z "${ans}" ]; then
+      ans="no"
+    fi
+    case ${ans} in
+      "yes"|"y") result=1; break;;
+      "no" |"n") result=0; break;;
+      *) echo "you must answer yes or no or carriage return for no." ;;
+    esac
+  done
+  if [ $result -ne 0 ]; then
+    ${PROMPT} "Include file location (" ${mydir} ") ? "
+    read ans
+    if [ -n "${ans}" ]; then
+      mydir="${ans}"
+    fi
+    echo "OK, using include files in" ${mydir}
+    includefile="define([includef],1)"
+  fi
+fi
+echo
+echo "CAP can be configured for various optional features."
+echo "For more information, refer to the file 'CAP60.README'."
+echo
+echo "Checking for special feature customisation ..."
+${PCAT} <<\EOT0 > /tmp/m4.f.$$
+# m4.features
+#
+# This file is used to determine the default set of additional features
+# that will be incorporated into CAP. These features have been contributed
+# by many people throughout the network community.
+#
+# Necessary preamble - please don't alter
+define(`concat',$1$2$3$4$5$6$7$8$9)
+define(`specialcflags',`')
+define(`aufsosflags',`')
+define(`simpleflags',`')
+define(`lwflags',`')
+#
+# To change the feature set, simply uncomment the wanted defines().
+# The Configure file will then use the customised version.
+# For more details, refer to the file 'CAP60.README'
+#
+# + SHORT_NAMES adds short name support to AUFS for AppleShare PC.
+# define(`specialcflags',concat(specialcflags,` -DSHORT_NAMES'))
+#
+# + NOCASEMATCH removes UNIX case sensitivity in AUFS (like Macs).
+# define(`specialcflags',concat(specialcflags,` -DNOCASEMATCH'))
+#
+# + SIZESERVER adds a daemon per AUFS server process for volume size info.
+# define(`specialcflags',concat(specialcflags,` -DSIZESERVER'))
+#
+# + LWSRV_AUFS_SECURITY provides printer security based on AUFS connection.
+# define(`specialcflags',concat(specialcflags,` -DLWSRV_AUFS_SECURITY'))
+#
+# + HIDE_LWSEC_FILE increases security of LWSRV_AUFS_SECURITY flag file
+# define(`aufsosflags',concat(aufsosflags,` -DHIDE_LWSEC_FILE'))
+# define(`lwflags',concat(lwflags,` -DHIDE_LWSEC_FILE'))
+#
+# + LWSRV_LPR_LOG causes stdout/stderr lpr output to be included in lwsrv log
+# define(`specialcflags',concat(specialcflags,` -DLWSRV_LPR_LOG'))
+#
+# + AUTHENTICATE turn on alternate AUFS/LWSRV authentication method
+# define(`specialcflags',concat(specialcflags,` -DAUTHENTICATE'))
+#
+# + STAT_CACHE causes critical AUFS stat() calls to be cached.
+# define(`specialcflags',concat(specialcflags,` -DSTAT_CACHE'))
+#
+# + TREL_TIMEOUT causes an extra TREL timeout listener to run to avoid timeouts
+# define(`specialcflags',concat(specialcflags,` -DTREL_TIMEOUT'))
+#
+# + RUTGERS includes local modifications for Rutgers University
+# define(`specialcflags',concat(specialcflags,` -DRUTGERS'))
+#
+# + MELBOURNE includes local modifications for Melbourne University
+# define(`specialcflags',concat(specialcflags,` -DMELBOURNE'))
+#
+# + USE_HOST_ICON provides automatic aufs ICON selection on supported hosts
+# define(`specialcflags',concat(specialcflags,` -DUSE_HOST_ICON'))
+#
+# + PERMISSIVE_USER_NAME allows AUFS users to have their real name in Chooser
+# define(`specialcflags',concat(specialcflags,` -DPERMISSIVE_USER_NAME'))
+#
+# + ULTRIX_SECURITY adds ULTRIX enhanced security to aufs
+# define(`specialcflags',concat(specialcflags,` -DULTRIX_SECURITY'))
+#
+# + DIGITAL_UNIX_SECURITY adds OSF/1 enhanced security to aufs
+# define(`specialcflags',concat(specialcflags,` -DDIGITAL_UNIX_SECURITY'))
+#
+# + USING_FDDI_NET adds support for FDDI networks (Digital UNIX/Ultrix only)
+# define(`specialcflags',concat(specialcflags,` -DUSING_FDDI_NET'))
+#
+# + USE_MAC_DATES maintains Mac Create/Modify dates on file copy
+# define(`specialcflags',concat(specialcflags,` -DUSE_MAC_DATES'))
+#
+# + DEV_NIT specifies alternate NIT device name (default "/dev/nit")
+# define(`specialcflags',concat(specialcflags,` -DDEV_NIT=\"/dev/nit\"'))
+#
+# + APPLICATION_MANAGER control the use of designated applications
+# define(`specialcflags',concat(specialcflags,` -DAPPLICATION_MANAGER'))
+#
+# + AUFS_README links readme file into new user's top level
+# define(`specialcflags',concat(specialcflags,` -DAUFS_README'))
+#
+# + ULT42PFBUG unpatched ULTRIX 4.2 packet filter workaround (also need COPYALL)
+# define(`specialcflags',concat(specialcflags,` -DULT42PFBUG'))
+#
+# + AUFS_IDLE_TIMEOUT will disconnect idle AUFS sessions (-[i|I] period)
+# define(`specialcflags',concat(specialcflags,` -DAUFS_IDLE_TIMEOUT'))
+#
+# + REREAD_AFPVOLS kill -USR1 will make parent aufs re-read system vols file
+# define(`specialcflags',concat(specialcflags,` -DREREAD_AFPVOLS'))
+#
+# + PASS_THRU pass through LWSRV jobs with no adobe preprocessing (for PCs)
+# define(`specialcflags',concat(specialcflags,` -DPASS_THRU'))
+#
+# + DONT_PARSE pass through LWSRV jobs with no adobe preprocessing at all
+# define(`specialcflags',concat(specialcflags,` -DDONT_PARSE'))
+#
+# + XDEV_RENAME allow files to be moved over cross device links
+# define(`specialcflags',concat(specialcflags,` -DXDEV_RENAME'))
+#
+# + USR_FILE_TYPES user defined file suffix to creator/type/xlate mapping
+# define(`specialcflags',concat(specialcflags,` -DUSR_FILE_TYPES'))
+#
+# + CREATE_AFPVOL create user .afpvols and 'mac' directories if non-existent
+# define(`specialcflags',concat(specialcflags,` -DCREATE_AFPVOL=\"mac\"'))
+#
+# + CREAT_AFPVOL_NAM customize name for the volume (modifies CREATE_AFPVOL)
+# (CREAT_AFPVOL_NAM fmt string: %U user, %H host, %V vol, %D home eg: "%U@%H")
+# define(`specialcflags',concat(specialcflags,` -DCREAT_AFPVOL_NAM="\"%U\""'))
+#
+# + ISO_TRANSLATE use Macintosh/ISO 8859 character translation on I/O
+# define(`specialcflags',concat(specialcflags,` -DISO_TRANSLATE'))
+#
+# + ISO_FILENAMES extend ISO translation to filenames (assumes ISO_TRANSLATE)
+# define(`specialcflags',concat(specialcflags,` -DISO_FILENAMES'))
+#
+# + ISO_FILE_TRANS use ISO translation on unix/TEXT file contents
+# define(`specialcflags',concat(specialcflags,` -DISO_FILE_TRANS'))
+#
+# + DENYREADWRITE implement AUFS read/write access and deny modes
+# define(`specialcflags',concat(specialcflags,` -DDENYREADWRITE'))
+#
+# + STEAL_PORTS extends DDP dynamic skts down into experimental range 64-128
+# (WARNING!!: Requires uar.1.0.patch11 or uar.1.1.patch09 for use with UAR)
+# define(`specialcflags',concat(specialcflags,` -DSTEAL_PORTS'))
+#
+# + USESYSLOG sends PAPIF Information, Warning & Debug messages to syslog()
+# define(`specialcflags',concat(specialcflags,` -DUSESYSLOG'))
+#
+# + NOCAPDOTPRINTERS uses /etc/lp/printers/<lw>/comment instead of cap.printers
+# (Note: intended for use with Solaris 2.N only)
+# define(`specialcflags',concat(specialcflags,` -DNOCAPDOTPRINTERS'))
+#
+#
+# AUFS definable options (previously required editing m4.setup)
+#
+# + FIXED_DIRIDS compile server and AUFS code for fixed directory & file IDs
+# define(`specialcflags',concat(specialcflags,` -DFIXED_DIRIDS'))
+#
+# + DISTRIB_PASSWDS use ~/.afppass for encrypted passwords (see CAP60.README)
+# define(`specialcflags',concat(specialcflags,` -DDISTRIB_PASSWDS'))
+#
+# + AFP_DISTPW_PATH alternate directory for .afppass files (not in ~user)
+# define(`specialcflags',concat(specialcflags,` -DAFP_DISTPW_PATH=\"/etc/dp\"'))
+#
+# + AFP_DISTPW_MODE enforced .afppass mode (must be 0644 for NFS mounted dirs)
+# define(`specialcflags',concat(specialcflags,` -DAFP_DISTPW_MODE=0600'))
+#
+# + DEBUG_AFP_CMD write detailed AUFS AFP debugging info to -Z specified file
+# define(`specialcflags',concat(specialcflags,` -DDEBUG_AFP_CMD'))
+#
+# + PID_FILE write an aufs process-ID file
+# define(`specialcflags',concat(specialcflags,` -DPID_FILE=\"aufs.pid\"'))
+#
+# + CLOSE_LOG_SIG close and reopen the aufs log on signal -USR2
+# define(`specialcflags',concat(specialcflags,` -DCLOSE_LOG_SIG=SIGUSR2'))
+#
+# + LOG_WTMP add entry to the 'wtmp' file for each AUFS connection (not IRIX4)
+# define(`aufsosflags',concat(aufsosflags,` -DLOG_WTMP'))
+#
+# + LOG_WTMP_FILE specify name of alternate wtmp file for LOG_WTMP feature
+# define(`aufsosflags',concat(aufsosflags,` -DLOG_WTMP_FILE=\"/usr/adm/wtmp\"'))
+#
+# + ADMIN_GRP allows users in specified UNIX group to login as AUFS superuser
+# define(`aufsosflags',concat(aufsosflags,` -DADMIN_GRP=\"macadm\"'))
+#
+# + NONLXLATE for aufs
+# define(`aufsosflags',concat(aufsosflags,` -DNONLXLATE'))
+#
+# + FULL_NCS_SUPPORT (National Character Support) for aufs
+# define(`aufsosflags',concat(aufsosflags,` -DFULL_NCS_SUPPORT'))
+#
+# + NCS_ALL_TEXT perform specified translation on any TEXT file
+# define(`aufsosflags',concat(aufsosflags,` -DNCS_ALL_TEXT'))
+#
+# + GGTYPE="gid_t" (group ID type) for AUFS
+# define(`aufsosflags',concat(aufsosflags,` -DGGTYPE="gid_t"'))
+#
+# + NOCHGRPEXEC don't exec chgrp, just use chown(2) 3rd arg. [Not for Sys V]
+# define(`aufsosflags',concat(aufsosflags,` -DNOCHGRPEXEC'))
+#
+# + USEDIRSETGID set group ID bit on non-primary group dirs [SunOS/Sys V]
+# define(`aufsosflags',concat(aufsosflags,` -DUSEDIRSETGID'))
+#
+# + NETWORKTRASH fix permissions on network trash stuff
+# define(`aufsosflags',concat(aufsosflags,` -DNETWORKTRASH'))
+#
+# + SHADOW_PASSWD add support for shadow password files if supported
+# define(`aufsosflags',concat(aufsosflags,` -DSHADOW_PASSWD'))
+#
+# + LOGIN_AUTH_PROG AUFS -L option specifies external authorization program
+# define(`aufsosflags',concat(aufsosflags,` -DLOGIN_AUTH_PROG'))
+#
+# + USEQUOTA forces usage of ufs quotas [Solaris 2.x only]
+#   note: check if you applied ufs quota patch:
+#         100833-xx for Solaris 2.1
+#         101039-xx for Solaris 2.2
+# define(`aufsosflags',concat(aufsosflags,` -DUSEQUOTA'))
+#
+#
+# LWSRV definable options (previously required editing m4.setup)
+#
+# + LPRARGS passes arguments on lwsrv command line directly to lpr
+# define(`lwflags',concat(lwflags,` -DLPRARGS'))
+#
+# + DOCNAME adds document name as a part of job name to lpr
+# define(`lwflags',concat(lwflags,` -DDOCNAME'))
+#
+# + LPRCMD redefine BSD lpr to use alternate path
+# define(`lwflags',concat(lwflags,` -DLPRCMD=\"/usr/local/bin/lpr\"'))
+#
+# + TEMPFILE set alternative path for lwsrv spool files (default /tmp)
+# define(`lwflags',concat(lwflags,` -DTEMPFILE=\"/usr/tmp/lwsrvXXXXXX\"'))
+#
+# + USELPRSYM add -s (symlink) option to lwsrv lpr call (not for OSF/1)
+# define(`lwflags',concat(lwflags,` -DUSELPRSYM'))
+#
+# + USESYSVLP required for HP-UX (and probably other System V) spooling
+# define(`lwflags',concat(lwflags,` -DUSESYSVLP'))
+#
+# + PAGECOUNT adds page count to job name (value is internal buffer size)
+# define(`lwflags',concat(lwflags,` -DPAGECOUNT=512'))
+# define(`simpleflags',concat(simpleflags,` -DPAGECOUNT=512'))
+#
+# + ADOBE_DSC2_CONFORMANT forces Adobe DSC2 conformance
+# define(`simpleflags',concat(simpleflags,` -DADOBE_DSC2_CONFORMANT'))
+#
+# + PROCSET_PATCH delete PatchPrep header for non-Apple LaserWriters
+# define(`simpleflags',concat(simpleflags,` -DPROCSET_PATCH'))
+#
+# + RUN_AS_USER run lpd job as Chooser Name if valid UNIX account (no authent)
+# define(`lwflags',concat(lwflags,` -DRUN_AS_USER'))
+#
+# + USER_REQUIRED (requires RUN_AS_USER) refuse printing if Chsr name invalid
+# define(`lwflags',concat(lwflags,` -DUSER_REQUIRED'))
+#
+#
+# PAPIF options
+#
+# + DUPLEXMODE tell suitably equipped printer to print on both sides of a page
+# define(`specialcflags',concat(specialcflags,` -DDUPLEXMODE'))
+#
+# + TRANS3 add support for TranScript 3.0 'psdman' (instead of pstext)
+# define(`specialcflags',concat(specialcflags,` -DTRANS3'))
+#
+# + PSJOBHEADER send PS header in file specified in env. variable "PSJOBHEADER"
+# define(`specialcflags',concat(specialcflags,` -DPSJOBHEADER'))
+#
+#
+EOT0
+result=0
+if [ -f m4.features ]; then
+  diff m4.features /tmp/m4.f.$$ > /dev/null 2>/dev/null
+  rc=$?
+  if [ $rc -ne 0 ]; then
+    echo
+    echo "You appear to have a locally customised version of m4.features."
+    while :
+    do
+    ${PROMPT} "I assume that you want to use it rather than the default (y) ? "
+      read ans
+      if [ -z "${ans}" ]; then
+	    ans="yes"
+      fi
+      case ${ans} in
+	    "y"|"ye"|"yes") result=1; break;;
+	    "no"|"n") result=0; break;;
+	    *) echo "you must answer yes or no or carriage return for yes." ;;
+      esac
+    done
+    if [ $result -eq 0 ]; then
+      echo "OK, copying m4.features to /tmp and replacing with the default."
+      ${PCAT} m4.features > /tmp/m4.features
+      ${PCAT} /tmp/m4.f.$$ > m4.features
+    else
+      echo "Using the locally customised version of m4.features."
+    fi
+  else
+    echo "Using the default feature list."
+  fi
+else
+  echo "Using the default feature list."
+  ${PCAT} /tmp/m4.f.$$ > m4.features
+fi
+rm -f /tmp/m4.f.$$
+echo
+echo
+result=0
+while :
+do
+  ${PROMPT} "Do you wish to customise the feature list (default no) ? "
+  read ans
+  if [ -z "${ans}" ]; then
+    ans="no"
+  fi
+  case ${ans} in
+    "y"|"yes")	result=1; break;;
+    "n"|"no")	result=0; break;;
+    *) echo "you must answer yes or no or carriage return for no." ;;
+  esac
+done
+if [ $result -ne 0 ]; then
+    case ${os} in
+    "ultrix40"|"ultrix20"|"ultrix12"|"bsd"|"encore"|"newsos"|"epix"|"osf1")
+        ${EDITOR-vi} m4.features
+    ;;
+    *)
+        ${EDITOR:-vi} m4.features
+    ;;
+    esac
+fi
+echo
+echo
+echo "Some machines send packets fast enough to overrun a Kinetics box"
+echo "running KIP.  You should answer yes if you know this is the case."
+echo "If you aren't sure, answer no.  You can go back and recompile the"
+echo "relevant programs later.  Generally, the programs affected are the"
+echo "LaserWriter printing programs."
+echo
+echo "Systems affected are generally those whose network interfaces are faster"
+echo "than the DEQNA (DEC Q-Bus Network Adapter).  Machines at risk may"
+echo "include, but are not limited to, Sun 3's and 4's and DEC VAX 8xxx class"
+echo "machines with DEBNT/DEBNA's"
+echo
+result=0
+while :
+do
+  ${PROMPT} "Do you want to throttle output for a Kinetics box (default no)? "
+  read ans
+  if [ -z "${ans}" ]; then
+	ans="no"
+  fi
+  case ${ans} in
+	"y"|"ye"|"yes") result=1; break;;
+	"no"|"n") fastether="# $fastether"; result=0; break;;
+	*) echo "you must answer yes or no or carriage return for no" ;;
+  esac
+done
+if [ $result -eq 0 ]; then
+  echo "We won't slow down printing code."
+else
+  echo "We will slow down printing code."
+fi
+# check for byte swapping
+echo
+echo "Checking the byte ordering on your machine ..."
+${PCAT} <<\EOTF > /tmp/bs$$.c
+#include <stdio.h>
+
+main()
+{
+  unsigned short aword, result;
+  char *pchar = (char *) &aword;
+
+  *pchar++ = 0x42;
+  *pchar   = 0x53;
+
+  result = (aword != 0x4253);
+  printf("This appears to be a '%s-endian' machine.\n",(result)?"little":"big");
+  exit(result);
+}
+EOTF
+byteswapping="# define([usebyteswap],1)"
+${ccompiler} -o /tmp/bs$$ /tmp/bs$$.c > /dev/null 2>/dev/null
+rc=$?
+if [ $rc -eq 0 ]; then
+	/tmp/bs$$
+	rc=$?
+	if [ $rc -ne 0 ]; then
+		byteswapping="define([usebyteswap],1)"
+		echo "Defining BYTESWAPPED for correct operation."
+	fi
+else
+	echo "Hmmm, can't get sensible results, assuming non-byteswapped"
+	echo "Uncomment the 'usebyteswap' line in m4.setup if incorrect."
+fi
+rm -f /tmp/bs$$ /tmp/bs$$.c
+# check types.h
+echo
+echo "Checking to see if the sequence"
+echo "	#include <sys/param.h>"
+echo "	#include <sys/types.h>"
+echo "causes a problem at your site."
+echo "Assuming that your C compiler returns error codes."
+echo " Temporary files: /tmp/cx$$.c, cx$$.o"
+echo
+${PROMPT} "[Hit carriage return to continue] "
+read ans
+trap "
+echo Exiting... Wait...
+if [ -f /tmp/cx$$.c ]; then rm -f /tmp/cx$$.c; fi; 
+if [ -f cx$$.o ]; then rm -f cx$$.o fi
+exit 255" 2
+echo "#include <sys/param.h>" > /tmp/cx$$.c
+echo "#ifndef _TYPES" >> /tmp/cx$$.c
+echo "# include <sys/types.h>" >> /tmp/cx$$.c
+echo "#endif" >> /tmp/cx$$.c
+${ccompiler} -c /tmp/cx$$.c > /dev/null 2>/dev/null
+rc=$?
+if [ $rc -ne 0 ]; then
+  echo
+  echo "The sequence does cause a problem, checking to see if the"
+  echo "actual sequence:"
+  echo "	#include <sys/param.h>"
+  echo "	#ifndef _TYPES"
+  echo "	# include <sys/types.h>"
+  echo "	#endif"
+  echo "can be made to work by define _TYPES everywhere"
+  echo
+  ${PROMPT} "[Hit carriage return to continue] "
+  read ans
+  ${ccompiler} -c -D_TYPES /tmp/cx$$.c > /dev/null 2>/dev/null
+  rc=$?
+  if [ $rc -ne 0 ]; then
+    echo
+    echo "This failed, continuing configuration, but you probably won't be"
+    echo "able to compile because sys/param.h or sys/types are probably not"
+    echo "there and even if they are, CAP sources make invalid assumptions"
+    echo "about them"
+  fi
+else
+  echo
+  echo "No problems here"
+  needselfdef="# ${needselfdef}"
+fi
+rm -f /tmp/cx$$.c
+if [ -f cx$$.o ]; then
+  rm -f cx$$.o
+fi
+trap 2
+echo
+echo "Checking for various system calls.  (But not the list of system"
+echo "call for system V compatibility). Temp files: m4.tmp, /tmp/cx$$"
+echo
+${PROMPT} "[Hit carriage return to continue] "
+read ans
+echo
+trap "
+echo Exiting... Wait...
+if [ -f /tmp/cx$$ ]; then rm -f /tmp/cx$$; fi; exit 255" 2
+libs=""
+case "${osdefault}" in
+"xenix5")
+	echo "Getting name list from /lib/386/Slib{[cx],socket}.a..."
+	${PNM} /lib/386/Slibc.a		> /tmp/cx$$
+	${PNM} /lib/386/Slibx.a		>> /tmp/cx$$
+	${PNM} /lib/386/Slibsocket.a	>> /tmp/cx$$
+	;;
+"solaris")
+	echo "Getting name list from /lib/libc.a ..."
+	${PNM} /lib/libc.a		> /tmp/cx$$
+	echo "Getting name list from /lib/libsocket.a ..."
+	${PNM} /lib/libsocket.a		>> /tmp/cx$$
+	echo "Getting name list from /lib/libnsl.a ..."
+	${PNM} /lib/libnsl.a		>> /tmp/cx$$
+	libs="-lsocket -lnsl"
+	;;
+"drsnx")
+	echo "Getting name list from /usr/ccs/libc.a /usr/ucblib/libucb.a..."
+	${PNM} /usr/ccs/lib/libc.a	> /tmp/cx$$
+	${PNM} /usr/ucblib/libucb.a	>> /tmp/cx$$
+	${PNM} /usr/lib/libsocket.a	>> /tmp/cx$$
+	;;
+"epix")
+	echo "Getting name list from /bsd43/usr/lib/libc.a"
+	${PNM} /bsd43/usr/lib/libc.a	> /tmp/cx$$
+	;;
+"osf1")
+	echo "Getting name list from /usr/lib/libc.a"
+	${PNM} -B /usr/lib/libc.a	> /tmp/cx$$
+	;;
+"domainosbsd")
+	echo "Getting name list from /lib/clib /lib/libc..."
+	${PNM} /lib/clib		> /tmp/cx$$
+	${PNM} /lib/libc		>> /tmp/cx$$
+	;;
+*)
+	if [ -f /lib/libc.a ]; then
+	  echo "Getting name list from /lib/libc.a..."
+	  ${PNM} /lib/libc.a > /tmp/cx$$
+	else
+	  if [ -f /usr/lib/libc.a ]; then
+	    echo "Getting name list from /usr/lib/libc.a..."
+	    ${PNM} /usr/lib/libc.a > /tmp/cx$$
+	  else
+	    if [ -f /lib/libsys_s.a ]; then
+	      echo "Getting NeXT 2.0 name list from /lib/libsys_s.a..."
+	      ${PNM} /lib/libsys_s.a > /tmp/cx$$
+	    else
+	      if [ -f /lib/libc.so.1 ]; then
+		echo "Getting IRIX 5 name list from /lib/libc.so.1"
+		${PNM} /lib/libc.so.1 > /tmp/cx$$
+	      else
+	        echo "Cannot get the namelist ... HELP"
+	      fi
+	    fi
+	  fi
+	fi
+	;;
+esac
+names=$?
+# FreeBSD (1.0) gives an error in nm, ignore it.
+if [ $names -ne 0 -a "${os}" != "386bsd" -a "${os}" != "freebsd" -a "${os}" != "bsdi" -a "${os}" != "netbsd" ]; then
+ echo "Couldn't get the name list!"
+else
+ echo "Done, running function configuration"
+ confos=${os}; export confos; export ccompiler; export libs
+ ${USESH} ./conf.func.sh /tmp/cx$$ conf.func.lst m4 m4.tmp
+ rc=$?
+ if [ $rc -eq 1 ]; then
+   if [ -z "${USESH}" ]; then
+     sh conf.func.sh /tmp/cx$$ conf.func.lst m4 m4.tmp
+   fi
+ fi
+ unset confos
+ echo "Done."
+fi
+rm -f /tmp/cx$$
+trap 2
+# now setup
+if [ -z "$1" ]; then
+ of=m4.setup
+else
+ of=$1
+fi
+echo
+${PROMPT} "[Hit carriage return to continue] "
+read ans
+echo
+if [ -f ${of} ]; then
+  echo "Getting ready to overwrite existing ${of}"
+else
+  echo "Getting ready to create ${of}"
+fi
+echo
+${PROMPT} "[Hit carriage return to continue] "
+read ans
+echo "Creating ${of}"
+rm -f ${of}
+exec > ${of}
+${PCAT} <<\EOT
+define(`concat',$1$2$3$4$5$6$7$8$9)
+changequote([,])
+
+# os - one of:
+#   "bsd" - bsd 4.2, bsd 4.3, ultrix 1.1, acis 4.2,4.3 other
+#       "standard" bsd systems without nfs
+#   "ultrix12" - Ultrix 1.2
+#   "ultrix20" - Ultrix 2.0 or greater
+#   "ultrix40" - Ultrix 4.0 or greater
+#   "osf1" - OSF/1 1.3 or greater
+#   "hpux" - HP/UX
+#   "aux" - A/UX
+#   "uts" - Amdahl UTS
+#   "xenix5" - SCO Xenix System V
+#   "aix" - IBM AIX System V
+#   "pyr" - pyramid (in BSD universe)
+#   "sunos" - SunOS 4.N or less
+#   "solaris" - Solaris 2.N (SunOS 5.0 and greater)
+#   "encore" - Encore MultiMax
+#   "next" - NeXT/MACH
+#   "dynix" - Sequent Balance
+#   "irix" - Silicon Graphics IRIS-4D/IRIX
+#   "newsos" - Sony NEWS
+#   "drsnx" - ICL DRS/NX V4.0
+#   "epix" - Control Data EP/IX
+#   "386bsd" - 386/BSD and derivatives
+#   "netbsd" - NetBSD 1.0
+#   "freebsd" - FreeBSD 2.0
+#   "bsdi" - BSDI BSD/386 1.1
+#   "domainosbsd" - HP/Apollo Domain BSD 4.3
+# Warning: hpux, pyr are hardcoded in some of the makefiles (sorry)
+
+# MAJOR CONFIGURATION
+# set to one of the above (or configure your own below)
+EOT
+echo "define([os],[[$os]])"
+echo
+echo "# System call configuration (not for system v compatibilty)"
+echo "# known: X_GETOPT, X_VPRINTF, X_GETMNT, X_STATFS, X_QUOTA,"
+echo "# X_SUNQUOTA, X_FLOCK, X_LOCKF, X_FCNTLLOCKF"
+${PCAT} m4.tmp
+echo
+echo "# GETOPT support"
+if [ "${os}" = "dynix" ]; then
+  echo "# Dynix provides getopt in -lseq"
+else
+  echo "ifdef([X_GETOPT],[],[define([needgetopt],[att_getopt.o])])"
+fi
+echo "# VPRINTF support"
+echo "ifdef([X_VPRINTF],[define([usevprintf], 1)],[])"
+echo
+echo "# Path to cap sources: useful for testing"
+echo "define([cwd],[${mydir}])" 
+echo "# turn on if your system sends packets very quickly"
+echo "# (see applications/aufs/INSTALLATION)"
+echo "${fastether}"
+echo
+echo "# The following selects the correct lap delivery objects"
+echo "${lapobj}"
+echo
+echo "# This determines what happens to UAB and UAR"
+echo "${uabprogs}"
+echo "${uabplibs}"
+echo "${uabpobjs}"
+echo
+echo "# This sets up Native EtherTalk support"
+echo "${etherprogs}"
+echo "${etherpobjs}"
+echo
+echo "# This sets up capd"
+echo "${capdprogs}"
+echo "${capdpobjs}"
+echo
+echo "# And this determines if Phase 2 packets are used"
+echo "${usingphase2}"
+echo
+echo "# The following selects byteswapping or otherwise"
+echo "${byteswapping}"
+echo
+echo "# We use build_here to restrict CAP to a single directory tree"
+echo "# but still using etcdest (see below) for the location of atalk.local"
+echo "# and other configuration files"
+echo "# define([build_here],1)"
+echo
+echo "# We use the debug flag to restrict CAP to a single directory tree"
+echo "# for testing purposes, e.g. testing new versions"
+echo "${singletree}"
+echo
+echo "# The includef flag sets an alternate localtion for include files"
+echo "${includefile}"
+echo
+echo "# Systems with kernel AppleTalk support do not need atis"
+echo "${usingatis}"
+echo
+echo "# uncomment if your param.h includes types.h and types.h doesn't"
+echo "# prevent itself from being included twice"
+echo "# define _TYPES"
+echo "${needselfdef}"
+${PCAT} <<\EOT1
+# MINOR CONFIGURATION: configure various programs
+
+#define([columbia],1) # so columbia can do things quickly
+#define([rutgersdef],1) # so rutgers can do things quickly
+
+# location of include files
+define([includedir],[[/usr/include]])
+ifelse(os,[epix],[define([includedir],[[/bsd43/usr/include]])])
+# location of des subroutine source (see lib/afp/README)
+define([desloc],[[../../extras]])
+# location of atalk.local, etc.
+define([etcdest],[[/etc]])
+ifdef([columbia],[define([etcdest],[[/usr/local/lib/cap]])])
+# location of user cap programs
+define([capdestdir],[[/usr/local/cap]])
+# location of cap "server" programs (aufs, lwsrv, papif, uab etc.)
+define([capsrvrdestdir],[[/usr/local/cap]])
+# location of some cap data files
+define([caplibdestdir],[[/usr/local/lib/cap]])
+ifdef([rutgersdef],[define([caplibdestdir],[[/usr/local/cap/lib]])])
+# location of cap libraries
+define([libdestdir],[[/usr/local/lib]])
+# override for aux (doesn't search /usr/local/lib)
+ifelse(os,[aux],[define([libdestdir],[[/usr/lib]])])
+# cap library names
+define([caplib],[[libcap.a]])
+define([afplib],[[libafp.a]])
+define([afpclib],[[libafpc.a]])
+# names to load cap libraries with
+define([libcap],[[-lcap]])
+define([libafp],[[-lafp]])
+define([libafpc],[[-lafpc]])
+ifelse(os,[encore],
+	[define([libcap],concat([-L],libdestdir,[ ],libcap))])
+ifelse(os,[encore],
+	[define([libafp],concat([-L],libdestdir,[ ],libafp))])
+ifelse(os,[encore],
+	[define([libafpc],concat([-L],libdestdir,[ ],libafpc))])
+ifelse(os,[aix],
+	[define([libcap],concat([-L],libdestdir,[ ],libcap))])
+ifelse(os,[aix],
+	[define([libafp],concat([-L],libdestdir,[ ],libafp))])
+ifelse(os,[aix],
+	[define([libafpc],concat([-L],libdestdir,[ ],libafpc))])
+ifelse(os,[hpux],
+	[define([libcap],concat([-L],libdestdir,[ ],libcap))])
+ifelse(os,[hpux],
+	[define([libafp],concat([-L],libdestdir,[ ],libafp))])
+ifelse(os,[hpux],
+	[define([libafpc],concat([-L],libdestdir,[ ],libafpc))])
+ifelse(os,[epix],
+	[define([libcap],concat([-L],libdestdir,[ ],libcap))])
+ifelse(os,[epix],
+	[define([libafp],concat([-L],libdestdir,[ ],libafp))])
+ifelse(os,[epix],
+	[define([libafpc],concat([-L],libdestdir,[ ],libafpc))])
+ifelse(os,[solaris],
+	[define([libcap],concat([-L],libdestdir,[ ],libcap))])
+ifelse(os,[solaris],
+	[define([libafp],concat([-L],libdestdir,[ ],libafp))])
+ifelse(os,[solaris],
+	[define([libafpc],concat([-L],libdestdir,[ ],libafpc))])
+ifelse(os,[netbsd],
+	[define([libcap],concat([-L],libdestdir,[ ],libcap))])
+ifelse(os,[netbsd],
+	[define([libafp],concat([-L],libdestdir,[ ],libafp))])
+ifelse(os,[netbsd],
+	[define([libafpc],concat([-L],libdestdir,[ ],libafpc))])
+ifelse(os,[freebsd],
+	[define([libcap],concat([-L],libdestdir,[ ],libcap))])
+ifelse(os,[freebsd],
+	[define([libafp],concat([-L],libdestdir,[ ],libafp))])
+ifelse(os,[freebsd],
+	[define([libafpc],concat([-L],libdestdir,[ ],libafpc))])
+# any special libraries
+define([libspecial],[])
+ifelse(os,[ultrix40],[
+	define([libspecial],concat(libspecial,[ -lauth]))])
+ifelse(os,[osf1],[
+	define([libspecial],concat(libspecial,[ -lsecurity]))])
+ifelse(os,[xenix5],[
+	define([libspecial],concat(libspecial,[ -lsocket]))])
+ifelse(os,[drsnx],[
+	define([libspecial],concat(libspecial,[ -lucb]))])
+ifelse(os,[uts],[
+	define([libspecial],concat(libspecial,[ -lsocket -lbsd -la]))])
+ifelse(os,[dynix],[
+	define([libspecial],concat(libspecial,[ -lseq]))])
+ifelse(os,[irix],[
+	define([libspecial],concat(libspecial,[ -lbsd]))])
+ifelse(os,[aix],[
+	define([libspecial],concat(libspecial,[ -lbsd]))])
+ifelse(os,[aux],[
+	define([libspecial],concat(libspecial,[ -lat -lbsd]))])
+ifelse(os,[hpux],[
+	define([libspecial],concat(libspecial,[ -lBSD -lndbm]))])
+ifelse(os,[epix],[
+	define([libspecial],concat(libspecial,[ -lc -lsec]))])
+ifelse(os,[386bsd],[
+	define([libspecial],concat(libspecial,[ -lrpc]))])
+ifelse(os,[netbsd],[
+	define([libspecial],concat(libspecial,[ -lcrypt]))])
+ifelse(os,[freebsd],[
+	define([libspecial],concat(libspecial,[ -lcrypt]))])
+ifelse(os,[bsdi],[
+	define([libspecial],concat(libspecial,[ -lrpc -lkvm]))])
+ifelse(os,[linux],[
+	define([libspecial],concat(libspecial,[ -lgdbm]))])
+ifelse(os,[solaris],[
+	define([libspecial],concat(libspecial,[ -lsocket -lnsl ]))])
+# rutgers specific
+define([libru],[])
+ifdef([rutgersdef], [
+ifelse(os,[solaris],[
+	define([libru],concat(libru,[ -L/usr/local/lib -R/usr/local/lib -lru ]))],[
+	define([libru],concat(libru,[ -lru ]))])])
+
+#
+# special configurations for individual source files
+#
+
+#
+# Aufs: see applications/aufs/INSTALLATION
+#
+# WARNING: OS DEPENDENT
+# define([smartunixfinderinfo],1)
+#
+# Set -DNONLXLATE, -DFULL_NCS_SUPPORT, -DGGTYPE="gid_t" or -DNOCHGRPEXEC
+#  in m4.features
+# Others: USESTATFS, USEGETMNT, USECHOWN, USEQUOTA, USESUNQUOTA, USEBSDQUOTA
+#  are autoconfigured
+define([aufsosdefs],[aufsosflags()])
+
+#
+# lib/cap/authenticate.c: configuration file
+#
+define([authconfig],concat([\"],etcdest,[/],[cap.auth],[\"]))
+
+#
+# lwsrv: see applications/lwsrv/README
+#
+# lwflags and simpleflags are now defined in m4.features
+
+#
+# lwrename: set name of file containing list of printers to be renamed
+#
+define([lwrenamefile],concat([\"],caplibdestdir,[/lwrename.list\"]))
+
+#
+# papif: see applications/papif/README
+#
+# uncomment and set to right location to turn on printing "plain text files"
+# define([pstextloc],[[\"/usr/local/lib/ps/pstext\"]])
+#
+# uncomment and set to right location to turn on page reversal
+# define([psrevloc],[[\"/usr/local/lib/ps/psrev\"]])
+#
+# Valid are:
+#  -DVERBOSELOG - default (set =0 to turn off)
+#  -DNO_STRUCT - default is on (structured)
+#  -DNOACCT - default is on (accounting)
+#  -DIDLESTUFF - default is off
+#  -DSFLOWQ - default is 8 (min 1, max 8)
+#  -DRFLOWQ - default is 8 (min 1, max 8)
+#  -DATPRESPONSETIMEOUT - default is 120 (2 minutes) - in seconds
+#  -DWATCHTIME - default is 10 seconds (in seconds)
+#  -DDEBUG - default is off
+#  -DSTRIPCONTROLD - default is off
+#  -DMAPCRTOLF - default is off
+#  -DMACUSER - default is off (need LPD_JOB environment variable in lpd)
+#  -DPLP - Use with PLP rather than Berkeley lpd
+#  see papif README file for explanations of the above
+# The following defines are recommended for System V lp printers (vs. bsd lpd)
+#  -DWATCHTIME=0 (no status) -DNOACCT
+define([papflags],[-DMACUSER])
+EOT1
+if [ "${lpd}" = "lp" ]; then
+	echo "define([papflags],concat(papflags,[ -DWATCHTIME=0 -DNOACCT]))"
+else
+	echo "define([papflags],concat(papflags,[ -DIDLESTUFF]))"
+fi
+echo
+echo "# Set -DBANNERFIRST if you want the banner page to come out as the"
+echo "#  first page instead of the last page "
+echo "# Set -DBANNERLAST if want it last"
+echo "# Set -DPSBANNER if you want a custom PostScipt Banner (must specify"
+echo "#  short banners in printcap). This still defaults to regular banners"
+echo "# Add -DCHARGEBANNER if you want to charge the banner page to the user"
+echo "#  on system V - there is no accounting, so leave blank"
+if [ "${lpd}" = "lp" ]; then
+	echo "define([papbanner],[])"
+else
+	echo "define([papbanner],[-DCHARGEBANNER])"
+fi
+${PCAT} <<\EOT3
+
+# for cap.printers - uncomment and change the following line to point
+# papif, et. al. to a location other than /etc/cap.printers.  (Note:
+# line below would set it to $etcdest/cap.printers)
+# define([capprinters],concat([\"],etcdest,[/],[cap.printers],[\"]))
+ifdef([columbia],
+       [define([capprinters],concat([\"],etcdest,[/],[cap.printers],[\"]))])
+# for atalkdbm - allows change following line(s) to modify atalk.local
+# (probably shouldn't).  Remember that atalk.local is expected to
+# be in etcdest
+define([atalklocal],concat([\"],etcdest,[/],[atalk.local],[\"]))
+define([etalklocal],concat([\"],etcdest,[/],[etalk.local],[\"]))
+define([configdir],concat([\"],etcdest,[\"]))
+define([uabpidfile],concat([\"],caplibdestdir,[/],[uab.pid],[\"]))
+define([uabbrdescr],concat([\"],caplibdestdir,[/],[bridge_desc],[\"]))
+
+# in case you want to globally change the c compiler
+EOT3
+echo "define([thecompiler],[${ccompiler}])"
+${PCAT} <<\EOT4
+define([theloader],[ld])
+define([theinstaller],[cp])
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#		      END OF CONFIGABLE OPTIONS                            #
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+# You should only edit past here if you are "porting"
+# Automatics
+define([osname],[Unknown])
+ifelse(os,[ultrix12],[define([osname],[Ultrix 1.2])])
+ifelse(os,[ultrix20],[define([osname],[Ultrix 2.0])])
+ifelse(os,[ultrix40],[define([osname],[Ultrix 4.0])])
+ifelse(os,[osf1],[define([osname],[OSF/1])])
+ifelse(os,[aux],[define([osname],[A/UX])])
+ifelse(os,[sunos],[define([osname],[SunOS])])
+ifelse(os,[solaris],[define([osname],[Solaris 2.x in native SVR4 mode])])
+ifelse(os,[encore],[define([osname],[Encore Umax])])
+ifelse(os,[hpux],[define([osname],[HP-UX (for 9000 series)])])
+ifelse(os,[uts],[define([osname],[Amdahl UTS])])
+ifelse(os,[bsd],[define([osname],[Standard BSD])])
+ifelse(os,[pyr],[define([osname],[Pyramid in BSD universe])])
+ifelse(os,[xenix5],[define([osname],[SCO Xenix System V])])
+ifelse(os,[aix],[define([osname],[IBM AIX System V])])
+ifelse(os,[next],[define([osname],[NeXT/MACH])])
+ifelse(os,[dynix],[define([osname],[Sequent Balance])])
+ifelse(os,[irix],[define([osname],[Silicon Graphics IRIS/IRIX])])
+ifelse(os,[newsos],[define([osname],[Sony NEWS])])
+ifelse(os,[drsnx],[define([osname],[ICL DRS])])
+ifelse(os,[epix],[define([osname],[Control Data EP/IX])])
+ifelse(os,[386bsd],[define([osname],[386/BSD etc])])
+ifelse(os,[netbsd],[define([osname],[NetBSD 1.0])])
+ifelse(os,[freebsd],[define([osname],[FreeBSD])])
+ifelse(os,[bsdi],[define([osname],[BSD/386])])
+ifelse(os,[domainosbsd],[define([osname],[HP/Apollo Domain BSD 4.3])])
+#
+define([cflags],ifdef([selfdefinetypes],[-D_TYPES],[]))
+define([cflags],concat(cflags,ifdef([usebyteswap],[ -DBYTESWAPPED],[])))
+define([cflags],concat(cflags,ifdef([usephase2],[ -DPHASE2],[])))
+define([bigcflags],ifelse(os,[hpux],[]))
+# The encore optimiser is slightly over zealous
+ifelse(os,[encore],[define([cflags],concat(cflags,[ -Dencore]))],[
+    define([cflags],concat(cflags,[ -O]))])
+ifelse(os,[pyr],[
+    define([cflags],concat(cflags,[ -q]))])
+ifelse(os,[next],[
+    define([cflags],concat(cflags,[ -DNeXT -DADDRINPACK]))])
+ifelse(os,[xenix5],[
+    define([cflags],concat(cflags,[ -Dxenix5 -I$I -DLAI_TCP -Di386]))])
+ifelse(os,[aix],[
+    define([cflags],concat(cflags,[ -DAIX -DUSETIMES -DNOWAIT3 -DUSEDIRENT]))])
+ifelse(os,[solaris],[
+    define([cflags],concat(cflags,[ -DSOLARIS]))])
+ifelse(os,[uts],[
+    define([cflags],concat(cflags,[ -eft ]))])
+ifelse(os,[irix],[
+    define([cflags],concat(cflags,[ -cckr -D_BSD_COMPAT]))])
+ifelse(os,[drsnx],[
+    define([cflags],concat(cflags,[ -DNOWAIT3]))])
+ifelse(os,[epix],[
+    define([cflags],concat(cflags,[ -DEPIX]))])
+ifelse(os,[osf1],[
+    define([cflags],concat(cflags,[ -DUSEDIRENT]))])
+ifelse(os,[netbsd],[
+    define([cflags],concat(cflags,[ -D__386BSD__]))])
+ifelse(os,[bsdi],[
+    define([cflags],concat(cflags,[ -D__386BSD__]))])
+ifelse(os,[linux],[
+    define([cflags],concat(cflags,[ -DUSE_GDBM]))])
+
+# was used for nbp, but found we needed more... leave in case
+define([nbpflags],[])
+define([lflags],[])
+define([mflags],[])
+
+# aux's c compiler isn't nice - it doesn't have a preprocessor
+# definition for aux.  So, let's invent one.  Also turn on -n
+# for shared code.
+ifelse(os,[aux],[
+	define([cflags],concat(cflags,[ -n -Daux]))
+	define([lflags],concat(lflags,[ -n]))])
+
+# for NetBSD 1.0 on 68k strip symbols to avoid ld error on some progs
+ifelse(os,[netbsd],[define([lflags],concat(lflags,[ -s]))])
+
+# use the transitional option of the C compiler - interpret as K&R C, not ANSI
+ifelse(os,[drsnx],[
+	define([cflags],concat(cflags,[ -Xt -Ddrsnx]))])
+
+# check to see if we need sysvinstall usage
+ifelse(os,[hpux6],[define([sysvinstall],[yes])],
+       os,[irix3],[define([sysvinstall],[yes])])
+
+# or if we really want to use install
+# ifelse(os,[someOS], [define([theinstaller],[install])])
+
+# for cap library
+# Valid are:
+#  NOFFS - no ffs function defined, fake it out
+#  LOCALTIME_GTOD - uses pd localtime, but gettimeofday always reads
+#   disk based time of day.  Always defined for AUX for now.  Probably
+#   needs to be changed for versions of Aux after 1.0
+#  NORECVMSG - no recvmsg in system (fake it out)
+#  NOSENDMSG - no recvmsg in system (fake it out)
+define([caposdefs],
+	concat( ifdef([X_NOFFS],[ -DNOFFS],[]),
+		ifelse(os,[aux],[ -DLOCALTIME_GTOD],[]),
+		ifdef([X_NORECVMSG], [ -DNORECVMSG],[]),
+		ifdef([X_NOSENDMSG], [ -DNOSENDMSG],[])))
+# for afp library
+# two cases for X_LOCKF - if lockf isn't defined
+# first: X_FCNTLLOCKF is defined, so just note that lockf uses fcntl.h
+# second: "         " isn't defined so define no lockf
+# we "know" that flock() was hiding in libbsd.a under aix
+define([afposdefs],
+	concat(	ifdef([X_FLOCK],[], ifelse(os,[aix],[],[ -DNOFLOCK])),
+		ifdef([X_LOCKF],[],
+		   [ifdef([X_FCNTLLOCKF],[ -DLOCKFUSESFCNTL],[ -DNOLOCKF])])))
+# for aufs
+define([aufsosdefs],
+    concat(aufsosdefs,
+	ifdef([X_STATFS],[ -DUSESTATFS],[]),
+	ifdef([X_GETMNT],[ -DUSEGETMNT],[]),
+	ifdef([X_QUOTA],[ -DUSEQUOTA],[]),
+	ifdef([X_SUNQUOTA],[ -DUSESUNQUOTA],[]),
+	ifdef([X_BSDQUOTA],[ -DUSEBSDQUOTA],[]),
+	ifelse(os,[irix],[ -DNOVFORK]),
+	ifelse(os,[aix],[ -DNOVFORK -DUSECHOWN],[])))
+
+# if no ranlib (or fakeout like hpux) and need to order libaries
+ifelse(os,[dummy],   [define(uselordertsort,[1])],
+       os,[aux],     [define(uselordertsort,[1])],
+       os,[solaris], [define(uselordertsort,[1])],
+       os,[uts],     [define(uselordertsort,[1])],
+       os,[drsnx],   [define(uselordertsort,[1])],
+       os,[irix],    [define(uselordertsort,[1])])
+
+# lw config
+define([lwflags],
+    concat(lwflags,
+	ifdef([fastether],[ -DSFLOWQ=1],[]),
+	ifelse(os,[aix],[],[])))
+
+# more papif config
+define([papflags],
+    concat(papflags,
+	ifelse(os,[irix],[ -DNOVFORK]),
+	ifelse(os,[aix],[ -DNOVFORK],[])))
+
+#NBPFLAGS = nbpflags()
+#SPECCFLAGS = specialcflags()
+#BIGCFLAGS = bigcflags()
+#CFLAGS = cflags()
+#LFLAGS = lflags()
+#AFPOSDEFS = afposdefs()
+#AUFSOSDEFS = aufsosdefs()
+
+ifdef([debug],[
+ define([build_here],1)
+# location of atalk.local, etc.
+ define([etcdest],concat(cwd,[[[/etc]]]))
+])
+
+ifdef([includef],[
+# location of include files
+ define([includedir],[cwd])
+ define([cflags],concat(cflags,[ -I],includedir))
+])
+
+ifdef([build_here],[
+# location of include files
+ define([includedir],[cwd])
+# location of des subroutine source (see lib/afp/README)
+ define([desloc],[[../../extras]])
+# location of user cap programs
+ define([capdestdir],concat(cwd,[[[/bin]]]))
+# location of cap "server" programs (aufs, lwsrv, papif, uab etc.)
+ define([capsrvrdestdir],concat(cwd,[[[/bin]]]))
+# location of some cap data files
+ define([caplibdestdir],concat(cwd,[[[/bin]]]))
+# location of cap libraries
+ define([libdestdir],concat(cwd,[[[/lib]]]))
+# cap library names
+ define([caplib],[[libcap.a]])
+ define([afplib],[[libafp.a]])
+ define([afpclib],[[libafpc.a]])
+# names to load cap libraries with
+ define([libcap],concat(cwd,[[[/lib/libcap.a]]]))
+ define([libafp],concat(cwd,[[[/lib/libafp.a]]]))
+ define([libafpc],concat(cwd,[[[/lib/libafpc.a]]]))
+ define([capprinters],concat([\"],etcdest,[/],[cap.printers],[\"]))
+ define([cflags],concat(cflags,[ -I],includedir))
+ define([atalklocal],concat([\"],etcdest,[/],[atalk.local],[\"]))
+ define([etalklocal],concat([\"],etcdest,[/],[etalk.local],[\"]))
+ define([configdir],concat([\"],etcdest,[\"]))
+])
+
+define([datestring],maketemp(/tmp/capcXXXXXX))
+syscmd(date > datestring())
+##########MARKER##########
+# Makefile autoconfigured for ...
+[#] osname() system on include(datestring())
+syscmd(rm -f datestring())
+
+MFLAGS=mflags()
+LFLAGS=lflags()
+CC=thecompiler()
+LD=theloader()
+SHELL=/bin/sh
+INSTALLER=theinstaller()
+EOT4
+exec > /dev/tty
+echo "${of} configured"
+echo
+echo "Getting ready to create the makefiles"
+echo
+echo "You can (re)generate the makefiles at any time by typing:"
+echo "gen.makes (or sh gen.makes) from the top level directory."
+echo
+echo "You need to build new makefiles if you change the user"
+echo "options by editing the 'm4.setup' or 'm4.features' files"
+echo "or have run 'make spotless' to remove all {m,M}akefiles."
+echo
+${PROMPT} "[Hit carriage return to continue] "
+read ans
+echo
+${USESH} ./gen.makes
+echo
+case ${os} in
+	"aux")
+	    echo "WARNING: remove old 'Makefiles' by typing: 'make spotless'"
+	    echo "then re-run 'gen.makes' to create new small-m 'makefiles'"
+	    echo
+	    ;;
+esac
+echo "CAP Configuration complete!"
+echo
+echo "You can now start the build process with 'make programs'"
+echo "(but it would be best to read the documentation in 'doc')."
+echo

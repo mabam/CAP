@@ -1,0 +1,23 @@
+.TH TOAUFS L "December 1990"
+.UC
+.SH NAME
+toaufs \- decode Binhex 4.0 files to CAP aufs format
+.SH SYNOPSIS
+.B toaufs
+file ...
+.SH DESCRIPTION
+.I Toaufs
+takes a collection of files, joins them as appropriate, discards gumph
+such as news headers at top & bottom, unbinhexes them and stores them
+as CAP aufs files in the current directory, which should be a CAP aufs folder.
+To use 
+.I toaufs
+to convert files sent as news articles save each part in a file using
+an ascending alphanumeric sequence of names e.g. file.1, file.2 etc.,
+and then pass them all to
+.I toaufs ,
+e.g. toaufs file.*.
+.SH SEE ALSO
+mcvert, capit
+.SH AUTHOR
+Nigel Perry (np@doc.ic.ac.uk)

@@ -1,0 +1,106 @@
+CAP note: last revision March, 1988
+
+General CAP notes.
+------------------
+
+The major thing that should be recognized about CAP is that the
+protocol is carried by each process.  Unlike TCP/IP, none of the
+protocol is carried in the kernel.  In the design of CAP, we stayed
+away from having asynchronous events.  This makes programming the
+protocol code and the user code much easier.  However, because of
+this, the programmer must allow the protocol to run.  This is
+generally done by issuing "abSleep" (scheduler) calls at regular
+intervals.  If you fail to allow protocol to run, then you'll see all
+sorts of aberrant behavior.  In general, a good rule of thumb is that
+you shouldn't allow more than about a second to pass before allowing
+protocol to run.  [Thus, things like blocking reads or writes will
+generally mess things up royally].
+
+See doc/sched.notes for a full description.
+
+LAP/UDP encapsulation
+---------------------
+
+When using UDP encapsulation (often in CAP referred to as KIP or KIP
+encapsulation), the only LAP protocol that may be used is DDP.  Doing
+otherwise would require modifications to the encapsulation method.
+Basically, the encapsulation method assumes that UDP sockets map to
+DDP sockets in some what and thus all UDP packets are a DDP packet of
+some type.
+
+For this reason, a LAP module is not included for UDP encapsulation.
+Note: lib/cap/ablap.c is inclued only for reference.
+
+NBP server
+----------
+
+A number of extensions were undertaken for the current UNIX nbp
+server.  These are documented in doc/nbp.ext.
+
+ABMISC
+------
+
+A number of miscellaneous, but useful routines are listed in
+abmisc.doc.
+
+ATP/ASP/PAP
+-----------
+
+See atp.notes, asp.notes, and pap.notes for a list of some of the
+major differences of the CAP implementation of these protocols from
+the "Inside AppleTalk/MacIntosh" documentation.  Note: the interfaces
+are now out of sync with the "Inside" documentation.
+
+
+ZIP
+---
+
+The ATP GetZoneList call has been implemented.  The routines are:
+
+* OSErr atpgetzonelist(int start_index, byte buffer,
+		     atpUserDataType zipuserbytes)
+
+atpgetzonelist sends a get zone list command to the current bridge.
+start_index is the first zone index to start enumeration at (very
+first is always 1).  This is used to get all the zones when they are
+larger than a single atp response -- zip only allows a single pkt
+response.
+
+buffer should be of size atpMaxData and contains the returned packet
+if there is no error.
+
+zipuserbytes will be set to the atp user data bytes a packet is
+returned from the bridge successfully.
+
+* OSErr GetZoneList(char *zones[], int nzones, int *realcount)
+
+GetZoneList repeatedly calls atpgetzonelist until all zones have been
+retrieved from the bridge.  It returns the count of zones in realcnt.
+It will return up to nzones pointers to zone names in the array zones.
+The memory for the zone name is allocated by GetZoneList and should be
+deallocated by going down the list or by use of FreeZoneList.
+
+The zone list and realcount returned should not be considered valid if
+noErr is not returned.
+
+* FreeZoneList(char *chararray[], int cnt)
+
+Goes through the passed array of character pointers up to cnt and
+does a free on the pointers.  A free is issued only if the pointer is
+not null.  In addition, the pointers are cleared.
+
+* char *GetMyZone()
+
+returns the zone the program is running in.  It does not ask the
+bridge for the current zone because it may not correspond.
+
+Overwriting the returned value is strongly discouraged.
+
+VERSION INFO
+------------
+
+CAP version information is now part of the library.  The call
+what_cap_version returns a pointer to a structure of type
+"cap_version".  All values are pointers to ascii strings.  See
+appletalk.h for the contents.
+

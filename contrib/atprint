@@ -1,0 +1,31 @@
+#!/usr/local/bin/perl
+#
+# Matthew Lewis <matthew@slice.ooc.uva.nl>
+# April 1991
+#
+# usage: atprint [zone]
+#
+
+open(PIPE,"/usr/local/cap/atlook '$ARGV[0]' |") || die "Cannot open atlook";
+$a = <PIPE>; $a = <PIPE>;
+while (<PIPE>) {
+	$index = substr($_,0,3);
+	$name = substr($_,6,41);
+	$name =~ s/\s*$//;
+	$net = substr($_,52,7);
+	$node = substr($_,65,3);
+	$socket = substr($_,73,3);
+	$list{"$net:$node"} .= "$name\034";
+}
+print "\n\nNode list for network $ARGV[0]:\nNet	Node	Names\n----	---	------------------------\n\n";
+foreach (sort keys(%list)) {
+	($net,$node) = split(/:/);
+	print "$net	$node";
+	@names = split(/\034/,$list{$_});
+	@names = sort @names;
+	for ($i=0; $i <= $#names; $i++) {
+		if ($i != 0) {print "	";}
+		print "	$names[$i]\n";
+	}
+	print "--------------------------------------------\n";
+}

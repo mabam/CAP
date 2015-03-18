@@ -1,0 +1,669 @@
+.TH hash 3 
+.SH NAME
+h_new, h_operation, h_free, h_redefine\- manage hash tables
+.SH SYNTAX
+.B #include <sys/types.h>
+.br
+.B #include <hash.h>
+.PP
+.B "caddr_t h_new(policy, htype, M, compare, allocate, compress, \
+hash, shash, chainops)"
+.br
+.B int policy;
+.br
+.B int htype;
+.br
+.B int M;
+.br
+.B int (\(**compare)();
+.br
+.B caddr_t (\(**allocate)();
+.br
+.B u_int (\(**compress)();
+.br
+.B u_int (\(**hash)();
+.br
+.B u_int (\(**shash)();
+.br
+.B struct hash_bucket_list_ops \(**chainops;
+.PP
+.B "int (\(**compare)(key, data)"
+.br
+.B caddr_t key;
+.br
+.B caddr_t data;
+.PP
+.B "caddr_t (\(**allocate)(p)"
+.br
+.B caddr_t p;
+.PP
+.B u_int (\(**hash)(M, logM, item);
+.br 
+.B int M;
+.br
+.B int logM;
+.br
+.B caddr_t item;
+.PP
+.B u_int (\(**shash)(M, logM, hidx, item);
+.br
+.B int M;
+.br
+.B int logM;
+.br
+.B int hidx;
+.br
+.B caddr_t item;
+.PP
+.B u_int (\(**compress)(item);
+.br
+.B caddr_t item;
+.PP
+.B "caddr_t h_operation(operation, hth, key, bkt, dadvance, distance, bucket)"
+.br
+.B int operation;
+.br
+.B caddr_t hth;
+.br
+.B caddr_t key;
+.br
+.B int bkt;
+.br
+.B int dadvance;
+.br
+.B int \(**distance;
+.br
+.B int \(**bucket;
+.PP
+.B MACRO on h_operation:
+.br
+.B h_member(hth,key)
+.br
+.B caddr_t hth;
+.br
+.B caddr_t key;
+.PP
+.B MACRO on h_operation:
+.br
+.B h_insert(hth, key)
+.br
+.B caddr_t hth;
+.br
+.B caddr_t key;
+.PP
+.B MACRO on h_operation:
+.br
+.B h_delete(hth,key)
+.br
+.B caddr_t hth;
+.br
+.B caddr_t key;
+.PP
+.B "caddr_t h_redefine(hth, policy, htype, M, compare, allocate, \
+hash, shash, compress, chainops)"
+.br
+.B caddr_t hth;
+.br
+.B int policy;
+.br
+.B int htype;
+.br
+.B int M;
+.br
+.B int (\(**compare)();
+.br
+.B caddr_t (\(**allocate)();
+.br
+.B caddr_t (\(**compress)();
+.br
+.B u_int (\(**hash)();
+.br
+.B u_int (\(**shash)();
+.br
+.B struct hash_bucket_list_ops \(**chainops;
+.PP
+.B MACRO on h_redefine:
+.br
+.B h_rehash(hth,M)
+.br
+.B caddr_t hth;
+.br
+.B int M;
+.PP
+.B "void h_free(hth, free_func)"
+.br
+.B caddr_t hth;
+.br
+.B int (\(**free_func)();
+.PP
+.B int (\(**free_func)(data);
+.br
+.B caddr_t data
+.PP
+.B "struct hash_statistics *h_statistics(hth)"
+.br
+.B caddr_t hth;
+.SH DESCRIPTION
+.I h_new,
+.I h_redefine,
+.I h_free,
+and
+.I h_operation
+define a general purpose hash table manager that is capable of
+handling collision resolution via chaining and open hashing with
+linear probing and double probing.
+.PP
+.I h_new
+is used to create and define the parameters for a hash table.
+.I h_redefine
+allows you to redefine the hash table parameters.  The
+associated macro
+.I h_rehash
+allows you redefine the size of the table.
+.I h_free
+is used to free a hash table.
+.PP
+.I h_operation
+provides "member", "insert", and "delete" functions for a hash table.
+h_operation provides a high degree of control to the user.  There are
+three associated macros
+.I h_insert,
+.I h_delete,
+and
+.I h_member
+that act as "wrappers" to
+.I h_operation
+for
+simple operation.
+.SH Creating hash tables
+.I h_new
+creates a new hash table and returns a handle that is used to
+reference it.  The various arguments to h_new define the hash table
+definition (e.g. chaining, open hash, etc) and define some general
+functions necessary for the hashing operations (insert, delete, find).
+.PP
+.I policy
+defines how collisions are to be resolved.
+.I HASH_POLICY_CHAIN
+says that we should chain off the bucket on a collision.
+.I HASH_POLICY_LINEAR_PROBE
+resolves collisions with linear probes (e.g. by searching for the next
+empty hash bucket).
+.I HASH_POLICY_DOUBLE_HASH
+is like linear probe, but searches in increments given by a
+secondary hash function.
+Note that the performance of the non-chain methods degrade severely as
+the number of elements in the hash table approach the hash table size.
+.PP
+.I M
+defines the minimum hash table size.  For some hash function types, M may be
+increased to some prime number or power of 2 larger than the passed
+value.
+.PP
+.I htype
+defines the hashing function.  There are a few internally defined
+hashing functions that may be specified.
+.TP 10
+\fBHASH_TYPE_OWN
+says that you will be supplying a
+.I hash
+function and possibly a
+.I shash
+function.  M will be taken as given.  See the discussion of
+.I hash
+and
+.I shash
+below for more information.
+.TP 10
+\fBHASH_TYPE_DIVISION
+is the simplest method.  The bucket is choosen on the basis of "key
+modulo M".
+.I hash_new
+resizes the supplied M upwards until it is relatively prime to
+2,3,5,7,11,13,17,19.  It would be best if M was prime such that M does
+not divide (size of character set)^b plus/minus a where b and a are
+small numbers; however, choosing M to be relatively prime to the prime
+factors less than 20 should still give decent results.
+The secondary hash for
+HASH_TYPE_DIVISION
+assumes
+that M is prime and uses the function 1 + (K modulo (M - 2)).  Things
+will work best if M and M-2 are twin primes like 1021 and 1019.  In
+general, this will not be true and you should evaluate the
+effectiveness on your data.
+(See Knuth, Volume 3 for a full discussion).
+.TP 10
+\fBHASH_TYPE_MULTIPLICATIVE
+forces up the passed M so that it is a power of 2 (call it 2^r).
+The hash function used is AK>>(number of bits in a word - r) where A
+is an integer constant relatively prime to 2^32 (for a 32 bit
+machine).
+A has been chosen to attempt fibonacci
+hashing (whether this holds or not is debatable--futher research
+required).  See A_MULTIPLIER in hash.h.
+The secondary hash function takes r higher bits in the product defined
+above and oring in a one (e.g. right shifts number of bits - 2*r).
+(See Knuth, Volume 3, for a full discussion).
+.PP
+The
+.I compare
+function is a required user specified routine to compare a key (key) to a
+stored data item (data).
+It should return negative, zero, or positive if the comparision is
+less than, equal to, or greater than respectively.
+.PP
+The
+.I allocate
+function allows one to insert data through
+.I h_operation
+without allocating it before hand.
+If
+.I allocate
+is not given, it assume that the key is the data.
+.PP
+.I hash,
+if non-null, defines the primary hash function that is used to compute
+the bucket corresponding to the key.
+.I shash,
+if non-null, defines the secondary hash function used to obtain a
+"movement" value for collision resolution for the open hash policies.
+It is worth noting
+that 
+.I shash,
+if specified, will be used by linear probing.
+Specifying linear
+probing versus double probing matters when no secondary hash function
+is given.
+The arguments to
+.I hash
+are the size of the hash
+table, the log base 2 of the size of the hash table (not the floor
+log2(M), but 2^r s.t. 2^r >= M), and the key K.
+.I shash
+also takes as a parameter (hidx) the value return by
+.I hash.
+Specification of the hash functions will override any specified by the
+hash type argument; however, the passed value of M will still be
+resized according to the passed hash type (e.g. for multiplicative,
+M will be bumped until it is a power of 2).
+.PP
+.I compress
+is used to compress a coerce a key to an unsigned
+integer for the hash functions and to dereference the data pointed to by
+key (which usually is a pointer).
+It is generally required
+for internal hashing
+functions are used and optional otherwise (though your hash function
+would have to do the compression if you don't supply this routine).
+An example of a compress function for an
+string would be:
+.nf
+	compress(s) unsigned char *s; 
+	{
+	  unsigned int j = 0;
+	  while (*s) j += *s++;
+	}
+.fi
+In this case, it is important to note that a simpler function like an
+xor across the
+data will make the range too small (unless the table is very small)
+because you would only be making use of 8 bits for a maximum hash
+range of 256.
+(Note: this
+compression function is only so-so, it would be better if it rotated
+the data on every turn to ensure that all the bits come fully into
+play--however, this is highly dependent upon the data the hashing
+type).  Note, if you don't supply a compression function (e.g. specify
+as NULL), then the key will be used directly.
+This will cause
+problems if sizeof(caddr_t) != sizeof(unsigned int), so consider this
+carefully (i.e. don't do it -- pass a pointer to a variable containing
+the key and write a dummy compress function that just returns the value).
+.PP
+.I chainops
+will be describe in a later section in full detail.  Essentially, it
+allows one to chain off the buckets in an arbritrary fashion (perhaps
+with another hash table).  By default, it is done with an ordered linked
+list.  Of course, it is only meanful when the policy selected is chain.
+.PP
+.I h_redefine
+takes the hash table handle as an argument in addition to all the
+other arguments of 
+.I h_new.  
+.I h_redefine
+will reformat the hash table
+according to the passed arguments.  It will rehash if the hash table
+is valid (so it should not be called lightly).
+.I WARNING:
+If you want to use h_redefine, it is important that the "key" as
+passed to the 
+.I h_operation
+routines is the same as the data stored in the buckets!  
+This is necessary because
+.I h_redefine
+operates by calling
+.I h_insert
+with the items in the buckets as the key.
+.PP
+.I policy
+and 
+.I type
+can be
+specified as 
+.I HASH_POLICY_OLD
+and
+.I HASH_TYPE_OLD respectively to retain
+the old policy and type.  For 
+.I compare, 
+.I allocate, 
+.I hash, 
+.I shash,
+.I compress, and 
+.I chainops,
+pass NULL unless you wish to change those functions.  Set M
+to be zero to retain the old table size (note, if a new hash type is
+specified, the passed M may be resized).  It is expected that the main use
+.I h_redefine
+will be to increase the hash table size: use the macro 
+.I h_rehash
+for this.
+.PP
+.I h_free
+will free a hash table.  It calls
+.I free_func
+on every item inserted into the table so that data can be released if
+necessary.  If free_func is NULL, then it is assumed that the data
+need not be released.
+.SH Hash Operations
+.I h_operation
+provides insert, member, and delete operations on a hash table created
+by h_new.  A high degree of control over its operation is provided.
+The macros
+.I h_insert,
+.I h_delete,
+and
+.I h_member
+hide the less commonly used arguments.
+.PP
+.I operation 
+defines the operation to be performed.  It best if
+.I key
+is a pointer to data instead of the actual key.
+.TP 10
+\fB HASH_OP_MEMBER
+finds an item based upon
+.I key
+and returns it.  If the item is not
+in the table, NULL is returned.
+The comparision function defined in 
+.I h_new
+is used to determine if the
+item is in the table.
+.TP 10
+\fBHASH_OP_INSERT
+is like find, but the item is inserted if it wasn't already in the
+table.
+.I allocate,
+if non-null,
+as defined in
+.I h_new
+is called to get the data to be stored.  If
+.I allocate
+is NULL, then it assumed that the key is the data.
+NULL is returned if the item could not be inserted because all the
+buckets were filled or a memory allocation failed.
+.TP 10
+\fB HASH_OP_DELETE
+will remove the specified item from the table and return it
+if it was in the table.
+NULL will be returned if the item was not in the
+table.
+.PP
+.I hth
+is the hash table handle as returned by
+.I h_new.
+.PP
+.I key
+is the used to match the data in the table.
+Normally it is a pointer to some data item.
+.PP
+.I bkt,
+and
+.I dadvance
+allow you to specify the hash bucket to use and the 
+hash advance (default is 1) to use in open hashing collision
+resolution respectively.
+If
+these are specified as negative numbers, the hash functions
+defined in
+.I h_new
+will be used.
+.PP
+.I bucket
+should be a pointer to an integer into which the primary bucket will
+be returned (e.g. the index returned by primary hash function).
+.I distance
+is set to the number of buckets examined (beyond the first one) before
+the item as added.
+.SH Chaining off buckets
+The default action for chaining off a bucket is to use a linked list
+ordered largest to smallest (as defined by the comparision function).
+It is possible to define an arbitrary method by defining a set of
+chain operations.  The functions needed are defined below and should be put 
+in a struct hash_bucket_list_ops and passed upon a hash table create.
+.nf
+	struct hash_bucket_list_ops {
+	  caddr_t (*hlo_find)();
+	  caddr_t (*hlo_insert)();
+	  int (*hlo_delete)();
+	  caddr_t (*hlo_get)();	/* get any and remove */
+	};
+.fi
+.PP
+In the following discussion, 
+.I bp
+is where information about the "list"
+is stored.  "list" is used to mean your storage mechanism.  It could
+be linked list, hash table, array, etc.
+.I bp
+allows you to disambiguate which list--unless your hash table size is
+one, you must support more than one list.  An item in the following is
+an abstract entity that can be compared against a key by the
+.I compare
+function provided in
+.I h_new.
+.I hlo_find,
+.I hlo_insert,
+and
+.I hlo_delete
+are matched functions.
+.I hlo_find
+is always called before
+.I hlo_insert
+or
+.I hlo_delete
+and the hash table functions will only call insert or delete if the
+item (defined by the key) is not in the list
+and in the list respectively.
+.PP
+.nf
+caddr_t (*hlo_find)(bp, key, cmp, distance, hint, hint2)
+caddr_t bp;
+caddr_t key;
+int (*cmp)();
+int *distance;
+caddr_t *hint;
+caddr_t *hint2;
+.fi
+.I hlo_find
+is used to see if the specified item is in the list based upon the
+key.  It should return
+the the item stored in the list if there and NULL
+otherwise.  If non-null, this is the value that will be returned by
+.I h_operation.
+If the return value will be non-null, then
+.I distance
+should be set to
+some metric by this function (e.g. distance from head of list on
+linked list).  
+.I cmp
+is a comparision function to use (as passed in h_new).
+.I hint,
+and
+.I hint2
+are places to store hints for
+.I hlo_insert
+and
+.I hlo_delete.
+.PP
+.nf
+caddr_t (*hlo_insert)(bp, key, allocate, distance, hint, hint2)
+caddr_t *bp;
+caddr_t key;
+caddr_t (*allocate)();
+int *distance;
+caddr_t hint1;
+caddr_t hint2;
+.fi
+.I hlo_insert
+should insert an item onto the list.  It should call
+.I allocate,
+if defined, to create the item based upon the key.  The distance should
+be updated with respect to your metric set.
+.I hint,
+and
+.I hint2
+are passed as set by the
+.I hlo_find.
+You should set the bucket pointer to point to your "list" if the list
+was empty before (e.g. *bp = head_of_list, *bp = hash_table_handle,
+etc.).
+.I hlo_insert
+should return the stored data.  If it cannot insert the
+item it may return NULL
+.I hlo_insert's
+value will be the value
+returned by 
+.I hlo_operation.
+.PP
+.nf
+int (*hlo_delete)(bp, key, distance, hint, hint2)
+caddr_t *bp;
+caddr_t key;
+int *distance;
+caddr_t hint;
+caddr_t hint2;
+.fi
+.I hlo_delete
+should remove the specified item from the list.  It should return TRUE
+on success and FALSE on failure.  distance should be set to the
+distance of the deleted item with respect to the arbritry metric
+defined for your set of functions.  The bucket pointer should be set
+to NULL if there are no longer items in the list (e.g. *bp = NULL).
+.I hint
+and
+.I hint2
+are passed as set by the last 
+.I hlo_find
+operation.
+.PP
+.nf
+caddr_t (*hlo_get)(bp)
+caddr_t *bp;
+.fi
+.I hlo_get
+is used by the
+.I h_redefine
+and
+.I h_free
+functions.
+It should unlink an abritrary item from the list and return it.
+.PP
+The following simple set of functions define a hash table with no
+collisions allowed:
+.nf
+	none_find(bp, key, cmp, distance, hint, hint2)
+	caddr_t bp, key, *hint,*hint2;
+	int (*cmp)(), *distance;
+	{
+	  *distance = 0;
+	  if (bp == NULL)	/* nothing in list */
+	    return(NULL);
+	  if ((*cmp)(key,bp) == 0)
+	    return(*bp);
+	}
+
+	caddr_t none_insert(bp, key, allocate, distance, hint, hint2)
+	caddr_t *bp, key, *hint,*hint2;
+	caddr_t (*dup)();
+	{
+	  *distance = 0;
+	  *bp = allocate ? (*allocate)(key) : key;
+	}
+
+	int none_delete(bp, key, distance, hint, hint2)
+	caddr_t *bp, key, *hint,*hint2;
+	{
+	  caddr_t v = *bp;
+	  *distance = 0;
+	  return(v != NULL);	/* true if we deleted */
+	}
+
+	caddr_t none_get(bp)
+	caddr_t *bp;
+	{
+	  caddr_t r = *bp;
+	  *bp = NULL;
+	  return(r);
+	}
+.fi
+.SH Statisitcs
+.I h_statistics
+returns a pointer to the following structure:
+.nf
+	struct hash_statistics {
+	  int hs_buckets;	/* number of buckets in table */
+	  /* describes # of entries in chain */	
+	  int hs_used;		/* # of buckets filled */
+	  /* describes table (not accurate for chain policy) */
+	  int hs_davg;		/* average distance from hash */
+	  int hs_dsum;		/* sum of distances from hash */
+	  int hs_dmax;		/* maximum distance from hash */
+	  /* describes lookup patterns (describes distance into */
+	  /* linear table if the policy is chain */
+	  int hs_lnum;		/* remember number of lookups */
+	  int hs_lsum;		/* sum of lookup distances */
+	  int hs_lavg;		/* average lookup distance */
+	  /* cumulative for lookup patterns (describes overall */
+	  /* efficiency) */
+	  int hs_clnum;		/* remember number of lookups */
+	  int hs_clsum;		/* sum of lookup distances */
+	};
+.fi
+The averages are reported as a fixed point number with two decimal
+digits of precision after the decimal point (e.g. avg/100.avg%100).
+.PP
+The lookup and table statistics are cleared on a
+.I h_redefine
+operation.
+.SH NOTES
+Some analysis of the hashing functions provided should be done to
+determine how "good" they are.
+.br
+Allocate probably should have been called "get_item" in the above.
+.br
+Possibly some method for returning the "nth" or "next" item in the
+hash table should be provided for times when it is necessary to access
+the items in a linear fashion.  However, it possible to do this
+already using the "allocate" call to put the items on a linked list or
+in an array.
+.SH RESTRICTIONS
+Perhaps more control over the hashing functions should be provided;
+however, it is easy enough to replace them.
+.SH REFERENCES
+Searching and Sorting, The Art of Computer Programming, Volume 3,
+Donald E. Knuth.
+.SH "SEE ALSO"
+bsearch(3), lsearch(3), string(3), tsearch(3), hsearch(3)
+
+

@@ -1,0 +1,7 @@
+iwii|ImageWriter II:\
+	:lp=/dev/ImageWriter:sd=/usr/spool/lpd/ImageWriter:\
+	:lf=/usr/adm/ImageWriter-log:af=/usr/adm/ImageWriter.acct:\
+	:br#9600:rw:fc#0000374:fs#0006003:xc#0:xs#0040040:mx#0:\
+	:if=/usr/local/lib/lwif:\
+	:of=/usr/local/lib/lnof:
+

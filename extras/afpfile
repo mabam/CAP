@@ -1,0 +1,31 @@
+# This is a sample CAP AUFS afpfile 
+#
+# It controls the type of translation performed on the file content and the
+# mapping between UNIX filename extension and the Macintosh Creator and Type.
+#
+# The available forms of translation are
+#	Ascii, map LF to CR and vice versa
+#	Text, map Mac quotes to UNIX quotes (not vice-versa, implies Ascii)
+#	Iso, map to/from ISO 8859 characters (requires ISO_TRANSLATE)
+#	Raw, no translation
+#
+# EXTN	XLate	CREAT	TYPE	Comment
+#
+.c	Ascii	'MPS '	'TEXT'	"This is a UNIX C source file."
+.h	Ascii	'MPS '	'TEXT'	"This is a UNIX C source header file."
+.p	Ascii	'KAHL'	'TEXT'	"This is a UNIX pascal source file."
+.o	Raw	'unix'	'OBJ '	"This is a UNIX object file."
+.a	Raw	'unix'	'AR  '	"This is a UNIX archive file."
+.Z	Raw	'LZIV'	'ZIVU'	"This is a UNIX compressed file."
+.ps	Raw	'ASPS'	'TEXT'	"This is a UNIX PostScript file."
+.sit	Raw	'SIT!'	'SIT!'	"This is a UNIX StuffIt file."
+.gif	Raw	'JRVL'	'GIFf'	"This is a UNIX GIF file."
+.tar	Raw	'TAR '	'TARF'	"This is a UNIX Tar file."
+.tex	Raw	'*TEX'	'TEXT'	"This is a UNIX TeX source file."
+.fram	Raw	'Fram'	'FASL'	"This is a UNIX FrameMaker file."
+.xlt	Ascii	'XCEL'	'TEXT'	"This is a UNIX Excel Text file."
+.hqx	Ascii	'BnHq'	'TEXT'	"This is a UNIX BinHex file."
+.wrd	Ascii	'MSWD'	'TEXT'	"This is a UNIX Text file."
+.wrt	Ascii	'MACA'	'TEXT'	"This is a UNIX Text file."
+.txt	Ascii	'ttxt'	'TEXT'	"This is a UNIX Text file."
+*	Ascii	'ttxt'	'TEXT'	"This is a UNIX created file."

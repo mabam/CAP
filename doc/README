@@ -1,0 +1,13 @@
+The following documentation is primarily for the installer.
+	install.ms - notes on how to install CAP libraries
+	install.doc - formatted copy of install.ms
+	print.cookbook - simple steps for CAP printing/installation
+
+The following documentation is primarily for the programmer.
+	atp.notes - notes on our version of ATP
+	asp.notes - notes on our version of ASP
+	cap.notes - notes on programming CAP
+	nbp.ext - notes on our NBP extensions for Unix
+	pap.notes - notes on our version of PAP
+	abmisc.doc - notes on the routines in abmisc
+	sched.notes - notes on protocol scheduler

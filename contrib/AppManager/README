@@ -1,0 +1,93 @@
+Application Manager v1.0 - CAP 6.0
+----------------------------------
+
+The Application Manager controls the number of times an Application
+may be run. This is most useful in restricting use to the number of legal
+copies of software. The Application Manager uses a new argument to aufs:
+
+	aufs -A <listname>
+
+The file <listname> contains information of the format
+
+/full/Path/To/Application1:N
+/full/Path/To/Application2:M
+/full/Path/To/Application3:O
+...
+
+where N/M/O are integers that specify the number of times that each
+application may be run. The full path is to the DATA fork. If you
+specify the character flag 'P' after the number, the file will be
+protected from simple Finder copying.
+
+EG:
+/mac/servers/studeApplications/Word 4.0/Word:20P
+
+limits Word to 20 simultaneous uses. The file cannot be Finder copied
+(copy protection can be broken by a determined user, run control cannot).
+NB: If the maximum run count is reached, file copying will fail, this is
+independant of the state of the protection flag.
+
+When the run limit is reached, a Mac user attempting to start the
+Application receives a message which varies somewhat with system version ...
+
+6.0.2	"The following application is busy or damaged
+	<ApplicationName>."
+
+6.0.5	"The file <ApplicationName> could not be
+	opened/printed (the file/folder is locked)."
+
+7.0	"The Application program <ApplicationName> could
+	not be opened, because it is locked."
+
+There is no need for extra software to be loaded onto the Mac, this is
+strictly a UNIX AppleShare server modification. The basic functionality
+for the Application Manager exists on SUN, ULTRIX and SGI machines. It is
+known to not work under HP-UX.
+
+The Application Manager is included in AUFS with the m4.features define
+APPLICATION_MANAGER. This can be edited within Configure or edited into
+an existing m4.features and 'gen.makes' rerun.
+
+There are a couple of tools, 'aufsmon' which lists the files in <listname>
+together with the number of time each is open, it can also optionally list
+the process IDs of the running aufs'. The second is 'aufslock' which can be
+used simply to add another lock from the UNIX end, it aids testing. It is
+IMPORTANT to note that the filename specified to aufslock must be for the
+resource fork, IE: include "/.resource/".
+
+	aufsmon [-fpv] [-s N] <listname>
+
+		-f	print a formfeed before each section
+		-p	print the process IDs of the locking aufs
+		-v	be verbose, print a 'bitmap' of the locks
+		-s N	sleep for N seconds (default 10 seconds)
+		<listname> is the same file provided to aufs with -A
+
+	aufslock <filename> [ <byte> ]
+
+		<filename> is the actual file (resource fork!!).
+		<byte> is an optional numeric argument specifying the
+			byte to lock, otherwise the next free is used.
+
+Caveats
+-------
+
+The only major problem I have found is with TMON (2.8) and System 6.0.2 and
+6.0.5. The machine simply bombs on locked applications. Removing TMON restores
+normality. These are only 1 Mb machines so I suspect a memory problem.
+
+A minor problem is due to a probable bug in the lockf() implementation
+(SunOS only so far). Any aufs server that isn't running with the Application
+Manager will see a block on the file if more than one other person and the
+modified aufs has the application open. This could be seen as a feature.
+You shouldn't be using two aufs servers on the same directory tree anyway!
+
+NOTE CAREFULLY:
+Locks are neither set nor checked if the aufs session has write permission
+on the application resource fork. I recommend that once set up, write
+permission for owner, group and other is removed from the application's
+resource fork. Since the Application Manager works by using read locking
+on the resource fork, copying or writing the application on a server with
+the file in use is a no-no.
+
+The AM uses fcntl(2) locking, see the manual entry for more information.

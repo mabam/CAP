@@ -1,0 +1,53 @@
+.\" troff -man
+.TH MACUSER 1L Macintosh/UNIX_Messages CAP
+.SH NAME
+macuser \- Macintosh Messages for UNIX users.
+.SH SYNOPSIS
+.BI macuser
+[-dadpn] [userlist ...]
+.SH DESCRIPTION
+If run by the super user (from 'rc.local' or 'start-cap-servers')
+.BI macuser
+registers each of its arguments on the AppleTalk network as
+"user@host:macUser@*". Ordinary users cannot provide a user list
+- the user login name is used instead.
+.BI macuser
+then listens for messages sent from Macintosh
+or UNIX users and forwards them to the designated recipient (writing to
+the users' terminal if logged in, or by sending email if not).
+.PP
+.BI macuser
+provides equivalent UNIX functionality to the
+Macintosh Control Panel document "Messages" which receives and displays
+short messages on Macs.
+"Messages DA" is used to lookup users, edit and send messages from
+the Macintosh. UNIX equivalence is provided by the commands listed in SEE
+ALSO.
+.PP
+.BI macuser
+is a messaging system ONLY, it
+is not intended to monitor login activity and cannot be used to check that
+a UNIX user is actually present.
+.SH FILES
+None.
+.SH SEE ALSO
+CAP (Columbia AppleTalk Package)
+.br
+macwho(1l) \- list macUsers, see also who(1)
+.br
+macwall(1l) \- send stdin message to all macUsers, see also wall(1)
+.br
+macwrite(1l) \- send stdin message to macUser, see also write(1)
+.br
+macto(1l) \- send argument list message to macUser, see also to(1)
+.br
+macmail(1l) \- notify macUser of UNIX mail arrival, see also biff(1)
+.SH DIAGNOSTICS
+"No permission to register name" if run by a non super-user with a user list.
+.SH BUGS
+1. The messages system was implemented in two parts on the Macintosh
+to allow the use of "Messages DA" to be restricted in a student environment.
+.br
+2. Messages are limited to about 550 bytes less 128 for any included ICON.
+.SH AUTHOR
+djh@munnari.OZ.AU, May 1990. Updates via FTP from munnari.OZ.AU

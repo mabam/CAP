@@ -1,0 +1,59 @@
+
+	AUFS - AppleTalk to Unix File Server
+
+	o RELEASE NOTES
+	o Aufs, version 3.00, Feb. 1988
+
+Introduction
+------------
+
+Aufs provides file service for a Mac client running AppleShare software.
+Aufs implements most of the AppleTalk Filing Protocol, as specified by
+protocol version 1.1, February 17, 1987. AFP 2.0 is also supported, except
+for the (optional) password change feature. It is possible to add code for
+this, but is dangerous to use with clear text passwords across networks.
+
+Though this version has been extensively tested, but definitely
+contain bugs - it is far to big not to.
+
+Installation
+============
+See INSTALLATION in this directory for notes on installation.
+
+
+What Aufs Does 
+=============
+See the Aufs man page and see NOTES in this directory
+
+The actual design parameters are mapped in design.notes.
+
+
+MAJOR CHANGES since Version 2.0:
+
+Here's the big one: we finally realized that the .ADeskTop, .IDeskTop
+and .finderinfo files are NOT written in network order.  This means
+you can't transport directly between machines with different byte
+orders!  (Not tar, dump, or NFS).  Aufs version 3 will destroy the old
+desktop files.  Aufs version 3 will also rewrite the old .finderinfo
+files when it sees them.  To ensure things are okay, rebuild your
+desktop.
+
+Accepts .afpvols if no afpvols.
+
+Provision has now been made to handle international character sets or
+rather "ascii"s that are different from what most people in the U.S.
+see.  The idea (and tables) come from Dan Sahlin of the Swedish
+Institute of Computer Science.
+
+Turning on SMART_FINDERINFO in afpudb.c will yield more information;
+however, it is unix variant (BSD) dependent and slows things down
+considerably.
+
+Simple minded shutdown mechanism added.
+
+Disallow "." and ".." as file names.
+
+Kinetics Box too slow code dropped in favor of settable values.
+
+Update to use sun quota system properly
+

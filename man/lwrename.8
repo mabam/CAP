@@ -1,0 +1,168 @@
+.TH lwrename 8L "17 Dec 1993" "Stanford Earth Sciences"
+.SH NAME
+lwrename \- daemon to hide printers on AppleTalk network by resetting 
+	   AppleTalk type value.
+.SH SYNOPSIS
+.B lwrename
+.RI "[\-t "  minutes ]
+[\-s] [\-r]
+.RI [ lwrenamefile ]
+.SH OPTIONS
+.TP 
+.BI "\-t " minutes
+Specify how many integer minutes to sleep in between each 
+sweep of the network looking for the monitored printers.
+Default=2 minutes.
+.TP
+.B \-s
+Do not run as a background daemon.
+Only make a single sweep looking for and changing type on monitored
+printers; wait the sleep time; reset printers to original types if
+"\-r" option also specified; and exit.
+Use for testing.
+.TP
+.B \-r
+If running a single sweep with \-s option, first reset printers to 
+original types before exiting.
+No effect unless \-s also specified.
+Use for testing.
+To make a normal
+.I lwrename
+background daemon reset printers and exit, send it the HUP signal.
+.TP
+.I lwrenamefile
+Pathname of the file containing the list of printers to be monitored
+(see format below).  
+Default=LWRENAMEFILE compile-time flag or "/etc/lwrename.list" if no
+compile-time flag.
+.SH DESCRIPTION
+.I lwrename
+is part of the CAP software for AppleTalk network access from 
+UNIX systems.
+It is used by a UNIX host to "capture" LaserWriter (or equivalent
+PostScript) printers on the network so that they are not directly
+visible to Macintosh or other computers on the network.
+Then an
+.I lwsrv
+daemon on the UNIX host can advertise the printer and create a spooler
+for it.
+This is particularly useful if you are using one of the authentication
+options in
+.I lwsrv
+to restrict access to the printer or provide accounting by user name.
+To capture the printer, you must send the appropriate PostScript code
+to it to change its network type value to something other than
+"LaserWriter".
+Then it cannot be seen by the Macintosh, at least not with standard
+printer drivers.
+This is no protection against hackers who know how to modify the
+Macintosh driver with ResEdit, etc.
+.PP
+Unfortunately, many printers store changes to their network type
+in ordinary RAM that gets reset back to the default "LaserWriter" after
+every power cycle.
+For these printers, sending the appropriate PostScript code once is
+not good enough.
+You have to keep checking to see if the printer has reverted to its
+default type and then rename it again.
+.PP
+.I lwrename
+runs as a daemon process to automate this checking and renaming for you.
+It periodically queries the AppleTalk network looking for any of a set
+of PostScript printers listed in a file.
+Whenever it finds one of these printers under its original
+AppleTalk type of "LaserWriter" (or other type specified in the
+file), it sends the appropriate PostScript code to rename the printer
+to a new type that you specify in the file (or a default type
+compiled into the program -- see below).
+This way, after a printer power cycle resets the AppleTalk type
+back to the default,
+.I lwrename
+will quickly find it and reset it to the "captured" value.
+.PP
+The list of printers to be monitored is stored in a file.
+The pathname of this file can be given as an optional command line
+argument; if no argument is given, the compile-time option LWRENAMEFILE
+will be used as the pathname, or the name "/etc/lwrename.list" if that
+option was not specified at compile time.
+Comment lines are allowed in this file; start them with the # character.
+One line defines each printer; tab characters are used to parse the
+line into three fields.  The third field is optional; if you omit it,
+be sure also to omit the tab character before it.  The format for
+each printer description line is:
+.br
+	password<tab>printer_NBP_name<tab>newtype
+.br
+Password is an integer value, either the factory default of 0, or a
+value you have previously set by another means.
+Printer_NBP_name is the full NBP name needed to find the printer on the
+network, with its original (default) type, in this format:
+.br
+	name:type@zone
+.br
+Use * for the current or default zone.
+Newtype is an optional third field specifying the new AppleTalk type to
+be used when renaming the printer.  If you omit this field, be sure
+to omit the tab before it.
+WARNING:  any trailing blanks on the line after "newtype"
+will be interpreted as part of the type name!
+If newtype is not specified for a particular printer, it reverts to the
+compile-time option LWRENAMETYPE, or to "LaserShared" if that option
+was not specified at compile time.
+.PP
+When first started,
+.I lwrename
+will automatically fork itself into the background, unless the
+"\-s" flag is specified (for testing).
+It will sleep between each network "sweep" for the number of 
+minutes specified in the optional "\-t" argument, or for two minutes
+if no argument is given.
+It runs forever until killed, unless you specify the "\-s" flag
+to run one sweep only for testing.
+If you send it the HUP signal (or if you specify the "\-r" flag with
+the "\-s" flag), it will first restore the original type to all of the
+printers it is monitoring before exiting.
+Any other kill signal just kills it without resetting any printer types.
+.PP
+.I lwrename
+does not need to run from the root account, although you may
+want to so restrict it to prevent private users from battling to
+control printers on the network.
+If your AppleTalk access method requires special privilege (e.g., the
+packetfilter under Ultrix), make sure
+.I lwrename
+executes under the appropriate user or group.
+Also, if you have set printer passwords, you probably want to change
+permissions on the printer list file to limit read access to the
+root or manager account.
+Generally, you would start
+.I lwrename
+from your
+.I start\-cap\-servers
+file.
+.SH FILES
+/etc/lwrename.list	default location for list of monitored printers
+.SH SEE ALSO
+CAP(8), atlook(1), lwsrv(8)
+.SH AUTHOR
+Edward Moy, Workstation Software Support Group, Workstation Support Services,
+Information Systems and Technology, University of California.
+.PP
+Revisions and manual page by Phil Farrell, Stanford University
+School of Earth Sciences.
+.PP
+See source code for copyright and distribution restrictions.
+.SH BUGS
+There is no error checking for correct syntax in the list of printers,
+except to verify that at least one tab is present to separate the
+required first and second fields.
+Be careful or you may get strange results.
+.PP
+There is no way to dynamically update the list of printers to be
+monitored by
+.I lwrename.
+To change the printer list, kill
+.I lwrename
+with the HUP signal (to restore the current list of printers to
+original type); edit the list; and then restart
+.I lwrename.

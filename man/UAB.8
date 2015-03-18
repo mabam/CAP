@@ -1,0 +1,161 @@
+.TH uab 8
+.SH NAME
+uab
+\- Unix AppleTalk Bridge
+.SH SYNTAX
+.I uab
+-D <level>
+-f <bridge_description>
+-l <log file>
+-d
+tdump debug nodebug statistics (stat) exit
+.SH DESCRIPTION
+The Unix AppleTalk
+Bridge (
+.I uab)
+program allows certain unix systems to act as AppleTalk
+Bridges.  
+.I uab
+can be functionally divided into two parts.  The
+first is the actual AppleTalk Bridge implementation and the second are
+the routines that define particular "Link Access Protocols" (aka
+"hardware" delivery methods e.g. EtherTalk).  
+.I uab
+also supports an
+internal demultiplexing that allows
+packets delivered to the 
+.I uab
+node to be delivered to other processes
+within that system.  
+.PP
+Currently, 
+.I uab
+runs on Ultrix 1.2 (and beyond) and SunOS 4.0 and
+supports EtherTalk (Phase 1). Unfortunately, with the current definition of
+KIP's UDP encapsulation and delivery rules, it is not feasible to
+implement KIP.
+The only internal packet
+delivery mechanism defined is a modified version of KIP's UDP
+encapsulation (modified-KIP) that uses a different UDP port range over
+the internal
+loopback; thus CAP programs must be relinked with a different low
+level delivery mechanism to work with 
+.I uab.
+Note that all packets for
+these programs are sent and received through the 
+.I uab process.
+.PP
+Since 
+.I uab
+does not understand KIP, 
+it is necessary to have an AppleTalk Bridge that
+understands both KIP encapsulation and EtherTalk before KIP based
+"systems" (e.g. programs compiled with CAP, bridges that only speak
+KIP on the ethernet interface--revisions of KIP before 2/88, etc) can
+work with 
+.I uab's
+modified-KIP based programs.
+.PP
+uab is configured by use of a "bridge description" file described in
+detail later.
+.PP
+The flags are: D to set the debugging level to a particular value, d
+to increment the debug level by one, f to specify a bridge description
+file (default bridge_desc), and l to specify a logging file (default none).
+.I uab
+acts in response to certain signals.
+.I uab
+invoked as:
+.nf
+	uab <name>
+.fi
+where name is one of tdump (SIGUSR1), debug (SIGIOT), nodebug
+(SIGEMT), statistics (SIGUSR2), or exit (SIGTERM) will
+send these signals.
+tdump causes the running uab to dump its internal tables (rtmp, etc.) to
+/usr/tmp/uab.dump.  (dump is
+reserved for nbp if uab ever support nbp).  debug tells the running
+uab to increment the debug level: if not log file was currently
+active, the log will go to /usr/tmp/uab.run.
+nodebug turns off all debugging.
+stat or statisitics dumps statistics to /usr/tmp/uab.stats.  exit
+causes the running uab to stop.
+.PP
+The bridge description file is a list of the valid ports for a
+particular Unix AppleTalk Bridge (UAB).
+In order to minimize the maintaince headache, one may use the host
+name as a selector.
+Each port description is entered on a single line.
+.PP
+The first item in a line is the host selector field.  It can be the
+host name (as returned by gethostname).  In addition, you can use % to
+match any character.  "*" can be used to match any host.  Finally, you
+can use "*" at the end of a string to complete a match.  (Allowing "*"
+at both the beginning and end or at an arbritrary location is a pain
+because it is an unanchored search -- would have to use a regular
+expression matcher to do this -- ugh).
+.PP
+The second field contains a tuple that specifies the interface's
+link access protocol (LAP) and any device specific data required.
+Valid LAP method specifications:
+.nf
+    ELAP - EtherTalk Link Access Protocol 
+    EtherTalk - same as above
+    ASYNC - Asynchronous AppleTalk
+    ASYNCATALK - same as above
+.fi
+The device specific data consists of a "device name" followed by an
+colon and a "device number".  If the colon is omitted, the device
+number is assumed to be zero.
+For Ethertalk, this should be interpreted as a ethernet "tap" device
+(SunOS, Ultrix).  For example, "ie:1" for ethertalk on interface ie1.
+For Asynchronous AppleTalk, this is just a label. Suggested use as:0
+.PP
+The third field specifies the local demultiplexing delivery
+mechanism for delivery of DDP packets not destined for the bridge
+process.  Currently defined mechanisms are: "none" which says there
+will be no other client processes; "mkip" - modified version of kip
+style udp encapsulation using a different udp port range.
+Specify 'none' for Asynchronous AppleTalk.
+(Hopefully, there will be a way to do direct kip etc. in the future)
+.PP
+The fourth and last field specifies two items paired in a
+[<item1>,<item2>] format.  The first is the DDP network that should
+be associated with this port.  If you specify zero, the ddp network
+number will be acquired via RTMP if there are other bridges that
+know the network number.  Note that only a single network is allowed
+at this point.  The network number may be specified as <number> or
+<high byte>.<low byte>.  In both cases, the number may be decimal
+(no leading zero), octal (leading zero), or hexadecimal (leading 0x
+or 0X).  If this field is not specified,
+.I uab
+will assume that this port is for multiplexing only.  It will not send
+out any rtmp data packets or respond to rtmp network request packets, etc.
+.PP
+The second item specifies the zone name associated with
+the ddp network associated with this port.  If it is not specified,
+it will be acquired via ZIP if there are other bridges on the
+network that know the zone name.  Note: you may omit the comma if
+you do not wish to specify a zone.
+Note, \ can be used to quote a character (like a space in the zone
+name :-)  A "\" at the end of a line continues the line.  Carriage
+return and line feed both terminate a line.
+.PP
+You MUST SPECIFY a network number and Zone for Asynchronous AppleTalk.
+.PP
+You should order the file from more specific to less specific (in
+terms of host name matches.  Once a match has been found, then only
+matches with the exactly same pattern will succeed!
+.SH BUGS
+None known.
+.SH NOTES
+Better method for internal demuxing is needed.
+.SH AUTHOR
+Charlie C. Kim, Academic Computing and Communications Group, Center
+for Computing Activities, Columbia University
+.SH FILES
+.nf
+/usr/tmp/uab.stats
+/usr/tmp/uab.run
+/usr/tmp/uab.dump
+.fi

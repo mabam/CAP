@@ -1,0 +1,195 @@
+#!/bin/sh
+#
+# Copyright (C) September 1993 appro@fy.chalmers.se
+#
+# Script to add an AppleTalk printer on a Solaris 2.N host
+#
+
+MYHOME=`dirname $0`; [ "$MYHOME" = "." ] && MYHOME=`pwd`
+case $MYHOME in .*)
+	echo "Use absolute pathname for $0."
+	exit 1
+	;;
+esac
+
+CAPHOME=${CAPHOME:-$MYHOME}; PAPIFHOME=${CAPHOME}
+if [ ! -x $PAPIFHOME/papif ]; then
+   PAPIFHOME=${PAPIFHOME}/bin
+   if [ ! -x $PAPIFHOME/papif ]; then
+	echo "FATAL:	can't find $PAPIFHOME/papif,"
+	echo "	make sure that $0 resides in the same directory as papif"
+	echo "	or set CAPHOME variable properly."
+	exit
+   fi
+fi
+export PAPIFHOME
+
+PATH=$PATH:$CAPHOME:$CAPHOME/bin:$PAPIFHOME
+
+SUFFIX=`basename $0`.$$; export SUFFIX
+trap 'rm /tmp/*.$SUFFIX > /dev/null 2>&1' 0
+trap 'exit' 1 2 3
+
+echo ""
+echo "Enter AppleTalk zone [*] > \c"; read ZONE
+[ "$ZONE" ] || ZONE="*"
+
+echo ""
+echo "Looking for =:LaserWriter@$ZONE ..."
+$CAPHOME/bin/atlook -n "=:LaserWriter@$ZONE" | egrep -e '\[Net:[0-9]*'
+
+echo ""
+echo "Enter AppleTalk printer name > \c"; read ATPRINTER
+[ "$ATPRINTER" ] || exit
+[ "`echo "$ATPRINTER" | awk -F@ '{ print $2 }'`" ] ||
+	ATPRINTER="$ATPRINTER@$ZONE"
+[ "`echo "$ATPRINTER" | awk -F: '{ print $2 }'`" ] ||
+	ATPRINTER="`echo "$ATPRINTER" | awk -F@ '{ printf "%s:LaserWriter@%s",$1,$2; }'`"
+
+TEMP=`echo "$ATPRINTER" | awk -F: '{ print $1 }' | awk '{ for(i=1;i<=NF;i++) printf "%s",$i; }'`
+echo "Enter Unix printer name [$TEMP] > \c"; read UXPRINTER
+[ "$UXPRINTER" ] || UXPRINTER=$TEMP
+
+if lpstat -p $UXPRINTER >/dev/null 2>&1; then
+	echo "\07"
+	echo "WARNING:	$UXPRINTER already exists,"
+	echo "		destination is \"`cat /etc/lp/printers/$UXPRINTER/comment`\"."
+	echo "Continue [Y/n]?\c"; read OK
+	case $OK in	[Nn]*)	exit; ;;
+			*)	;;
+	esac
+	disable -c -r "Redefining to $ATPRINTER" $UXPRINTER
+	reject $UXPRINTER
+else
+	echo "\07"
+	echo "Defining \"$ATPRINTER\" AppleTalk printer as $UXPRINTER ..."
+	echo "Continue [Y/n]?\c"; read OK
+	case $OK in	[Nn]*)	exit; ;;
+			*)	;;
+	esac
+fi
+echo ""
+
+if [ ! -r /etc/lp/filter.table ]; then
+	echo "Initializing of default printer filters..."
+	for f in `ls /etc/lp/fd | sed 's/.fd$//'`; do
+		lpfilter -f $f -F/etc/lp/fd/$f.fd
+	done
+fi
+
+if lpfilter -f atalkio -l > /dev/null 2>&1; then
+	echo "AppleTalk printer filter is already defined."
+else
+	echo "Defining AppleTalk printer filter ..."
+	cat > /etc/lp/fd/atalkio.fd << EOF
+#ident  "@(#)atalkio.fd 1.0 (C) July 1993 appro@fy.chalmers.se"
+
+Input types: postscript
+Output types: PS
+Printer types: AppleTalk
+Printers: any
+Filter type: fast
+Command: \$PAPIFHOME/papif 2>>\$ERRFILE
+EOF
+	lpfilter -f atalkio -F /etc/lp/fd/atalkio.fd
+fi
+
+if [ ! -f /usr/share/lib/terminfo/A/AppleTalk ]; then
+	echo "Defining terminfo for AppleTalk printers ..."
+	cat > /tmp/terminfo.$SUFFIX << EOF
+AppleTalk,
+	cols#80, lines#66,
+	cpi=null, csnm=^D, lpi=null, scs=^D, slines=^D, u9=^D,
+EOF
+	tic /tmp/terminfo.$SUFFIX
+fi
+
+LOCKSDIR=/var/spool/lp/tmp/AppleTalk
+if [ ! -d $LOCKSDIR ]; then
+	mkdir -m 0771	$LOCKSDIR
+	chown lp	$LOCKSDIR
+	chgrp lp	$LOCKSDIR
+fi
+PSEUDODEVICE=$LOCKSDIR/$UXPRINTER
+touch		$PSEUDODEVICE
+chown lp	$PSEUDODEVICE
+chgrp lp	$PSEUDODEVICE
+chmod 0600	$PSEUDODEVICE
+
+echo $PAPIFHOME | sed -e 's/\//\\\//g' > /tmp/sed.$SUFFIX
+sed -e "s/PAPIFHOMEMAGICTOKEN/`cat /tmp/sed.$SUFFIX`/g" \
+	$MYHOME/papif.interface.template > /etc/lp/interfaces/$UXPRINTER
+chown lp	/etc/lp/interfaces/$UXPRINTER
+chgrp lp	/etc/lp/interfaces/$UXPRINTER
+chmod 0775	/etc/lp/interfaces/$UXPRINTER
+
+echo "(Re)defining $UXPRINTER ..."
+(	lpadmin -p $UXPRINTER -D "$ATPRINTER" \
+		-T AppleTalk \
+		-v $PSEUDODEVICE \
+		-I PS \
+		-i /etc/lp/interfaces/$UXPRINTER \
+		-A none && \
+	accept $UXPRINTER && \
+	enable $UXPRINTER \
+) || exit
+
+echo "\07"
+echo "Do you want to make it available to network [Y/n]?\c"; read OK
+case $OK in	[Nn]*)	exit; ;;
+		*)	;;
+esac
+
+echo ""
+if sacadm -l -p tcp > /dev/null; then
+   echo "tcp listener is already defined."
+else
+   echo "Defining tcp listener ..."
+   sacadm -a -p tcp -t listen \
+          -c "/usr/lib/saf/listen tcp" \
+          -v `nlsadmin -V` \
+          -n 9999
+fi
+
+ADDR_LPD="\\x`lpsystem -A`"; export ADDR_LPD
+ADDR_0=`echo $ADDR_LPD | sed -e 's/\\x00020203/\\x00020ACE/g'`; export ADDR_0
+
+if pmadm -l -p tcp -s 0 > /dev/null; then
+   echo "<0> service is already defined."
+else
+   echo "Defining <0>/tcp service ..."
+   pmadm -a -p tcp -s 0 -i root \
+         -m `nlsadmin -c /usr/lib/saf/nlps_server -A $ADDR_0` \
+         -v `nlsadmin -V`
+fi
+
+if pmadm -l -p tcp -s lp > /dev/null; then
+   echo "<lp> service is already defined."
+else
+   echo "Defining <lp>/tcp service ..."
+   pmadm -a -p tcp -s lp -i root \
+         -m `nlsadmin -o /var/spool/lp/fifos/listenS5` \
+         -v `nlsadmin -V`
+fi
+
+if pmadm -l -p tcp -s lpd > /dev/null; then
+   echo "<lpd> service is already defined."
+else
+   echo "Defining <lpd>/tcp service ..."
+   pmadm -a -p tcp -s lpd -i root \
+         -m `nlsadmin -o /var/spool/lp/fifos/listenBSD -A $ADDR_LPD` \
+         -v `nlsadmin -V`
+fi
+
+if nistest printers.org_dir; then
+	if nistest "[printer_name=$UXPRINTER]printers.org_dir"; then
+		nistbladm -m	printer_host=`uname -n` \
+				description="$ATPRINTER" \
+			"[printer_name=$UXPRINTER]printers.org_dir"
+	else
+		nistbladm -a	printer_name=$UXPRINTER \
+				printer_host=`uname -n` \
+				description="$ATPRINTER" \
+			printers.org_dir
+	fi
+fi

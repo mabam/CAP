@@ -1,0 +1,160 @@
+afpidsrvr
+---------
+
+This provides aufs with permanent external directory and file id's.
+
+Rather than remembering pathnames, Mac's often store a number for
+the directory and the name of the file. These id's must be mapped
+by aufs onto the Unix file system - thus the term "external id's".
+External id's are used extensively by the alias manager, and also
+affect QuickTime. aufs's problem is that it forgets the id's after
+each session. This causes many problems, the greatest being that
+aliases do not work properly.
+
+The previous, and still default, version created external id's as 
+required in a linear manner. These are mapped onto pointers - 
+internally aufs holds the directory picture as a tree. An array of 
+these pointers, indexed by the external id, was used to perform the 
+external to internal mapping. The reverse mapping was achieved 
+primarily by a field in the internal directory records.
+
+This new version uses a central database to hold the external id's. 
+Various schemes were examined, including the use of inode numbers. 
+Most were rejected on the realisation that a single scheme had to 
+cover the whole file system: you cannot assign numbers by volumes. 
+The database is single-writer/multi-reader. aufs processes read 
+id/path pairs from the database, but if they want to add entries they 
+send a request to the 'afpidsrvr'. The use of a server at least 
+ensures consistency is maintained, gets around the basic problem of 
+the lack of locks, and preserves some security. So far, at least, the 
+system has worked without locks - aufs does re-open databases after 
+it detects change, to avoid some problems. Security is not 
+particularly strict - the server will not create entries if 
+directories don't exist, and will not remove entries for existing 
+directories. The system is not foolproof, and can have problems if 
+the database gets corrupted, but there we are.
+
+The current version (1.1) of the database is the second go. The first 
+version contained two sets of entries: fullpath->id and id->fullpath. 
+This worked fine until the system tried to delete or move directory 
+trees - it just moved the top one, and left the children in their 
+original places. The second version mirrors the directory structure 
+in providing a tree. Moving and deleting now alters the tree 
+structure. This means that many more accesses are required, but the 
+records themselves are on average smaller. Each record, looked up by 
+key N<id>, consists of:
+
+	<parent id><num children><child ids....><name>
+
+There is also an initial record consisting of the databased version 
+and the root id. 
+
+As well as a the afpidsrvr server there is an afpidtool, which can 
+send messages directly to the server, and afpidlist, which will 
+list the database.
+ 
+The system is by no means foolproof. Expect problems if different 
+people are working on the same area - aufs still cannot detect 
+automatically that other processes have changed the Unix 
+filestructure. Since the server routines pass a fullpath back to 
+aufs itself, and let it then decode that into the internal aufs 
+directory tree, if the name is changed by another process, then aufs 
+may see a whole new path. If this proves a problem, a mechanism will 
+be required to pass back the information to aufs - it is essentially 
+a problem with the aufs/afpidsrvr interface, rather than with afpidsrvr 
+itself. One possibility would be to passback a list of extId/name 
+pairs, rather than a path. If the names changed than aufs would 
+realise that, and could change its internal record. I've no idea how 
+it would tell the Mac though!
+
+Another area of concern is in the integrity of the database. The 
+current database should not get corrupted, but if it does the 
+programs are not very resiliant to it - the contents of a record are 
+believed. It is not particularly clear how this will workout in 
+practice - my experience with corruptions is limited to problems 
+during testing, when bugs caused process crashes. If corruptions turn 
+out to be a problem, then some extra checks will be required. To be 
+worth while, adding CRC checks to the database records is probably 
+required. For the moment the simple scheme seems preferable. Do note 
+that, in the extreme case, you may have to delete the database in 
+/usr/local/lib/cap and start again. If you do this, ensure you stop both 
+afpidsrvr and aufs first - neither like this event! This will obviously 
+cause problems to users. The previous version of afpidsrvr had a clean 
+function, which was intended to remove unused and faulty entries. 
+This is currently non-operative, but may be re-instated in the 
+future.
+
+In will be noted that afpidsrvr is optional. Why might you not wish to 
+use this:
+
+    * There is a performance penalty, and you might not wish to pay it. 
+    In practice, there is a slight penalty on startup, and in opening 
+    folders for the first time - especially new ones. The only "bad case" 
+    scenario that actually occurs is the reverse lookup of an id to a 
+    pathname, which is then converted to an internal pointer by a second 
+    tree semi-traversal. My experience with a Sun II server suggests that 
+    this delay is negligable.
+
+    * Reliability. The system has, currently, only been tested on a Sun 
+    II server. There may be minor problems elsewhere, but there is 
+    nothing to suggest that there should be huge problems. I'm still not 
+    sure about the big-endian/little-endian situation, but I believe that 
+    providing the database is not moved from one machine to another there 
+    should be no problem.
+
+    * NFS. We do not use NFS much, and I have little experience of it. I 
+    would only expect problems if the aufs server for the same area ran 
+    on serveral machines, but there are several suspect areas.
+
+    * Portability. The system runs under SunOS4.1. I have not tested it 
+    on other systems - not even Solaris. The chief problem areas may be 
+    in named sockets, which are used to send the information between 
+    client processes and the server. On other systems you my have to use 
+    equivalents.
+
+On a final point, the modified server does contain emergency code for 
+use if the server ceases to function. This should never happen in 
+normal running, but may if errors are hit. This backup mechanism 
+actually reflects v1.0 if the database, and just records name/id 
+pairs. It is anything but efficient, and is merely intended to avoid 
+having to crash the server. Really there ought to be a few bells 
+ringing if this happens, but there are not! [Perhaps in a future 
+version, if something thinks of a good interface.] It is suggested 
+that this should not be used routinely - not least it has problems 
+still with moving and deleting sub-trees of directories - and is very 
+inefficient. In case you wonder why not just fall back on the default 
+scheme, the assumption is that the existing database is fine, but 
+cannot be modified.
+
+Installation and Use
+--------------------
+
+To use the file/directory ID server, select the FIXED_DIRIDS option in
+the m4.features file. Re-run gen.makes, 'make clean' and rebuild CAP.
+
+When compiled and installed, you will get the additional tools afpidsrvr,
+afpidlist and afpidtool in your cap bin directory - along with the
+modified aufs. 
+
+To bring them into operation, you must:
+
+* Modify /etc/rc.local or your start-cap-servers file to place the
+following lines, or similar, before you start aufs:
+
+    rm /usr/local/lib/cap/afpIDsock
+    afpidsrvr -l /usr/adm/afpidsrvr.log
+
+Then restart as appropriate. The first call to afpidsrvr will create 
+the database, and aufs processes will then use it. Note the first 
+line is to delete the socket used for communication. This normally 
+happens when afpidsrvr exits, but may not if the machine crashes. In 
+normal running, you should be careful about running this - ensure 
+there is no afpidsrvr server running. This will only happen in normal 
+running if the afpidsrvr falls over. If this does happen, run 
+afpidlist first to ensure you can printout the database. If you 
+have real problems, you may have to close down aufs and delete the 
+database before continuing. You may prefer to try to restore the 
+database off backup.
+
+John Forrest,
+jf@ap.co.umist.ac.uk

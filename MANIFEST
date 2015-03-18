@@ -1,0 +1,535 @@
+-rw-r--r--  1 djh          9033 Mar 14 23:57 CAP60.README
+-rwxr-xr-x  1 djh         31416 Mar 13 19:32 Configure
+-rw-r--r--  1 djh         25821 Mar 15 15:14 MANIFEST
+-rw-r--r--  1 djh          2759 Feb 28 23:42 MODIFICATIONS
+-rw-r--r--  1 djh          1461 Mar 14 16:15 Makefile
+-rw-r--r--  1 djh          7310 Mar 14 16:14 NOTES
+-rw-r--r--  1 djh          1460 Feb 28 23:42 NOTICE
+-rw-r--r--  1 djh          6312 Feb 28 23:42 PORTING
+-rw-r--r--  1 djh          9256 Mar 13 20:04 README
+-rw-r--r--  1 djh          1747 Mar 13 19:56 conf.func.lst
+-rwxr-xr-x  1 djh          8221 Feb 28 23:42 conf.func.sh
+-rw-r--r--  1 djh          1842 Feb 28 23:45 conf.sysv.lst
+-rwxr-xr-x  1 djh          4760 Feb 28 23:45 conf.sysv.sh
+-rwxr-xr-x  1 djh           825 Feb 28 23:45 gen.makes
+-rw-r--r--  1 djh         12974 Feb 28 23:46 m4.setup
+
+applications:
+-rw-r--r--  1 djh           467 Feb 28 23:44 Makefile
+-rw-r--r--  1 djh           321 Feb 28 23:44 Makefile.m4
+-rw-r--r--  1 djh           429 Feb 28 23:44 README
+-rw-r--r--  1 djh           460 Feb 28 23:44 makefile
+
+applications/aufs:
+-rw-r--r--  1 djh         10802 Feb 28 23:44 INSTALLATION
+-rw-r--r--  1 djh          4954 Feb 28 23:44 Makefile
+-rw-r--r--  1 djh          5016 Feb 28 23:44 Makefile.m4
+-rw-r--r--  1 djh          7223 Feb 28 23:44 NOTES
+-rw-r--r--  1 djh          1882 Feb 28 23:44 README
+-rw-r--r--  1 djh          1832 Feb 28 23:44 abmisc2.c
+-rw-r--r--  1 djh          8405 Feb 28 23:44 afpavl.c
+-rw-r--r--  1 djh           843 Feb 28 23:44 afpavl.h
+-rw-r--r--  1 djh         26109 Mar 13 20:18 afpdid.c
+-rw-r--r--  1 djh           400 Feb 28 23:44 afpdid.h
+-rw-r--r--  1 djh          9761 Feb 28 23:44 afpdir.c
+-rw-r--r--  1 djh         45300 Mar 13 20:21 afpdt.c
+-rw-r--r--  1 djh          4533 Feb 28 23:44 afpdt.h
+-rw-r--r--  1 djh          7731 Feb 28 23:44 afpfile.c
+-rw-r--r--  1 djh         11102 Mar 14 14:37 afpfork.c
+-rw-r--r--  1 djh          6638 Feb 28 23:44 afpgc.c
+-rw-r--r--  1 djh          1379 Feb 28 23:44 afpgc.h
+-rw-r--r--  1 djh          2252 Feb 28 23:44 afpmisc.c
+-rw-r--r--  1 djh          4341 Feb 28 23:44 afpntoh.h
+-rw-r--r--  1 djh         84426 Mar 13 19:40 afpos.c
+-rw-r--r--  1 djh         23870 Mar 14 16:21 afposenum.c
+-rw-r--r--  1 djh         20664 Feb 28 23:44 afposfi.c
+-rw-r--r--  1 djh         21166 Mar 13 20:29 afposncs.c
+-rw-r--r--  1 djh           936 Feb 28 23:44 afposncs.h
+-rw-r--r--  1 djh          3279 Mar 13 20:29 afppasswd.c
+-rw-r--r--  1 djh           535 Feb 28 23:44 afppasswd.h
+-rw-r--r--  1 djh          7479 Feb 28 23:44 afps.h
+-rw-r--r--  1 djh         20917 Mar 13 20:29 afpserver.c
+-rw-r--r--  1 djh          5111 Feb 28 23:44 afpspd.c
+-rw-r--r--  1 djh          7484 Feb 28 23:44 afpudb.c
+-rw-r--r--  1 djh           577 Feb 28 23:44 afpudb.h
+-rw-r--r--  1 djh           212 Feb 28 23:44 afpvols
+-rw-r--r--  1 djh         13145 Mar 13 20:29 afpvols.c
+-rw-r--r--  1 djh          1206 Feb 28 23:44 afpvols.h
+-rw-r--r--  1 djh         35073 Mar 14 20:00 aufs.c
+-rwxr-xr-x  1 djh            16 Mar 13 19:51 aufs_vers
+-rw-r--r--  1 djh           356 Feb 28 23:44 aufs_vers.sh
+-rw-r--r--  1 djh         13042 Mar 14 16:03 aufsicon.c
+-rw-r--r--  1 djh            92 Mar 13 19:54 aufsv.c
+-rw-r--r--  1 djh         21413 Feb 28 23:44 design.notes
+-rw-r--r--  1 djh          5001 Feb 28 23:44 makefile
+-rw-r--r--  1 djh          1672 Mar 14 14:30 sizeserver.c
+-rw-r--r--  1 djh            45 Feb 28 23:44 sizeserver.h
+-rw-r--r--  1 djh          3377 Feb 28 23:44 todo
+-rw-r--r--  1 djh          7564 Feb 28 23:44 user.doc
+-rw-r--r--  1 djh          1171 Feb 28 23:44 whatiswhat
+
+applications/lwsrv:
+-rw-r--r--  1 djh           280 Feb 28 23:44 LWFonts
+-rw-r--r--  1 djh           664 Feb 28 23:44 LWPlusFonts
+-rw-r--r--  1 djh          1995 Feb 28 23:44 Makefile
+-rw-r--r--  1 djh          1971 Feb 28 23:44 Makefile.m4
+-rw-r--r--  1 djh          5471 Feb 28 23:44 README
+-rw-r--r--  1 djh          1747 Feb 28 23:44 fontlist.c
+-rw-r--r--  1 djh           717 Feb 28 23:44 fontlist.h
+-rw-r--r--  1 djh         20867 Mar 14 13:42 lwsrv.c
+-rw-r--r--  1 djh          2014 Feb 28 23:44 makefile
+-rw-r--r--  1 djh          3680 Feb 28 23:44 papstream.c
+-rw-r--r--  1 djh          1366 Feb 28 23:44 papstream.h
+-rw-r--r--  1 djh          5500 Feb 28 23:44 procset.c
+-rw-r--r--  1 djh           832 Feb 28 23:44 procset.h
+-rw-r--r--  1 djh         18717 Feb 28 23:44 simple.c
+-rw-r--r--  1 djh          2068 Feb 28 23:44 spmisc.c
+-rw-r--r--  1 djh           711 Feb 28 23:44 spmisc.h
+-rw-r--r--  1 djh           355 Feb 28 23:44 whatiswhat
+
+applications/papif:
+-rw-r--r--  1 djh          1337 Feb 28 23:44 Makefile
+-rw-r--r--  1 djh          2108 Feb 28 23:44 Makefile.m4
+-rw-r--r--  1 djh          7842 Feb 28 23:44 README
+-rw-r--r--  1 djh           426 Feb 28 23:44 cap.printers
+-rw-r--r--  1 djh          1355 Feb 28 23:44 makefile
+-rw-r--r--  1 djh         36711 Mar 14 13:52 papif.c
+-rw-r--r--  1 djh          4919 Feb 28 23:44 papof.c
+-rw-r--r--  1 djh           917 Feb 28 23:44 printcap.samp1
+-rw-r--r--  1 djh           469 Feb 28 23:44 printcap.samp2
+
+contrib:
+-rw-r--r--  1 djh          1338 Mar 14 17:59 Makefile
+-rw-r--r--  1 djh          1296 Mar 13 20:42 Makefile.m4
+-rw-r--r--  1 djh          1208 Mar 13 20:44 README
+-rwxr-xr-x  1 djh           749 Mar 14 15:59 atprint
+-rw-r--r--  1 djh          7714 Feb 28 23:44 cvt2apple.c
+-rw-r--r--  1 djh          6218 Feb 28 23:45 cvt2cap.c
+-rw-r--r--  1 djh          5200 Feb 28 23:45 lwrename.c
+-rw-r--r--  1 djh          1357 Mar 14 17:59 makefile
+-rw-r--r--  1 djh         38620 Feb 28 23:45 printQDA.hqx
+-rw-r--r--  1 djh         14370 Feb 28 23:45 printqueue.c
+-rw-r--r--  1 djh         12296 Feb 28 23:45 snitch.c
+
+contrib/AsyncATalk:
+-rw-r--r--  1 djh          2087 Feb 28 23:45 INSTALLATION
+-rw-r--r--  1 djh          1181 Feb 28 23:45 Makefile
+-rw-r--r--  1 djh          5238 Feb 28 23:45 README.rfc
+-rw-r--r--  1 djh         30688 Feb 28 23:45 async.1.4.hqx
+-rw-r--r--  1 djh         31083 Feb 28 23:45 async.c
+-rw-r--r--  1 djh          4124 Feb 28 23:45 async.h
+-rw-r--r--  1 djh          3872 Mar 14 14:27 asyncad.c
+-rw-r--r--  1 djh          5323 Feb 28 23:45 atalkdbm.c
+-rw-r--r--  1 djh          1235 Feb 28 23:45 macros.h
+
+contrib/AufsTools:
+-rw-r--r--  1 djh          1912 Feb 28 23:44 MANIFEST
+-rw-r--r--  1 djh           488 Feb 28 23:44 Makefile
+-rw-r--r--  1 djh           739 Feb 28 23:44 README
+
+contrib/AufsTools/binhex:
+-rw-r--r--  1 djh          1248 Feb 28 23:44 8to6.c
+-rw-r--r--  1 djh           482 Feb 28 23:44 Makefile
+-rw-r--r--  1 djh          4134 Feb 28 23:44 aufs.h
+-rw-r--r--  1 djh          4441 Feb 28 23:44 binhex.c
+-rw-r--r--  1 djh          1488 Feb 28 23:44 crc.c
+-rw-r--r--  1 djh          4043 Feb 28 23:44 gethead.c
+-rw-r--r--  1 djh          1175 Feb 28 23:44 run.c
+
+contrib/AufsTools/capit:
+-rw-r--r--  1 djh           141 Feb 28 23:44 Makefile
+-rw-r--r--  1 djh          8924 Feb 28 23:44 capit.c
+
+contrib/AufsTools/man:
+-rw-r--r--  1 djh           526 Feb 28 23:44 binhex.1
+-rw-r--r--  1 djh           499 Feb 28 23:44 capit.1
+-rw-r--r--  1 djh           335 Feb 28 23:44 cleanup.1
+-rw-r--r--  1 djh           400 Feb 28 23:44 drag.1
+-rw-r--r--  1 djh           401 Feb 28 23:44 dup.1
+-rw-r--r--  1 djh           341 Feb 28 23:44 m2u.1
+-rw-r--r--  1 djh           362 Feb 28 23:44 macp.1
+-rwxr-xr-x  1 djh            85 Feb 28 23:44 makeman
+-rw-r--r--  1 djh          5991 Feb 28 23:44 mcvert.1
+-rw-r--r--  1 djh           299 Feb 28 23:44 newfolder.1
+-rw-r--r--  1 djh          1006 Feb 28 23:44 sit.1
+-rw-r--r--  1 djh           657 Feb 28 23:44 toaufs.1
+-rw-r--r--  1 djh           348 Feb 28 23:44 trash.1
+-rw-r--r--  1 djh          4233 Feb 28 23:44 unsit.1
+-rw-r--r--  1 djh          2942 Feb 28 23:44 unstuffit.1
+
+contrib/AufsTools/mcvert:
+-rw-r--r--  1 djh           443 Feb 28 23:44 Makefile
+-rw-r--r--  1 djh         19992 Feb 28 23:44 hqxify.c
+-rw-r--r--  1 djh          7478 Feb 28 23:44 mactypes.h
+-rw-r--r--  1 djh         13666 Feb 28 23:44 mcvert.c
+-rw-r--r--  1 djh          6606 Feb 28 23:44 unpack.c
+
+contrib/AufsTools/shell:
+-rw-r--r--  1 djh           108 Feb 28 23:44 Makefile
+-rwxr-xr-x  1 djh           120 Feb 28 23:44 cleanup
+-rwxr-xr-x  1 djh           513 Feb 28 23:44 drag
+-rwxr-xr-x  1 djh           513 Feb 28 23:44 dup
+-rwxr-xr-x  1 djh            83 Feb 28 23:44 m2u
+-rwxr-xr-x  1 djh            55 Feb 28 23:44 macp
+-rwxr-xr-x  1 djh            99 Feb 28 23:44 newfolder
+-rwxr-xr-x  1 djh            71 Feb 28 23:44 toaufs
+-rwxr-xr-x  1 djh            64 Feb 28 23:44 trash
+-rwxr-xr-x  1 djh            83 Feb 28 23:44 u2m
+
+contrib/AufsTools/stuffit:
+-rw-r--r--  1 djh           229 Feb 28 23:44 Makefile
+-rw-r--r--  1 djh         12353 Feb 28 23:44 sit.c
+-rw-r--r--  1 djh          1834 Feb 28 23:44 sit.h
+-rw-r--r--  1 djh          5848 Feb 28 23:44 updcrc.c
+
+contrib/AufsTools/unstuffit:
+-rw-r--r--  1 djh           364 Feb 28 23:44 Makefile
+-rw-r--r--  1 djh          1074 Feb 28 23:44 getopt.c
+-rw-r--r--  1 djh          1871 Feb 28 23:44 stuffit.h
+-rw-r--r--  1 djh         31757 Feb 28 23:44 unsit.c
+-rw-r--r--  1 djh          5848 Feb 28 23:44 updcrc.c
+
+contrib/MacPS:
+-rw-r--r--  1 djh          3485 Feb 28 23:45 Installation
+-rw-r--r--  1 djh          1119 Feb 28 23:45 Makefile
+-rw-r--r--  1 djh          4682 Feb 28 23:45 ReadMe
+-rw-r--r--  1 djh          3585 Feb 28 23:45 macaux.c
+-rw-r--r--  1 djh          1949 Feb 28 23:45 macps-22.hdr
+-rw-r--r--  1 djh         36921 Feb 28 23:45 macps-22.shar
+-rw-r--r--  1 djh          2592 Feb 28 23:45 macps.1
+-rw-r--r--  1 djh          5053 Feb 28 23:45 macps.c
+-rw-r--r--  1 djh           536 Feb 28 23:45 macps.config
+-rw-r--r--  1 djh          2100 Feb 28 23:45 prepfix.1
+-rw-r--r--  1 djh          5999 Feb 28 23:45 prepfix.c
+-rw-r--r--  1 djh          1160 Feb 28 23:45 str.h
+-rw-r--r--  1 djh          3273 Feb 28 23:45 ucbwhich.c
+-rw-r--r--  1 djh           778 Feb 28 23:45 ucbwhich.h
+
+contrib/Messages:
+-rw-r--r--  1 djh           918 Mar 14 17:27 Makefile
+-rw-r--r--  1 djh          3067 Mar 14 17:27 README
+-rw-r--r--  1 djh            41 Feb 28 23:45 dot.forward
+-rw-r--r--  1 djh          2056 Feb 28 23:45 macto.1l
+-rw-r--r--  1 djh          1872 Feb 28 23:45 macuser.1l
+-rw-r--r--  1 djh          8122 Mar 14 14:21 macuser.c
+-rw-r--r--  1 djh          1068 Feb 28 23:45 macwho.1l
+-rw-r--r--  1 djh          1835 Mar 14 14:23 macwho.c
+-rw-r--r--  1 djh          4676 Mar 14 14:22 messages.c
+-rw-r--r--  1 djh         35239 Mar 14 19:27 messages.hqx
+-rw-r--r--  1 djh          6556 Mar 14 14:24 notify.c
+-rw-r--r--  1 djh          1671 Mar 14 14:25 notify.h
+
+contrib/Timelord:
+-rw-r--r--  1 djh           214 Mar 14 17:30 Makefile
+-rw-r--r--  1 djh         18399 Feb 28 23:45 tardis.hqx
+-rw-r--r--  1 djh           951 Feb 28 23:45 timelord.1l
+-rw-r--r--  1 djh          7478 Mar 14 14:26 timelord.c
+-rw-r--r--  1 djh           471 Feb 28 23:45 timelord.h
+
+doc:
+-rw-r--r--  1 djh           107 Mar 14 16:10 Makefile
+-rw-r--r--  1 djh           516 Mar 14 16:09 README
+-rw-r--r--  1 djh          3633 Feb 28 23:42 abmisc.doc
+-rw-r--r--  1 djh          4824 Feb 28 23:42 asp.notes
+-rw-r--r--  1 djh          2163 Feb 28 23:42 atp.notes
+-r--r--r--  1 djh          1097 Mar 14 14:39 cap.auth.doc
+-rw-r--r--  1 djh          3742 Feb 28 23:42 cap.notes
+-rw-r--r--  1 djh         11245 Mar 14 16:13 install.ms
+-rw-r--r--  1 djh         10507 Feb 28 23:42 nbp.ext
+-rw-r--r--  1 djh          2741 Feb 28 23:42 pap.notes
+-rw-r--r--  1 djh          8214 Feb 28 23:42 sched.notes
+-rw-r--r--  1 djh          8069 Feb 28 23:42 uab.desc.ms
+
+etc:
+-rw-r--r--  1 djh           921 Feb 28 23:43 Makefile
+-rw-r--r--  1 djh           941 Feb 28 23:43 Makefile.m4
+-rw-r--r--  1 djh           400 Feb 28 23:43 README
+-rw-r--r--  1 djh           902 Feb 28 23:43 atalk.local
+-rw-r--r--  1 djh         27084 Mar 13 19:48 atis.c
+-rw-r--r--  1 djh           517 Feb 28 23:43 etalk.local
+-rw-r--r--  1 djh           939 Feb 28 23:43 makefile
+-rw-r--r--  1 djh          9281 Mar 13 19:50 nisaux.c
+-rw-r--r--  1 djh           673 Feb 28 23:43 start-cap-servers
+
+extras:
+-rw-r--r--  1 djh           506 Feb 28 23:43 Makefile
+-rw-r--r--  1 djh           440 Feb 28 23:43 Makefile.m4
+-rw-r--r--  1 djh           324 Mar 14 17:36 README
+-rw-r--r--  1 djh          3666 Feb 28 23:43 att_getopt.c
+-rw-r--r--  1 djh         13301 Feb 28 23:43 des.c
+-rw-r--r--  1 djh          1258 Feb 28 23:43 dummy.des.c
+-rw-r--r--  1 djh          2241 Feb 28 23:43 iwif.c
+-rw-r--r--  1 djh           926 Feb 28 23:44 lnof.c
+-rw-r--r--  1 djh           525 Feb 28 23:44 makefile
+-rw-r--r--  1 djh           249 Feb 28 23:44 printcap.iw
+
+lib:
+-rw-r--r--  1 djh           506 Feb 28 23:42 Makefile
+-rw-r--r--  1 djh           480 Feb 28 23:43 Makefile.m4
+-rw-r--r--  1 djh           499 Feb 28 23:43 makefile
+
+lib/afp:
+-rw-r--r--  1 djh          1374 Feb 28 23:43 Makefile
+-rw-r--r--  1 djh          1420 Feb 28 23:43 Makefile.m4
+-rw-r--r--  1 djh           188 Feb 28 23:43 README
+-rw-r--r--  1 djh         13894 Feb 28 23:43 afpcmd.c
+-rw-r--r--  1 djh          2356 Feb 28 23:43 afperr.c
+-rw-r--r--  1 djh          9202 Mar 13 19:44 afposlock.c
+-rw-r--r--  1 djh         23206 Feb 28 23:43 afppacks.c
+-rw-r--r--  1 djh          1384 Feb 28 23:43 makefile
+
+lib/afpc:
+-rw-r--r--  1 djh           748 Feb 28 23:43 Makefile
+-rw-r--r--  1 djh           798 Feb 28 23:43 Makefile.m4
+-rw-r--r--  1 djh           968 Feb 28 23:43 README
+-rw-r--r--  1 djh         19432 Mar 14 14:36 afpc.c
+-rw-r--r--  1 djh         24803 Feb 28 23:43 afpc.mss
+-rw-r--r--  1 djh         17132 Feb 28 23:43 afpcc.c
+-rw-r--r--  1 djh           767 Feb 28 23:43 makefile
+-rw-r--r--  1 djh          1405 Feb 28 23:43 probs
+
+lib/cap:
+-rw-r--r--  1 djh          2731 Mar 14 18:32 Makefile
+-rw-r--r--  1 djh          2810 Mar 14 14:01 Makefile.m4
+-rw-r--r--  1 djh         60621 Mar 14 13:47 abasp.c
+-rw-r--r--  1 djh          3941 Feb 28 23:42 abasp.h
+-rw-r--r--  1 djh         33717 Feb 28 23:42 abatp.c
+-rw-r--r--  1 djh          2721 Feb 28 23:42 abatp.h
+-rw-r--r--  1 djh         13024 Feb 28 23:42 abauxddp.c
+-rw-r--r--  1 djh         14591 Feb 28 23:42 abauxnbp.c
+-rw-r--r--  1 djh         11505 Mar 14 14:35 abddp.c
+-rw-r--r--  1 djh         16059 Feb 28 23:42 abkip.c
+-rw-r--r--  1 djh          3846 Feb 28 23:42 ablap.c
+-rw-r--r--  1 djh          3712 Mar 13 20:16 ablog.c
+-rw-r--r--  1 djh          7955 Mar 14 14:29 abmisc.c
+-rw-r--r--  1 djh         20150 Mar 13 20:00 abnbp.c
+-rw-r--r--  1 djh         10688 Feb 28 23:42 abnet.c
+-rw-r--r--  1 djh         23370 Feb 28 23:42 abpap.c
+-rw-r--r--  1 djh          4393 Feb 28 23:42 abpap.h
+-rw-r--r--  1 djh          6863 Feb 28 23:42 abpapc.c
+-rw-r--r--  1 djh         15404 Feb 28 23:42 abpaps.c
+-rw-r--r--  1 djh          2294 Feb 28 23:42 abpp.c
+-rw-r--r--  1 djh          5975 Feb 28 23:42 abqueue.c
+-rw-r--r--  1 djh         22880 Feb 28 23:42 absched.c
+-rw-r--r--  1 djh          1067 Feb 28 23:43 abversion.c
+-rw-r--r--  1 djh          4029 Feb 28 23:43 abzip.c
+-rw-r--r--  1 djh         13844 Mar 15 14:56 atalkdbm.c
+-rw-r--r--  1 djh           478 Feb 28 23:43 atalkdbm.h
+-rw-r--r--  1 djh          8881 Feb 28 23:43 authenticate.c
+-rw-r--r--  1 djh          1201 Feb 28 23:43 cap_conf.h
+-rw-r--r--  1 djh          2736 Mar 14 18:32 makefile
+-rw-r--r--  1 djh           392 Feb 28 23:43 todist
+-rw-r--r--  1 djh           929 Feb 28 23:43 whatiswhat
+
+lib/xenix:
+-rw-r--r--  1 djh           773 Feb 28 23:43 Makefile
+-rw-r--r--  1 djh           302 Feb 28 23:43 fsync.c
+-rw-r--r--  1 djh          1347 Feb 28 23:43 ftruncate.c
+-rw-r--r--  1 djh           585 Feb 28 23:43 groups.c
+-rw-r--r--  1 djh          1791 Feb 28 23:43 rename.c
+-rw-r--r--  1 djh          3196 Feb 28 23:43 scandir.c
+
+man:
+-rw-r--r--  1 djh         16823 Feb 28 23:42 AUFS.1
+-rw-r--r--  1 djh          8483 Feb 28 23:42 AUFS.8
+-rw-r--r--  1 djh          2228 Feb 28 23:42 CAP.3
+-rw-r--r--  1 djh          5237 Mar 13 20:45 CAP.8
+-rw-r--r--  1 djh          6129 Feb 28 23:42 UAB.8
+-rw-r--r--  1 djh          3301 Feb 28 23:42 ash.1
+-rw-r--r--  1 djh          5971 Mar 13 20:47 atalk.local.5
+-rw-r--r--  1 djh          3869 Feb 28 23:42 atis.8
+-rw-r--r--  1 djh          3059 Feb 28 23:42 atlook.1
+-rw-r--r--  1 djh          3329 Feb 28 23:42 atprint.1
+-rw-r--r--  1 djh          2080 Feb 28 23:42 cvt2apple.1
+-rw-r--r--  1 djh          1516 Mar 15 00:50 etalk.local.5
+-rw-r--r--  1 djh           557 Feb 28 23:42 getzones.1
+-rw-r--r--  1 djh          2541 Feb 28 23:42 instappl.1
+-rw-r--r--  1 djh          8346 Feb 28 23:42 lwsrv.8
+-rw-r--r--  1 djh          1020 Feb 28 23:42 makefile
+-rw-r--r--  1 djh         13770 Feb 28 23:42 papif.8
+-rw-r--r--  1 djh          3455 Feb 28 23:42 snitch.1
+
+netat:
+-rw-r--r--  1 djh           216 Feb 28 23:43 Makefile
+-rw-r--r--  1 djh          2571 Feb 28 23:43 aberrors.h
+-rw-r--r--  1 djh          3024 Feb 28 23:43 abnbp.h
+-rw-r--r--  1 djh           640 Feb 28 23:43 abqueue.h
+-rw-r--r--  1 djh         10274 Feb 28 23:43 afp.h
+-rw-r--r--  1 djh           482 Feb 28 23:43 afpc.h
+-rw-r--r--  1 djh         20501 Feb 28 23:43 afpcmd.h
+-rw-r--r--  1 djh         13515 Feb 28 23:43 appletalk.h
+-rw-r--r--  1 djh          1779 Feb 28 23:43 compat.h
+-rw-r--r--  1 djh          3533 Feb 28 23:43 macfile.h
+-rw-r--r--  1 djh          3550 Feb 28 23:43 sysvcompat.h
+
+patches:
+-rw-r--r--  1 djh           512 Mar 14 17:50 README
+-rw-r--r--  1 djh          2345 Feb 28 23:45 abpap.c.tickletimer
+-rw-r--r--  1 djh          2010 Feb 28 23:45 abpaps.c.flowquantum
+-rw-r--r--  1 djh          1594 Feb 28 23:45 afpos.c.strcmp
+-rw-r--r--  1 djh          1787 Feb 28 23:45 mips.ultrix.byteswap
+-rw-r--r--  1 djh          2352 Feb 28 23:45 papif.c.atpresponse
+-rw-r--r--  1 djh          2565 Feb 28 23:45 papif.c.reverse
+-rw-r--r--  1 djh          4528 Feb 28 23:45 papif.c.variousbugs
+-rw-r--r--  1 djh          3045 Feb 28 23:45 procset.c.looping
+-rw-r--r--  1 djh          2699 Mar 14 23:27 rtmp.c.nocase
+-rw-r--r--  1 djh          2414 Feb 28 23:45 simple.c.comments
+-rw-r--r--  1 djh          2117 Feb 28 23:45 snitch.c.stringlength
+
+patches/AUX.NATIVE:
+-rw-r--r--  1 djh         14519 Feb 28 23:45 cap.for.aux.2
+-rw-r--r--  1 djh         29478 Feb 28 23:45 cap.for.aux.2-2
+
+patches/BUGS.orig:
+-rw-r--r--  1 djh          3701 Feb 28 23:45 cap5.0-patch00001
+-rw-r--r--  1 djh          4401 Feb 28 23:45 cap5.0-patch00002
+-rw-r--r--  1 djh          2806 Feb 28 23:45 cap5.0-patch00003
+-rw-r--r--  1 djh          1369 Feb 28 23:45 cap5.0-patch00004
+-rw-r--r--  1 djh           622 Feb 28 23:45 cap5.0-patch00005
+-rw-r--r--  1 djh           803 Feb 28 23:45 cap5.0-patch00006
+-rw-r--r--  1 djh          2959 Feb 28 23:45 cap5.0-report0001
+-rw-r--r--  1 djh          3773 Feb 28 23:45 cap5.0-report0002
+-rw-r--r--  1 djh          3604 Feb 28 23:45 cap5.0-report0003
+-rw-r--r--  1 djh          1509 Feb 28 23:45 cap5.0-report0004
+-rw-r--r--  1 djh           865 Feb 28 23:45 cap5.0-report0005
+-rw-r--r--  1 djh           919 Feb 28 23:45 cap5.0-report0006
+
+patches/Dan@lth.se:
+-rw-r--r--  1 djh          1588 Feb 28 23:45 README
+-rw-r--r--  1 djh           479 Feb 28 23:45 README.FIRST
+-rw-r--r--  1 djh          5074 Feb 28 23:45 afpspd.c
+-rw-r--r--  1 djh         14907 Feb 28 23:45 stat.cache.patches
+-rw-r--r--  1 djh          1686 Feb 28 23:45 trel.README
+-rw-r--r--  1 djh          5421 Feb 28 23:45 trel.patches
+
+patches/Moy@Berkeley:
+-rw-r--r--  1 djh          2258 Feb 28 23:45 Configure.diff
+-rw-r--r--  1 djh          1327 Feb 28 23:45 README
+-rw-r--r--  1 djh          2206 Feb 28 23:45 abasp.c.diff
+-rw-r--r--  1 djh           448 Feb 28 23:45 abatp.c.diff
+-rw-r--r--  1 djh           710 Feb 28 23:45 abkip.c.diff
+-rw-r--r--  1 djh          1428 Feb 28 23:45 afpc.c.diff
+-rw-r--r--  1 djh          3235 Feb 28 23:45 afpcmd.h.diff
+-rw-r--r--  1 djh          1305 Feb 28 23:45 afpdid.c.diff
+-rw-r--r--  1 djh           459 Feb 28 23:45 afpdir.c.diff
+-rw-r--r--  1 djh           391 Feb 28 23:45 afpdt.c.diff
+-rw-r--r--  1 djh         41043 Feb 28 23:45 afpos.c.diff
+-rw-r--r--  1 djh          7261 Feb 28 23:45 afposenum.c.diff
+-rw-r--r--  1 djh          6644 Feb 28 23:45 afposfi.c.diff
+-rw-r--r--  1 djh           895 Feb 28 23:45 afps.h.diff
+-rw-r--r--  1 djh           460 Feb 28 23:45 afpserver.c.diff
+-rw-r--r--  1 djh           557 Feb 28 23:45 atalkdbm.c.diff
+-rw-r--r--  1 djh          2688 Feb 28 23:45 atis.c.diff
+-rw-r--r--  1 djh           470 Feb 28 23:45 papof.c.diff
+-rw-r--r--  1 djh          7955 Feb 28 23:45 sizeserver.shar
+
+patches/PC.aufs:
+-rw-r--r--  1 djh          2075 Feb 28 23:45 README
+-rw-r--r--  1 djh          2174 Feb 28 23:45 README.orig
+-rw-r--r--  1 djh          1644 Feb 28 23:45 afp.h.diffs
+-rw-r--r--  1 djh          7480 Feb 28 23:45 afpdid.c.diffs
+-rw-r--r--  1 djh          1161 Feb 28 23:45 afpdir.c.diffs
+-rw-r--r--  1 djh          1675 Feb 28 23:45 afpfile.c.diffs
+-rw-r--r--  1 djh           613 Feb 28 23:45 afpfork.c.diffs
+-rw-r--r--  1 djh          2409 Feb 28 23:45 afpos.c.diffs
+-rw-r--r--  1 djh          8229 Feb 28 23:45 afposenum.c.diffs
+-rw-r--r--  1 djh          1252 Feb 28 23:45 afposfi.c.diffs
+-rw-r--r--  1 djh          2681 Feb 28 23:45 afposncs.c.diffs
+-rw-r--r--  1 djh          1389 Feb 28 23:45 afpserver.c.diffs
+-rw-r--r--  1 djh          1420 Feb 28 23:45 afpvols.c.diffs
+
+patches/Rutgers:
+-rw-r--r--  1 djh          1826 Feb 28 23:45 README
+-rw-r--r--  1 djh         14645 Feb 28 23:45 afpos.c.diffs
+-rw-r--r--  1 djh         14589 Feb 28 23:45 aufs-lwsrv-mods
+-rw-r--r--  1 djh          6787 Feb 28 23:45 lwsrv.c.diffs
+
+patches/XENIX:
+-rw-r--r--  1 djh         11503 Feb 28 23:45 file.1
+-rw-r--r--  1 djh         12009 Feb 28 23:45 file.2
+-rw-r--r--  1 djh         35225 Feb 28 23:45 file.3
+
+samples:
+-rw-r--r--  1 djh          2465 Feb 28 23:44 Makefile
+-rw-r--r--  1 djh          2508 Feb 28 23:44 Makefile.m4
+-rw-r--r--  1 djh          1421 Feb 28 23:44 README
+-rw-r--r--  1 djh         22919 Feb 28 23:44 ash.c
+-rw-r--r--  1 djh          2593 Feb 28 23:44 atistest.c
+-rw-r--r--  1 djh         14500 Mar 14 13:59 atlook.c
+-rw-r--r--  1 djh          1654 Feb 28 23:44 getzones.c
+-rw-r--r--  1 djh          4043 Feb 28 23:44 instappl.c
+-rw-r--r--  1 djh          5081 Mar 14 14:38 isrv.c
+-rw-r--r--  1 djh         10624 Feb 28 23:44 look.c
+-rw-r--r--  1 djh          7246 Feb 28 23:44 lwpr.c
+-rw-r--r--  1 djh          2484 Feb 28 23:44 makefile
+-rw-r--r--  1 djh          7386 Mar 15 00:53 ruiwpr.c
+-rw-r--r--  1 djh          5801 Feb 28 23:44 tlw.c
+
+support/enet:
+-rw-r--r--  1 djh          6454 Feb 28 23:46 README
+-rw-r--r--  1 djh         21000 Feb 28 23:46 enet.4
+-rw-r--r--  1 djh         45628 Feb 28 23:46 enet.c
+-rw-r--r--  1 djh          6108 Feb 28 23:46 enet.h
+-rw-r--r--  1 djh          7613 Feb 28 23:46 enetdefs.h
+-rw-r--r--  1 djh            23 Feb 28 23:46 enetfilter.h
+-rw-r--r--  1 djh          1185 Feb 28 23:46 etherstat.8
+-rw-r--r--  1 djh          9976 Feb 28 23:46 etherstat.c
+
+support/ethertalk:
+-rw-r--r--  1 djh           829 Feb 28 23:46 Makefile
+-rw-r--r--  1 djh          1527 Mar 13 20:06 Makefile.m4
+-rw-r--r--  1 djh          2599 Mar 15 15:12 README
+-rw-r--r--  1 djh           422 Feb 28 23:46 STILL_TO_DO
+-rw-r--r--  1 djh          7033 Mar 13 19:34 aarpd.c
+-rw-r--r--  1 djh           267 Feb 28 23:46 aarpd.h
+-rw-r--r--  1 djh           201 Feb 28 23:46 aarpd.x
+-rw-r--r--  1 djh          1351 Mar 14 14:32 aarpd_clnt.c
+-rw-r--r--  1 djh          1565 Mar 14 14:32 aarpd_svc.c
+-rw-r--r--  1 djh           474 Mar 14 14:33 aarpd_xdr.c
+-rw-r--r--  1 djh          1474 Mar 13 20:12 aarptest.c
+-rw-r--r--  1 djh         20676 Mar 13 20:10 abelap.c
+-rw-r--r--  1 djh          6867 Feb 28 23:46 dlip.c
+-rw-r--r--  1 djh         10526 Mar 14 20:06 ethertalk.c
+-rw-r--r--  1 djh          1470 Feb 28 23:46 makefile
+-rw-r--r--  1 djh          1749 Mar 13 20:13 rtmptest.c
+-rw-r--r--  1 djh         10810 Mar 13 20:15 senetp.c
+-rw-r--r--  1 djh         10134 Feb 28 23:46 snitp.c
+
+support/uab:
+-rw-r--r--  1 djh          1374 Feb 28 23:45 Makefile.m4
+-rw-r--r--  1 djh          1420 Feb 28 23:45 README
+-rw-r--r--  1 djh           241 Feb 28 23:45 STILL_TO_DO
+-rw-r--r--  1 djh         26462 Mar 13 20:08 aarp.c
+-rw-r--r--  1 djh          1880 Feb 28 23:45 aarp.h
+-rw-r--r--  1 djh          3727 Feb 28 23:45 aarp_defs.h
+-rw-r--r--  1 djh         13436 Mar 13 20:38 asyncatalk.c
+-rw-r--r--  1 djh          4171 Feb 28 23:45 bridge_desc
+-rw-r--r--  1 djh          6448 Mar 13 20:38 ddpport.c
+-rw-r--r--  1 djh          4223 Feb 28 23:45 ddpport.h
+-rw-r--r--  1 djh         14131 Feb 28 23:45 ddprouter.c
+-rw-r--r--  1 djh          6971 Mar 13 20:39 ddpsvcs.c
+-rw-r--r--  1 djh          6212 Feb 28 23:45 dlip.c
+-rw-r--r--  1 djh         12707 Mar 13 20:39 ethertalk.c
+-rw-r--r--  1 djh          1012 Feb 28 23:45 ethertalk.h
+-rw-r--r--  1 djh          2563 Feb 28 23:45 gw.h
+-rw-r--r--  1 djh         17620 Feb 28 23:45 hash.3
+-rw-r--r--  1 djh         21202 Feb 28 23:45 hash.c
+-rw-r--r--  1 djh          4509 Feb 28 23:45 hash.h
+-rw-r--r--  1 djh          1927 Feb 28 23:45 if_desc.h
+-rw-r--r--  1 djh         12116 Mar 13 20:39 kip_mpx.c
+-rw-r--r--  1 djh          3579 Mar 13 20:38 log.c
+-rw-r--r--  1 djh           945 Feb 28 23:45 log.h
+-rw-r--r--  1 djh          1440 Feb 28 23:45 makefile
+-rw-r--r--  1 djh          2210 Feb 28 23:45 mpxddp.h
+-rw-r--r--  1 djh          1324 Feb 28 23:45 node.h
+-rw-r--r--  1 djh          2206 Feb 28 23:45 proto_intf.h
+-rw-r--r--  1 djh         35153 Mar 14 20:26 rtmp.c
+-rw-r--r--  1 djh          8127 Feb 28 23:45 senetp.c
+-rw-r--r--  1 djh          8529 Feb 28 23:45 snitp.c
+-rw-r--r--  1 djh         21040 Mar 13 20:37 uab.c
+-rw-r--r--  1 djh           969 Feb 28 23:46 whatiswhat
+
+support/uab/patches:
+-rw-r--r--  1 djh          4930 Feb 28 23:45 bug.1
+-rw-r--r--  1 djh          1494 Feb 28 23:45 bug.2
+-rw-r--r--  1 djh           718 Feb 28 23:45 bug.3

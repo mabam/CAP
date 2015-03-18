@@ -1,0 +1,75 @@
+CAP GLOSSARY
+
+CAP	Columbia AppleTalk Package
+	A freeware suite of programs that partially implement the AppleTalk
+	protocol stack on a variety of UNIX machines.  Includes an AFP 2.0
+	AppleShare Server, LaserWriter Spooler and lpr/lpd "input" filter.
+
+ETHERTALK
+	AppleTalk protocols transmitted in specific type Ethernet packets.
+	May be Phase 1 (Ethernet packets type 0x809B) or Phase 2 (IEEE 802.3
+	Ethernet packets with 0xAAAA03 802.2 header and 0x080007809B SNAP
+	headers).  CAP in "Native EtherTalk" mode uses AppleTalk in Ethernet.
+	
+LOCALTALK
+	AppleTalk protocols transmitted over twisted pair cable at
+	230.4Kbits/second.
+
+IPTALK	IP encapsulated AppleTalk
+	AppleTalk protocols transmitted within IP packets.  Usually used with
+	CAP on UNIX hosts that are unable to speak EtherTalk.  Requires an
+	external AppleTalk gateway to translate IPTalk to/from EtherTalk.
+	
+UAB	UNIX AppleTalk Bridge
+	Phase 1 EtherTalk Router.  Used to connect two EtherTalk networks
+	together via Ethernet interfaces on a UNIX host.  Also supports
+	CAP processes via local UDP/IP loopback using modified IPTalk.
+	Bundled with CAP.
+
+UAR	UNIX AppleTalk Router
+	Phase 1/Phase 2 EtherTalk Router for UNIX boxes.  Also supports CAP
+	and simple AppleTalk tunneling over IP networks.  Not bundled with
+	CAP.  Available in two versions: freeware with basic features and
+	shareware with extra features (supports ARNS clients, NBP registry).
+
+AUFS	AppleTalk UNIX File Server
+	UNIX based AppleShare server.  Supports Apple Filing Protocol v 2.0.
+	Nominated UNIX directories can be mounted as a AppleShare Volumes
+	for storage of Mac files.
+
+LWSRV	LaserWriter Server/Spooler
+	UNIX based LaserWriter Spooler.  Macintosh print jobs are spooled to
+	the UNIX printer queue for subsequent printing via PAPIF or serially
+	connected printer.
+
+PAPIF	PAP Input Filter
+	BSD lpd filter for sending print-jobs to AppleTalk connected
+	printers.  Can be used in a script for non-BSD printing systems.
+
+AARPD	AARP Daemon
+	UNIX process for handling AppleTalk Address Resolution Protocol (AARP)
+	lookups.  Stores ethernet hardware address/AppleTalk address mappings
+	which are available to other CAP processes via RPC.  Also handles
+	updating of /etc/etalk.local.  Used only with "Native EtherTalk".
+
+ATIS	AppleTalk Information Server
+	UNIX process for handling AppleTalk Name Binding Protocol (NBP)
+	lookups and registrations, AppleTalk Echo Protocol (AEP) traffic
+	and Routing Table Maintenance Protocol (RTMP) data.  Sends RTMP
+	router updates to AARPD via RPC.  Other CAP processes register
+	Chooser visible names with ATIS.
+
+GETZONES
+	List AppleTalk zones for the local Internet.
+
+ATLOOK	AppleTalk Lookup
+	Lists AppleTalk NBP entities visible on the network.  Also ATPINGER
+	for sending Echo Protocol packets and ATLOOKLWS for LaserWriters.
+
+SNITCH	UNIX InterPoll client
+	Equivalent to Macintosh "Responder" program.  Provides limited
+	information about the CAP host to Mac InterPoll lookups.
+
+AppleTalk Reference
+	"Inside AppleTalk, Second Edition", Sidhu, Andrews, Oppenheimer.
+	Addison-Wesley, ISBN 0-201-55021-0

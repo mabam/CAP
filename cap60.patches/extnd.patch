@@ -1,0 +1,280 @@
+Patch #:	none yet
+Type:		operational change
+Priority:	none
+Modification:	add support for AFP2.2 extended 8-byte size/free fields
+IMPORTANT:
+IMPORTANT:	This patch assumes CAP at patch level 198 plus asip.patch
+IMPORTANT:	plus cicon.patch
+IMPORTANT:
+IMPORTANT:	This is an interim patch only. You will need to keep this
+IMPORTANT:	patch file in order to reverse the code changes before patch
+IMPORTANT:	199 can be applied without error.
+IMPORTANT:
+File:		cap60/applications/aufs/afpvols.h
+File:		cap60/applications/aufs/afpvols.c
+File:		cap60/applications/aufs/afpos.c
+
+
+*** applications/aufs/afpvols.h.orig	Thu Dec 11 17:00:38 1997
+--- applications/aufs/afpvols.h		Thu Dec 11 17:00:41 1997
+***************
+*** 40,45 ****
+--- 40,47 ----
+    sdword v_bdate;		/* volume backup date */
+    dword v_size;			/* size of volume in bytes */
+    dword v_free;			/* free bytes on volume */
++   byte v_esize[8];		/* size of volume in bytes */
++   byte v_efree[8];		/* free bytes on volume */
+  } VolEntry, *VolPtr;		/* user volume table */
+  
+  #define NILVOL ((VolPtr) 0)
+*** applications/aufs/afpvols.c.orig	Thu Dec 11 16:57:43 1997
+--- applications/aufs/afpvols.c		Thu Dec 11 16:58:22 1997
+***************
+*** 70,75 ****
+--- 70,77 ----
+    PAKB(VolPtr,P_DWRD,v_free,VP_FREE),	/* free bytes */
+    PAKB(VolPtr,P_DWRD,v_size,VP_SIZE),	/* size in bytes */
+    PKSB(VolPtr,P_OSTR,v_name,VP_NAME),	/* name of volume */
++   PKSB(VolPtr,P_BYTS,v_efree,VP_EFREE), /* extended free bytes */
++   PKSB(VolPtr,P_BYTS,v_esize,VP_ESIZE), /* extended total bytes */
+    PACKEND()
+  };
+  
+*** applications/aufs/afpos.c.orig	Thu Dec 11 17:01:58 1997
+--- applications/aufs/afpos.c		Tue Jan 13 15:09:25 1998
+***************
+*** 2410,2415 ****
+--- 2410,2516 ----
+  }
+  
+  /*
++  * set the extended volume size
++  * parameters defined by AFP 2.2
++  *
++  * size, free and blocks are 32-bit numbers.
++  * We want to end up with a 64-bit number in
++  * network-byte-order.
++  *
++  * For the moment we note that block-sizes
++  * are usually a simple power of two so we
++  * just bit-shift the original numbers.
++  *
++  */
++ 
++ void
++ extendedVolSize(v, size, free, blk)
++ VolPtr v;
++ dword size, free, blk;
++ {
++   int off;
++   int i, j;
++   int shift;
++ 
++   bzero((char *)v->v_esize, sizeof(v->v_esize));
++   bzero((char *)v->v_efree, sizeof(v->v_efree));
++ 
++   switch (blk) {
++     case 1:
++     case 2:
++     case 4:
++     case 8:
++     case 16:
++     case 32:
++     case 64:
++     case 128:
++       off = 0;
++       break;
++     case 256:
++     case 512:
++     case 1024:
++     case 2048:
++     case 4096:
++     case 8192:
++     case 16384:
++     case 32768:
++       off = 1;
++       break;
++     case 65536:
++     case 131072:
++     case 262144:
++       off = 2;
++       break;
++     default:
++       /* set some arbitrary number */
++       v->v_esize[4] = 0x80;
++       v->v_efree[4] = 0x40;
++       return;
++       break;
++   }
++ 
++   /*
++    * initialize the array in network byte
++    * order. If the multiplier is 1, 256 or
++    * 65536 there is nothing else to do.
++    *
++    */
++   v->v_esize[7-off] = size & 0xff;
++   v->v_esize[6-off] = (size >> 8) & 0xff;
++   v->v_esize[5-off] = (size >> 16) & 0xff;
++   v->v_esize[4-off] = (size >> 24) & 0xff;
++ 
++   v->v_efree[7-off] = free & 0xff;
++   v->v_efree[6-off] = (free >> 8) & 0xff;
++   v->v_efree[5-off] = (free >> 16) & 0xff;
++   v->v_efree[4-off] = (free >> 24) & 0xff;
++ 
++   if (blk == 1 || blk == 256 || blk == 65536)
++     return;
++ 
++   /*
++    * now bit shift each group of bytes
++    *
++    */
++   shift = (blk < 256) ? blk : ((blk < 65536) ? (blk/256) : (blk/65536));
++ 
++   for (i = 1; i < 20; i++) {
++     for (j = 0 ; j < 8; j++) {
++       v->v_esize[j] <<= 1;
++       v->v_efree[j] <<= 1;
++       if (j < 7 && (v->v_esize[j+1] & 0x80))
++         v->v_esize[j] |= 1;
++       if (j < 7 && (v->v_efree[j+1] & 0x80))
++         v->v_efree[j] |= 1;
++     }
++     if (shift == (0x0001 << i))
++       break;
++   }
++ 
++   return;
++ }
++ 
++ /*
+   * OSErr OSVolInfo(VolPtr v)
+   *
+   * Update volume information for volume pointed to by v.
+***************
+*** 2448,2453 ****
+--- 2549,2555 ----
+  # endif SOLARIS
+  #endif USESTATFS
+    time_t sometime;
++   void extendedVolSize();
+    void scaleVolSize();
+  
+    if (stat(path,&buf) != 0)	/* directory exists? */
+***************
+*** 2484,2490 ****
+        v->v_attr &= ~V_RONLY;	/* clear read-only */
+    }
+  
+!   if ((bitmap & (VP_FREE|VP_SIZE)) == 0)
+      return(noErr);		/* naught else to do */
+  
+    /* All the following is good and fine unless: (a) the volume */
+--- 2586,2592 ----
+        v->v_attr &= ~V_RONLY;	/* clear read-only */
+    }
+  
+!   if ((bitmap & (VP_FREE|VP_SIZE|VP_EFREE|VP_ESIZE)) == 0)
+      return(noErr);		/* naught else to do */
+  
+    /* All the following is good and fine unless: (a) the volume */
+***************
+*** 2516,2521 ****
+--- 2618,2625 ----
+        dqblk.dqb_bhardlimit != 0) { /* make sure not unlimited */
+      v->v_size = dqblk.dqb_bhardlimit*512;
+      v->v_free = (dqblk.dqb_bhardlimit-dqblk.dqb_curblocks)*512;
++     extendedVolSize(v, dqblk.dqb_bhardlimit,
++       dqblk.dqb_bhardlimit-dqblk.dqb_curblocks, 512);
+      scaleVolSize(v);
+      return(noErr);
+    }
+***************
+*** 2532,2537 ****
+--- 2636,2643 ----
+           dqblk.dqb_bhardlimit != 0) {
+          v->v_size = dqblk.dqb_bhardlimit*512;
+          v->v_free = (dqblk.dqb_bhardlimit-dqblk.dqb_curblocks)*512;
++ 	extendedVolSize(v, dqblk.dqb_bhardlimit,
++ 	  dqblk.dqb_bhardlimit-dqblk.dqb_curblocks, 512);
+  	scaleVolSize(v);
+          return(noErr);
+      }
+***************
+*** 2548,2553 ****
+--- 2654,2660 ----
+        v->v_size = ubuf.f_tfree*1024;
+      }
+      v->v_free = ubuf.f_tfree*1024;
++     extendedVolSize(v, ubuf.f_tfree, ubuf.f_tfree, 1024);
+      scaleVolSize(v);
+      return(noErr);
+    }
+***************
+*** 2558,2563 ****
+--- 2665,2671 ----
+      v->v_size = fsbuf.f_frsize * fsbuf.f_blocks;
+      /* limiting factor: cannot report on overutilization of a volume */
+      v->v_free = (fsbuf.f_bavail < 0) ? 0 : fsbuf.f_frsize * fsbuf.f_bavail;
++     extendedVolSize(v, fsbuf.f_blocks, fsbuf.f_bavail, fsbuf.f_frsize);
+      scaleVolSize(v);
+      return(noErr);
+    }
+***************
+*** 2567,2572 ****
+--- 2675,2681 ----
+      v->v_size = fsbuf.f_bsize * fsbuf.f_blocks;
+      /* limiting factor: cannot report on overutilization of a volume */
+      v->v_free = (fsbuf.f_bfree < 0) ? 0 : fsbuf.f_bsize * fsbuf.f_bfree;
++     extendedVolSize(v, fsbuf.f_blocks, fsbuf.f_bfree, fsbuf.f_bsize);
+      scaleVolSize(v);
+      return(noErr);
+    }
+***************
+*** 2581,2590 ****
+--- 2690,2701 ----
+      v->v_size = fsbuf.f_fsize * fsbuf.f_blocks;
+      /* limiting factor: cannot report on overutilization of a volume */
+      v->v_free = (fsbuf.f_bavail < 0) ? 0 : fsbuf.f_fsize * fsbuf.f_bavail;
++     extendedVolSize(v, fsbuf.f_blocks, fsbuf.f_bavail, fsbuf.f_fsize);
+  #else  /* __386BSD__ || __osf__ */
+      v->v_size = fsbuf.f_bsize * fsbuf.f_blocks;
+      /* limiting factor: cannot report on overutilization of a volume */
+      v->v_free = (fsbuf.f_bavail < 0) ? 0 : fsbuf.f_bsize * fsbuf.f_bavail;
++     extendedVolSize(v, fsbuf.f_blocks, fsbuf.f_bavail, fsbuf.f_bsize);
+  #endif /* __386BSD__ || __osf__ */
+      scaleVolSize(v);
+      return(noErr);
+***************
+*** 2598,2603 ****
+--- 2709,2715 ----
+    v->v_size = 0x1000000;		/* some random number */
+    v->v_free = 0x1000000;		/* same random number */
+  #endif SIZESERVER
++   extendedVolSize(v, 0x1000000, 0x1000000, 512);
+    scaleVolSize(v);
+    return(noErr);			/* all ok */
+  }
+***************
+*** 2694,2699 ****
+--- 2806,2812 ----
+    struct fs_data buffer[NUMGETMNTBUF];
+    struct fs_data *bp;
+    int nbytes = sizeof(struct fs_data)*NUMGETMNTBUF;
++   void extendedVolSize();
+    void scaleVolSize();
+  
+    if (!oldgetmnt) {
+***************
+*** 2723,2728 ****
+--- 2836,2843 ----
+    /* bfreen must be "good" in that it cannot go below 0 when */
+    /* out of space -- it is unsigned! */
+    v->v_free = ((getuid() == 0) ? bp->fd_req.bfree : bp->fd_req.bfreen) * 1024;
++   extendedVolSize(v, bp->fd_req.btot,
++     (getuid() == 0) ? bp->fd_req.bfree : bp->fd_req.bfreen, 1024);
+    scaleVolSize(v);
+    return(noErr);
+  }

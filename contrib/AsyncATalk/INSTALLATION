@@ -1,0 +1,50 @@
+NOTE: This software currently only works in conjunction with a Webster
+MultiPort Gateway or UAB from CAP 6.0. To install async appletalk using
+UAB, read the UAB documentation  and follow steps 0, 2, 6, 7, 8 & 9 below.
+YOU DON'T NEED TO RUN asyncad WITH UAB
+
+To install for use with a hardware gateway
+------------------------------------------
+
+0. Read the file 'README' for an overview of the way Async Appletalk works.
+1. Compile and install async and asyncad (eg: in /usr/local/cap).
+2. add a line such as the following to /etc/services (NB: 750 is not an
+officially assigned port).
+
+aabroad		750/udp		# async atalk broadcast
+
+3. create an AppleTalk Net Number for each host that is to run asyncad and
+add lines to /etc/atalkatab to map the network number to the host IP address.
+(You must be using the modified atalkad.c available via ftp from munnari.OZ.AU)
+
+170.26	A	128.250.1.26	unimelb-Async	# async net running on murtoa
+
+4. add another entry to /etc/atalk.local to identify the Net Number and
+Zone Name for Asynchronous AppleTalk on this host. This must be the fourth
+non-comment line in the file, after the one that identifies the NIS host.
+
+# asyncnet	asynczone
+170.26		unimelb-Async
+
+5. Add an entry to /etc/rc.local to run the daemon at boot time (it may be
+necessary to put this line before 'portmap'. It is possible for portmap to
+steal ports in this range).
+
+/usr/local/cap/asyncad
+
+6. On your Macintosh, install the 'Network' adev that normally comes with
+the 'EtherTalk' driver. This software is available from Apple.
+
+7. Copy 'Async AppleTalk' into the System Folder.
+
+8. Connect a serial line to the Macintosh Modem Port and a modem/host port.
+
+9. Open the Control Panel and select the ICON 'Async ATalk'. Choose a
+serial line speed and 'Connect'. Follow the normal login procedure and run
+/usr/local/cap/async. The login window will disappear. Selecting the
+Chooser (probably twice consecutively on a Mac Plus at 1200 baud) should
+show the normal AppleTalk services.
+
+I recommend that at least System Sotware version 6 be used.
+
+Problems, bugs to djh@munnari.OZ.AU

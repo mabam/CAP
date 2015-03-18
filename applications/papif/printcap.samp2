@@ -1,0 +1,22 @@
+From croft@russell.stanford.edu Thu Dec 18 09:13:31 1986
+Date: Wed, 17 Dec 86 21:00:47 pst
+From: Bill Croft <croft@russell.stanford.edu>
+Subject: samples/printcap.sample
+To: cck@cu20b
+
+Charlie, Please pick up this file!!!
+---
+
+
+For use when you have PSTEXT turned on.....
+
+
+
+ps|xmac|PostScript|LaserWriter in Ventura-H5, via appletalk:\
+	:lp=/dev/null:if=/etc/cap/papif:\
+	:du#0:\
+	:sd=/usr/spool/lw:\
+	:lf=/usr/spool/lw/errs:\
+	:af=/usr/spool/lw/lwacct:pl#72:pw#85:
+
+

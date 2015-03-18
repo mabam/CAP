@@ -1,0 +1,73 @@
+The following is an (incomplete) list of the modifications from CAP
+Distribution 5 to CAP Distribution 6.
+
+	* Many patches for extra functionality have been incorporated.
+	* Subdirectory 'support' has been added for alternate LAPs.
+	* UAB is now bundled with this CAP distribution (support/uab).
+	* 'Configure' will recognize the host byte ordering.
+	* 'Configure' handles a wider range of machine types.
+	* AUFS support for AFP 2.0 is (practically) complete.
+	* UAB now supports Asynchronous AppleTalk on a UNIX host.
+	* The format of 'atalk.local' has been extended for async appletalk.
+	* Zone names in 'atalk.local' MUST now be quoted to include spaces.
+	* A "free format" 'etalk.local' is used by EtherTalk LAPs.
+	* atis is now Phase 2 NBP compatible (obj/type partial matching).
+
+The following is an (incomplete) list of the modifications from CAP
+Distribution 4 to CAP Distribution 5.
+
+The general change are:
+  o various directories have been reorganized.  The major ones are:
+    doc - documentation, man - manual pages, samples - sample
+    programs, applications - heavily used programs (at Columbia), 
+    lib - libraries, and etc - support programs. 
+
+  o While a generic Makefile is included, an "os specific" makefile
+    generation facility is included and should now be used.
+
+We do not list bug fixes below, only major changes in functionality.
+
+In samples, the various programs now use a define to find cap.printers
+allowing it to be relocated from etc.  In addition, look has been
+revised to make its operation easier and renamed to atlook to prevent
+naming conflicts (looks => atlooklws, and pinger => atpinger)
+
+applications/lwsrv
+	lwsrv rewritten.  The major change is that it now stores prep
+	files in a directory and automatically captures unknown ones.
+applications/papif
+	essentially rewritten
+	supports psrev, pstext now
+	pscomm compatible now
+
+applications/aufs
+	user data base of icon types added
+	normalizing character set for different types of ascii 
+	clean up of kbox too slow code
+	new desktop format
+	new finderinfo format
+	aux support
+	sun quota fixed
+	.afpvols used if no afpvols
+	shutdown code from Scooter Morris added.
+
+lib/cap
+	allow modifcation of response cache timeout in atp
+	pap fix for cleaning up outstanding papwrites
+	fix problem with timeouts in abmisc
+	print nis node
+	fix up asp to match up specifiable values better
+	rework abnet.c,abddp.c,abmisc.c so that they "layer" better
+		abnet moved into abkip.c and absched.c
+		parts of abmisc.c moved to absched.c
+		abddp had KIP (udp) encapsulation dependencies removed
+			or hidden
+		absched now "schedules" protocol events
+		abkip now holds all code for KIP (udp) encapsulation
+
+lib/afp
+	fix afposlock up for nfs systems w/o lock daemon
+
+lib/afpc
+	clean up
+

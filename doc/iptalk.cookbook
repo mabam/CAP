@@ -1,0 +1,76 @@
+Herewith 10 easy steps to installing CAP with IPTalk:
+
+1. Make sure that you have the latest CAP code. If in doubt, FTP the CAP
+FAQ file mac/cap.patches/CAP.faq from munnari.OZ.AU. It contains a list of
+the sites where CAP is available, please choose the closest site.
+
+2. Run the CAP Configure program, answer all of the questions with the
+defaults (by hitting RETURN). Run gen.makes to create the makefiles.
+
+3. Find out the IP address of the CAP host, say 132.45.67.89. This is a 32
+bit number represented as four 8-bit quantities written as decimal numbers.
+It could also be represented as a hexadecimal number, 0x842d4359. The CAP
+host node number is the bottom eight bits of the IP address, written as a
+decimal number, in this case 89.
+
+4. Find out the IP address of the IPTalk compatible gateway, such as a
+FastPath, GatorBox or MultiPort Gateway, say 132.45.67.90. The "bridge"
+node number is the bottom eight bits of the IP address, in this case 90.
+
+5. Check that the top 24-bits of the two IP addresses are identical, in
+this case 132.45.67. For simplicity I'll call this the IP subnet number.
+If they do not match you have to investigate the atalkad administration
+package, or use CAP with Native EtherTalk or one of the AppleTalk routers.
+
+6. Find out the IPTalk network number being used by the gateway. This is
+a 16-bit number represented as two 8-bit quantities separated by periods
+or a single decimal number. For example 93.57 is 93*256 + 57, or 23865.
+Each IPTalk network number is uniquely associated with one IP subnet
+number, each IPTalk installation must have a unique network number where
+the IP subnets differ.
+
+7. (optional) Check all the other network numbers in use on your network,
+make sure that the IPTalk network number is not being used for LocalTalk,
+EtherTalk (Phase 1 or Phase 2) or on any other IPTalk network where the
+IP subnet numbers differ.
+
+8. Find out the zone name associated with the IPTalk network number. This
+may be the same as other zone names on the network but must be identical
+to the zone name programmed into the IPTalk gateway. eg: unimelb-CompSci
+
+9. Create a file called /etc/atalk.local using the template provided in
+cap60/etc/atalk.local and the UNIX manual entry in cap60/man/atalk.local.5
+As a minimum, the file would look like the following, using the numbers
+from the examples used above, comment lines start with a '#'
+
+# mynet         mynode          myzone
+93.57		89		unimelb-CompSci
+# bridgenet     bridgenode      bridgeIP
+93.57		90		132.45.67.90
+
+10. Find out what UDP ports are being used on the IP network. These are
+also called the "NIC Assigned" ports. These ports map to AppleTalk socket
+numbers and are used to deliver packets to the correct UNIX processes. By
+default, CAP will use the ports starting at 768 so that the RTMP socket
+number 1 maps to UDP port 769 and the ECHO socket 4 maps to 772. The
+official port range starts at 200, so RTMP becomes 201 and ECHO becomes
+204. To ensure that CAP uses the official ports, add the following entries
+to the file /etc/services or the NIS database
+
+at-rtmp         201/udp
+at-nbp          202/udp
+at-echo         204/udp
+at-zis          206/udp
+
+The port numbers should already be defined in the gateway configuration.
+
+Continue testing from the [10] Verification step in cap60/doc/install.ms
+
+Note: if you are using CAP with Native EtherTalk then ignore all but step 1.
+The Native EtherTalk code is able to learn the network configuration. If
+you have an /etc/atalk.local file, you should remove it. If there are no
+other routers on the network, start aarpd with "*" as the zone name. The
+UDP ports are also used in Native EtherTalk, as markers for sockets in use.
+If a CAP process has trouble starting the ZIS listener or ECHO or NBP
+sockets are unavailable, consider installing the official UDP port entries.
+

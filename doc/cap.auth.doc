@@ -1,0 +1,28 @@
+Authentication Methods
+
+The file /etc/cap.auth specifies a network list (permit or deny)
+on a per server per type (lwsrv, aufs) basis. Rules are additive
+in that later rules can modify previous rules. The comments below
+are for explanation only and should not be included in the file.
+Examples:
+
+lwsrv.*.innet	32.152 33.9	# For lwsrv of any name, only accept
+				# connections from the listed networks.
+
+lwsrv.PrivateLW.outnet	33.9	# Independent of other rules the
+				# "PrivateLW" does not accept
+				# connections from 33.9.
+
+*.*.innet	32.152 33.9	# Any server with any name allows
+				# only the listed networks.
+
+*.*.innet	*		# Any server allows any network
+				# (in reality deletes access list)
+
+lwsrv.*.network    ImOK		# client mac must have NBP registered
+				# X.Y.Z:ImOK where X.Y is net, Z node
+
+To use authentication, you must define "AUTHENTICATE" in the features
+list at Configuration time. It is suggested that you use only one of 
+AUTHENTICATE and LWSRV_AUFS_SECURITY. The latter requires an lwsrv spooler
+user to be concurrently connected to an aufs server on the same machine.

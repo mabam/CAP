@@ -1,0 +1,33 @@
+Revised: Aug. 6, 1987
+
+Comments apply to AppleShare version 1.0, Jan. 12, 1987 and protocol
+specification "AppleTalk File Protocol (AFP) Engineering Technical
+Notes, Protocol Version 1.1, February 17, 1987"
+
+Additional comments apply to AppleShare version 1.1.
+
+FPAddAPPL packet display says we are to send volid in a request - this
+doesn't seem right - probably should be DTRefNum.
+
+AppleShare seems to use Mac time, with earliest time at 0.  This is at
+|odds with the specification.  This seems to be fixed in AppleShare 1.1.
+
+At least for FPEnumerate AppleShare client seems to reverse creation
+and modification dates.  Either the spec or code is out of sync.
+Probably the code since the AppleShare server seems to get them in the
+|correct order.  This may be fixed in AppleShare 1.1.
+
+Spec does not make clear how FPAddIcon is to proceed - it simply says
+"The bitmap is sent to the server in a subsequent intermediate
+exchange of the Session Protocol packets".
+
+SPAttention calls from the server are not documented - not sure if you
+think this should be part of the specification, but the calls should
+be documented.  From observations, we can guess that some number <=4
+of the high order bits of the attention code define the event.  For
+example, (0x => hex) 0x8xxx seems to mean server is going down in xxx
+minutes unless xxx == fff in which case it indicates that a shutdown
+has been cancelled.
+
+
+

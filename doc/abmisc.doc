@@ -1,0 +1,120 @@
+- void cpyc2pstr(char *ps,*cs)
+Copy a C style string to an Apple Pascal style string.  Restrictions:
+sizeof(*ps) must be >= 1+sizeof(*cs).
+ 
+
+- void cpyp2cstr(char *cs,*ps)
+Copy a Apple Pascal style string to C string
+
+
+- pstrcpy(byte *d,s)
+like strcpy, but for pascal strings
+
+
+- pstrncpy(byte *s,*d; int n)
+like strncpy, but for pascal strings
+
+- int pstrlen(byte *s)
+like strlen, but for pascal strings
+
+- pstrcmp(bytes1,s2)
+like strcmp, but for pascal strings
+
+- int cmptime (struct timeval *t1,*t2)
+cmptime compares two time values and returns an integer greater than,
+equal to, or less than zero according to whether the time represented
+in t1 is greater than, equal to, or less than t2.
+
+
+- abstoreltime(struct timeval *at,*rt)
+convert absolute time in at to relative time by subtracting the
+current time as returned by gettimeofday.
+
+
+struct TimerEntry {
+  struct TimerEntryt_next;	      pointer to next/
+  struct timeval t_time;	      timeout internal form/
+  ProcPtr t_fun;		      function to call/
+  caddr_t t_arg;		      argument for function/
+};
+
+- void apptoabstime(struct timval *tv,int t)
+Construct actual time of timeout given unit tick 1/4 of a second.
+
+- void Timeout(ProcPtr fun,caddr_t arg,int t)
+Call "fun" with "arg" after elapsed time "t" has expired.  "t" is in
+internal tick units of 1/4 seconds.  This unit conforms to LAP and PAP
+timeout units.
+  
+- void remTimeout(ProcPtr fun, caddr_t arg);
+Given the function and function arg of a pending timeout remove that
+timeout from the q.  Question: should we remove all instances?  Should
+timeout enforce a single (fun, arg) pair?
+
+- void doTimeout()
+doTimeout expires entries on the timeout queue. The timeout function
+is called with the function argument, the timeout entry is unlinked
+from the q and memory is returned.
+
+doTimeout can be called at any time, if the q is empty, or no timers
+have expired then no action is taken.
+
+- boolean minTimeout(struct timeval *mt)
+minTimeout returns the minimum timeout of all entries on the timeout
+q.  The timer records are ordered earliest first so this routine only
+needs to check on the first one.
+
+- dbugarg(char *chars) 
+Process the -d argument from the command line, setting debug options
+in global dbug structure.  a - db_atp; l - db_lap; d - db_ddp; n -
+db_nbp; i - db_ini; p - db_pap;   
+
+
+
+- int setup_bds(BDS bds[]; int numbds, segsize; charbuf; int bufsiz; 
+	  atpUserDataType userdata)
+Establish a bds (of size most numbds) with buffer buf of size bufsiz
+set all bds userdata fields to userdata return count of bds's.  More
+buffer than bds is okay.
+
+
+- int sizeof_bds(BDS bds[]; int numbds)
+return size of BDS dataSize fields
+
+
+** routines to deal with "Indexed" strings
+
+- void IniIndStr(byte *istr)
+Initialize an Indexed string for calls to AddIndStr
+
+
+- void AddIndStr(char *src,byte *istr)
+
+Add a c string to a Indexed string.  The c string always is added to
+the end of the indexed string.
+
+
+- void GetIndStr(char *dest,byte *istr,int index)
+Copy from an indexed string into a c string.  Use index to select
+the string entry within the indexed string type.
+
+- int IndStrCnt(byte *istr)
+ Return the count of entries in an indexed string.
+
+- int IndStrLen(byte *istr)
+Return the length of the indexed string istr including the count byte.
+
+- PrtIndStr(byte *istr)
+For debugging, dump the content indexed string.
+
+- int strcmpci(char *s, *t)
+Case insensitive version of strcmp.
+
+- int strncmpci(char *s, *t,int n)
+Case insensitive version of strcmp.
+
+- char *strdup(char *p)
+duplicates the pointed to by p.  returns pointer to copy or null if no
+space.  returns pointer to emtpy string if p is null.
+
+

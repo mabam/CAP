@@ -1,0 +1,59 @@
+.TH SIT L "December 1990"
+.UC
+.SH NAME
+stuffit \- create a Stuffit archive from Unix text or CAP aufs files
+.br
+sit \- create a Stuffit archive from Unix text or *.{rsrc,data,info} files
+.SH SYNOPSIS
+.B stuffit
+[
+.B \-ru
+] [
+.B \-o
+.I output
+] [
+.B \-C
+.I creator
+] [
+.B \-T
+.I type
+] file
+.br
+.B sit
+[
+.B \-ru
+] [
+.B \-o
+.I output
+] [
+.B \-C
+.I creator
+] [
+.B \-T
+.I type
+] file
+.br
+.SH DESCRIPTION
+Create a Stuffit archive from CAP aufs (stuffit), *.{rsrc,data,info} (sit) or
+Unix text (both) files.
+.SH OPTIONS
+.TP
+.B \-r
+Remove input files when done.
+.TP
+.B \-o output
+Specify name of output file. Defaults to
+.I archive.sit .
+.TP
+.B \-u
+Input files are Unix text not CAP aufs (stuffit) or *.{rsrc,data,info} (sit).
+.TP
+.B \-C creator
+Set files creator when input is Unix text, defaults to KAHL.
+.TP
+.B \-T type
+Set files type wehn input is Unix text, defaults to TEXT.
+.SH AUTHORS
+stuffit: Nigel Perry (np@doc.ic.ac.uk), based on
+.br
+sit: Tom Bereiter ..!{rutgers,ames}!cs.utexas.edu!halley!rolex!twb

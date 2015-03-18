@@ -1,0 +1,210 @@
+First revision: March 29, 1988
+
+Protocol Scheduler
+
+The CAP protocol libraries are designed so that protocols run based on
+two types of events.  The first type is incoming packets/input ready
+and the second is timeouts.  These are "scheduled" or handled by
+giving up the CPU for a specified amount of time during which these
+events are awaited and processed.  Thus, these events run
+non-preemptively.  Because of this, there's a lot less worry about
+critical sections, etc.  (Warning: this means running protocol from
+signal handlers is a bad idea since the signal handler may have been
+invoked inside the protocol scheduler).
+
+Both input ready and timeout routines should follow these rules:
+	o don't block for any significant amounts of time (>.25
+	  seconds is a good rule of thumb)
+	o don't call abSleep or doTimeout
+
+SCHEDULING
+
+o int abSleep(giveup time, until_first)
+	giveup time - time in tick (1/4 second units)
+	until_first - TRUE/FALSE
+
+abSleep runs protocol events.  If until_first is set to TRUE, then
+abSleep will return after the first (set) of protocol events occur.
+In this case the giveup time specifies the maximum time abSleep would
+keep control.  Warning: more than one protocol event may occur even if
+until_first is set.
+
+The basic algorithm is:
+	while giveup time is still valid
+		sleep until input ready or Timeout
+		if input ready then
+			get all input
+		else if Timeout then
+			run all timeouts
+		if event occurred and until_first set, then return
+	end
+
+There should probably be a version of abSleep that accepts
+absolute/relative times via struct timeval to allow better control,
+but there isn't a need yet...
+
+
+INTERNAL CLOCK:
+
+An internal clock is used to redefine relative times as absolute
+(system TOD based) times to minimize the effects of scheduling, etc.
+(e.g. we can't trust relative times in a timeshared environment).
+
+o getschedulerclock(struct timeval **tv)
+
+getschedulerclock returns the current scheduler reference clock
+setting.  (Pass pointer to timeval pointer and it will return pointer
+to the reference clock.)  Even though you can update the reference
+clock through this pointer, you shouldn't unless you know what you are
+doing.
+
+o updateschedulerclock()
+
+updates the scheduler reference clock settting (safely).
+
+
+
+EVENT: INPUT
+
+Input protocol event handling below the user level is generally done
+on the basis of incoming packets.  At the user level, it is possible
+to specify non-protocol file descriptors for input protocol event
+handling.  This is useful when you don't want to block on input
+because protocol must be scheduled--it's silly to make the user level
+program have to another set of selects.
+
+o int init_fdlistening();
+
+Initialize the file descriptor listening code.  This is generally done
+in abInit.  Calling init_fdlistening twice is okay -- the second call
+is ignored.  Returns: number of file descriptors that it can handle.
+
+The rest of the calls return -1 for error and 0 for success.
+
+o int fdlistener(int fd, int (*listener)(), caddr_t addrarg, int intarg)
+
+Install the listener "listener" that is to be called with the
+arguments "addrarg" and "intarg" when input is ready on the file
+descriptor "fd".  Note: fdlistenread is used to call the listener.  If
+"listener" is NULL, input ready waits are still done on the file
+descriptor, but the no listener will be called.  The addrarg and
+intarg distinction is made in case a pointer is not necessarily an int
+on a particular machine.  The reason for having both is that it is
+useful to be able to pass an array/buffer with a size to "read"
+routines.  The read listener should not do more than a single read
+call unless it is know that sufficient data is there to satisfy it or
+else things will block.  Extreme care should be taken when using stdio
+since the read system call is not under user control.
+
+o int fdunlisten(int fd)
+
+Remove any listeners on file descriptor "fd".  Returns error if no
+listener was installed.
+
+o int fdlistenread(int fd)
+
+Calls the listener for file descriptor "fd" with the argument saved by
+fdlistener.  Included at the user level to allow a forced "read" call.
+
+o int fdlistensuspend(int fd)
+
+Suspend input ready check on file descriptor "fd".  Returns error if
+not installed by fdlistener.  Note: this can be called from inside a
+"fd" listener and it will take effect immediately.
+
+o int fdlistenresume(int fd)
+
+Resume input ready check on file descriptor "fd".  Returns error if
+not installed by fdlistener.  Note: this can be called from inside a
+"fd" listener and it will take effect immediately.
+
+
+fdlistensuspend and fdlistenresume are useful to when the listener
+doesn't actually read the data, but instead just marks that input is
+ready.  For example:
+	waitforinput(fd, waitvar, dummy)
+		int fd;
+		int *waitvar;
+		int dummy
+	{
+		(void)fdlistensuspend(fd);
+		*waitvar = 1;	
+	}
+	/* calling sequence */
+	fdlistener(fileno(stdin), waitforinput, &waitvar, 0);
+	do {
+		/* okay to do even if not suspended */
+		fdlistenresume(fileno(stdin));
+		waitvar = 0;
+		do {
+			abSleep(4, TRUE); /* run protocol events */
+		} until (waitvar);
+		read input on stdin
+	} while (not end of file on stdin)
+
+
+EVENT: TIMEOUTS
+
+Timeouts are used to schedule a procedure to "run" at a later point.
+Timeouts are always stored internally in absolute time format (see the
+notes on the internal clock above).  Due to the nature of the
+environment, timeouts can only occur near the times specified.  Things
+are designed so that timeouts should never occur before the time
+specified.
+
+o void Timeout(void (*fun)(), caddr_t arg, int timeout)
+o void AppleTimeout(void (*fun)(), caddr_t arg, int timeout, boolean doupdate)
+o void relTimeout(void (*fun)(), caddr_t arg, struct timeval *tv,
+                 boolean doupdate))
+o void absTimeout(void (*fun)(), caddr_t arg, struct timeval *tv)
+
+Timeout schedules "fun" to be called with argument "arg" at "timeout"
+ticks in the future.  The call will never occur before "timeout"
+ticks.  It will only occur near timeout ticks if abSleep is called
+around that time.  Thus, if timeouts are critical, then it is
+important to call "abSleep" often.
+
+AppleTimeout is actually the basis for "Timeout".  It takes as an
+additional argument "doupdate" that, if FALSE, notifies the timeout
+code that the internal clock should be considered "accurate" and need
+not be updated.  One may make this assumption if AppleTimeout or
+relTimeout (see below) was called just before with doupdate TRUE with
+little or no code intervening.  Note: Timeout just calls AppleTimeout
+with doupdate TRUE.
+
+relTimeout replaces the Apple tick time with "struct timeval" set to
+the interval (relative time).  This allows us to schedule to down to
+microseconds (be warned, the resolution of your interval timer is
+unlikely to be that accurate!  It is even more unlikely you can get
+your scheduler to guarantee that you will be scheduled at microsecond
+accuracy.  Don't count on better than about 1/10 second or so).  See
+AppleTimeout above for information on the doupdate flag.
+
+absTimeout is like relTimeout except it takes an absolute time and
+thus removes the need for the "doupdate" flag.
+
+Note: two or more timeouts scheduled for the same time will occur in
+an indeterminate order and within the same "abSleep" call.
+
+o int remTimeout(void (*fun)(), caddr_t arg)
+
+remTimeout removes a timeout to call function "fun" with argument
+"arg".  remTimeout will only remove the first instance of the pair
+<fun,arg> that it finds.  remTimeout returns true if it removed the
+<fun,arg> pair, false otherwise.  So to guarantee that you have
+removed all instances, you can (a) make sure you only have one
+outstanding at a time or (b) use the following code fragment:
+	while (remTimeout(fun,arg)) 
+	  /* NULL STATEMENT */;
+
+o boolean minTimeout(struct timeval *timeval)
+
+minTimeout will return in "timeval" the time that the "next" timeout
+is scheduled to occur.  Note: it may be in the past if the scheduler
+has not run.  It returns FALSE if there are no timeouts enqueued.
+
+o int doTimeout()
+
+doTimeout is included to allow forcing of timeouts without running the
+"input" events.  If doTimeout is used, it should probably be used in
+conjunction with "minTimout" to minimize the work.

@@ -1,0 +1,62 @@
+Introduction:
+-------------
+
+Messages is a combination of UNIX and Macintosh programs designed to make
+it easy to communicate short messages (not email) between Mac and UNIX users.
+
+The shar files includes C source for use with the Columbia AppleTalk
+Package (CAP) on UNIX and a StuffIt/BinHex file containing the mac components.
+
+For more information on the UNIX programs, refer to the *.1l manual entries.
+
+Macintosh files in messages.hqx:
+--------------------------------
+
+'Messages' is a Control Panel document that receives and displays short 
+messages. 'Messages DA' is used to lookup users, edit and send messages. 
+Together, they provide a similar functionality to the UNIX programs "wall", 
+"write" and "biff" for Macintosh users (something akin to "biff" is 
+implemented in the UNIX version of the DA).
+
+The messages system was implemented in two parts to allow the use of
+'Messages DA' to be restricted in a student environment.
+
+Usage: Messages version 1.6
+
+Copy the file into your System Folder and reboot, a mailbox ICON at INIT
+time indicates successful installation. If you don't want to receive a
+particular type of message, set this with the Control Panel. At boot time,
+the cdev attempts to NBP register the Chooser User Name as type 'macUser' 
+(NB: this conflicts with MacServe but I suspect usage of this is fast 
+approaching nil so I don't really care). If this name is already in use 
+then it generates a warning message to both users and tries 'User-x', 
+where x is 0-9, A-Z until successful. If no Chooser name is set, then it
+registers 'nobody', 'nobody-0' etc. (no warning messages for this case)
+and politely requests that the user enter a Chooser name. Messages will be
+received but not displayed for a short period after a reboot.
+
+When a message is received, it is displayed in a scrolling window dialog box
+together with an ICON, time of the message and an OK button. If the message
+is not acknowledged within 60 seconds the dialog box goes away. Any mouse
+movement or arrival of a new message will re-display the original dialog
+box (this is different behaviour to the earlier version to be more
+compatible with the aims of screensavers). Up to 16 messages can be queued,
+after which, as many message headers are saved as possible.
+
+
+Usage: Messages DA version 1.2
+
+Use Font/DA Mover to install the DA, and, if required, use ResEdit to
+edit the file 'myICON' and copy it to the System Folder. Run the DA, if
+necessary select a zone, choose a user (shift click for multiple users) or
+check the 'Broadcast' button. If you have 'myICON' installed (the 'Send 
+ICON' button isn't grey) you can also check this button. Type a message in
+the text window, use CR for new lines and Enter or OK to send it (you can
+also double click a single user name for the same result). If you send a
+message across zones, then your zone name is sent with your message.
+
+BUGS:
+	1. messages are limited to about 550 bytes less 128 for the ICON.
+	2. it should have a way of receiving messages without requiring 
+		use of 'Messages', probably in version 2.0.
+

@@ -1,0 +1,25 @@
+ Problem: UAB missing first byte from the received long DDP packet
+
+
+
+
+
+*** ethertalk.c.org	Fri Feb 23 10:47:41 1990
+--- ethertalk.c	Fri Feb 23 10:49:39 1990
+***************
+*** 304,310 ****
+    iov[0].iov_base = (caddr_t)&ea;
+    iov[0].iov_len = sizeof(ea);
+    iov[1].iov_base = (caddr_t)&lap;
+!   iov[1].iov_len = sizeof(lap);
+    iov[2].iov_base = (caddr_t)rbuf;
+    iov[2].iov_len = sizeof(rbuf);
+    if ((cc = pi_readv(etph, iov, 3)) < 0) {
+--- 304,310 ----
+    iov[0].iov_base = (caddr_t)&ea;
+    iov[0].iov_len = sizeof(ea);
+    iov[1].iov_base = (caddr_t)&lap;
+!   iov[1].iov_len = lapSize;
+    iov[2].iov_base = (caddr_t)rbuf;
+    iov[2].iov_len = sizeof(rbuf);
+    if ((cc = pi_readv(etph, iov, 3)) < 0) {

@@ -1,0 +1,58 @@
+.TH cvt2apple 1 "24 July 1990" "Columbia University"
+.SH NAME
+cvt2apple, cvt2cap \- convert CAP AUFS files to and from Apple standard file formats.
+.SH SYNTAX
+.BR cvt2apple " [" \-d ] 
+.I cap-file apple-file
+.PP
+.B cvt2cap
+.I apple-file cap-file
+.SH DESCRIPTION
+.I cvt2apple
+converts CAP AUFS format files to 
+Apple-Single or Apple-Double format files suitable
+for launching by the A/UX
+.I launch
+program.
+.I cvt2cap 
+converts Apple single and/or Apple-Double files to CAP AUFS format files.
+.PP
+A CAP AUFS file consists of three parts: the data fork, which is
+the file which has same name as the whole CAP file; the resource fork
+which is a file with the same name as the data fork but located
+in a subdirectory called ".resource" of the directory in which the
+data fork is located; and the finder information, located in a subdirectory
+called ".finderinfo".
+.PP
+An Apple-Single format file contains all this information in a single file
+using a standard format (see the A/UX Release Notes 1.0 page 5-2).
+An Apple-Double
+format file is similar to an Apple-Single file except that it consists 
+of two separate parts:  the data fork is
+stored with the base name; and the resource/finder part is stored in
+a file with the base name prefixed by the '%' character.
+.PP
+.I cvt2apple 
+by default makes Apple-Single format files.
+If the
+.I \-d
+option is specified then an Apple-Double format file is created. This should 
+normally be used for data files or for applications that write to their 
+data forks.
+.PP
+To copy a Macintosh file so it can be used under A/UX, first mount an AUFS
+volume from the destination A/UX system on the source Macintosh;
+next drag the application you want to run into that filesystem;
+and finally, on the destination A/UX machine run
+.I cvt2apple
+to convert the CAP file to a launchable Apple format file.
+.SH NOTES
+.I cvt2apple
+does not create Icon, real-name, or file-info records in Apple format
+files.
+As most Mac files contain their own icon information, this
+is probably not a problem.
+.SH AUTHOR
+Paul Campbell
+.SH "SEE ALSO"
+AUFS(1), AUFS(8), CAP(8)

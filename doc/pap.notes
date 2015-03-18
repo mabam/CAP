@@ -1,0 +1,60 @@
+CAP note: last revision July 26, 1986
+
+UNIX Printer Access Protocol (PAP) Programmer and implementation notes
+
+Protocol specification: Inside Appletalk, June 1986.
+
+The document briefly describes implementation specific aspect of PAP.
+
+PAPOpen, PAPRead, PAPWrite, PAPClose, PAPStatus, GetNextJob,
+PAPRegName, PAPRemName work as documented.  SLInit and HeresStatus
+differ in that they record the pointer to the buffer which contains
+the status message, thus allowing the user to modify the status
+message.  SLClose differs in that it does not deregister names
+submitted via SLInit or PAPRegName.  PAPUnload is unimplemented at
+present.  Note: SLClose as implemented probably should be renamed to
+SLShutdown (to correspond to PAPShutdown as below) and SLClose should
+be implemented to work as documented by Apple.
+
+One additional call has been added.  PAPHalfClose closes a pap socket
+for further writes.  PAPShutdown closes a pap socket without notifying
+the remote.  These were added to allow PAP connections to be used in a
+multi-fork environment.
+
+Note on forks.
+
+After a PAP connection has been opened via PAPOpen or GetNextJob, it
+is possible to have one fork reading and another writing.  It is not
+possible to have more than one fork reading or writing.  This is an
+implementation restriction caused by the fact that the PAP and ATP
+protocols are carried by each fork instead of some system process.
+Any fork except the one which is to do the writing (via PAPWrite) must
+issue a PAPHalfClose call after a connection has been opened.  The
+write fork listens for remote close and tickle requests (and thus,
+also carries the timeout which prevents half-open connections from
+sticking around).  All processes forked off after the connection has
+been established run the tickle functions.  Note: you should fork
+after the open and before any reads or writes or you may well get
+unexpected results.
+
+Doing forks for the server environment is a little more involved.
+Assuming you want the server to stick around, you must do a SLClose on
+the server refnum in the child after the fork call.  The server must
+do a PAPShutdown on the opened PAP socket.  [This assumes that any
+getnextjob has completed].
+
+
+General implementation notes:
+
+Each PAP connection has a private ATP responding socket used to
+receive data from the remote.  Each fork has one ATP requesting
+socket.  The responding socket is only used by PAPWrite.
+
+Note: two pap connections and one server connection is allowed at
+present.  To change this, modify the parameters in abpap.h.
+
+
+ABPP.C routines.  These are synchronous, unix-style calls which
+provide access to PAPOpen, PAPRead and PAPWrite.  See the module or
+any of the sample programs for examples of how to call them.
+

@@ -1,0 +1,294 @@
+Printing from a Sun to a LaserWriter with CAP
+=============================================
+
+
+These notes are a beginner's "cookbook" approach to a basic CAP printer
+installation - just getting a Sun SS2 to print to an Apple LaserWriter
+via EtherTalk. They consolidate information scattered through the CAP
+Installation Procedures, the man pages, the CAP FAQ, and postings in
+comp.protocols.appletalk.
+
+
+Network Setup.
+==============
+
+The objective which prompted these notes was to get a new Sun SS2 to print
+to an existing Apple LaserWriter IIG via an isolated Ethernet subnet. There
+were no other A/Talk devices on the Ethernet; in particular, there was no
+A/Talk router, and therefore no zones. However the LaserWriter was already
+connected to an established LocalTalk network, with LocalTalk zones
+established by a Webster Multiport Gateway.
+
+                    LaserWriter         Lots of   Webster
+    Sun SS2           LW IIG              Macs    Multigate
+      |               |    |                |      |    |
+      -------Enet------    ----LocalTalk-----------     ---Another Enet--
+
+The LaserWriter IIG is claimed to service both LocalTalk and EtherTalk 
+interfaces concurrently, but several people have reported difficulties, 
+especially with firmware prior to Revision 2.  However, the LocalTalk side 
+of the printer turns out to be largely irrelevant to the CAP setup, other 
+than for initially setting the printer's AppleTalk name.
+
+The good news is that CAP _will_ work in this configuration, using the
+"Native Ethertalk" mode through the Sun Network Interface Tap (NIT). There
+is no need to have an AppleTalk router on the Ethernet segment. Network 
+numbers will be assigned by CAP; the zone must (ie, can only) be the 
+"default" zone "*" (because there is no router); and the printer name 
+will be the same as its LocalTalk name. 
+
+If there had been Macs already on the Ethernet, CAP would simply fit in with
+the existing network numbers. Ditto if there had been an AppleTalk router,
+provided that the printer's zone names on the EtherTalk and LocalTalk sides
+were different. (Otherwise, the printer name would match two network
+addresses, and it would shut down the LocalTalk port).
+
+
+Pre-requisites.
+===============
+
+Get the latest CAP FAQ from munnari.OZ.AU (mac/CAP.faq). The version that
+comes with the CAP distribution is NOT the latest.
+
+Get and install the "patch" utility (after getting and installing the gzip
+utility!).
+
+Check that the NIT (network interface tap) has been configured into your
+kernel. If etherfind runs, it is probably OK, but see the FAQ for details.
+
+Check that the LaserWriter firmware is Version 2 or later, and arrange for a
+ROM upgrade if necessary. (The version number is in the fine print at the
+bottom right of the startup test page).
+
+
+Getting Organised.
+==================
+
+Download the CAP file patched to level 100 (cap60.pl100.tar.Z), and all 
+the subsequent patch files (patches.XXX-YYY.tar.Z).
+
+Unpack CAP and all the patch files in /usr/local/cap. (Patches end up in
+this directory, CAP files in ./cap60).
+
+Change to the top-level CAP directory (cap60).
+
+Check the README file to find out the current patch level. Apply all the 
+required patches, adapting the 3-line command in the FAQ (painless).
+
+Check file ownerships, and change to root.daemon or something sensible
+(" chown -R root.daemon . ", as user root from the cap60 directory).
+
+Print and read the Installation Procedure in cap60/doc/install.ms
+(" nroff -ms doc/install.ms | more ")
+
+Read the relevant UNIX manual entries in cap60/man.
+(" nroff -man man/CAP.8 | more ")
+
+Add the assigned AppleTalk UDP port numbers to /etc/services, as per the
+instructions in the Installation Procedure.
+
+
+Configure and Build CAP.
+=======================
+
+From the cap60 directory:
+
+Run ./Configure, and take all defaults except:
+
+        Use Native EtherTalk?           Yes
+        Use Phase 2?                    Yes
+        Restrict CAP to one directory?  Yes
+
+Run ./gen.makes to build the makefiles from the m4 scripts.
+
+With CAP resticted to one directory, there is no need to "make include".
+
+Run "make libsmade" to build CAP libraries.
+
+Run "make programs" to compile the applications.
+
+Run "make install" to move things into ./bin
+
+The files ./etc/atalk.local and ./etc/etalk.local contain addressing "seed"
+information ex Melbourne Uni, and should be deleted. etalk.local will be
+re-created from scratch by "aarpd" and "atis" in the steps following.
+
+
+Initial Testing.
+================
+
+Start aarpd with the default zone name ("*" or \*):   bin/aarpd le0 "*"
+
+Aarpd may take 15 seconds or so before returning, while it establishes an
+initial node number and creates a new version of etalk.local.
+
+Start atis: bin/atis
+
+Wait while atis listens for routing packets. There won't be any, unless
+there is a router on the Ethernet. After about 15 seconds, atis updates the
+file ./etc/etalk.local with either the existing or its own network
+numbering. With no router, it should look something like:
+
+   #
+   # EtherTalk dynamic configuration data
+   #
+   # Last update:  Tue Jan 18 15:34:30 1994
+   #
+   # Generated by Native EtherTalk (Phase 2)
+   #
+   interface       "le0"
+   netRangeStart    0.00
+   netRangeEnd     255.254
+   thisNet         255.00
+   thisNode        168
+   thisZone        "*"
+   bridgeNet        0.00
+   bridgeNode      0
+   bridgeIP        127.0.0.1
+   nisNet          255.00
+   nisNode         168
+   asyncNet         0.00
+   asyncZone       ""
+
+If there is an AppleTalk router on the Ethernet, run bin/getzones and check
+that the existing zones are visible to the Sun. If there is no AppleTalk
+router, there can be no zones either, and getzones will fail.
+
+Run bin/atlook to show the devices visible on the network. This should show
+(at least) the LaserWriter. See the man pages for the many options to
+atlook - no arguments will show all devices in the default zone.
+
+   auric# bin/atlook
+   abInit: [ddp: 255.00, 168] starting
+   Looking for =:=@* ...
+     1 - Administration Room A1.62 :LaserWriter@* [Net:255.246
+     Node:246 Skt:128]
+
+Note the extra space character at the end of the printer name (before the
+colon). This is due to a bug in some versions of the naming program, but it
+_is_ part of the printer name and must be included in the setups following.
+
+Test the Printer Access Protocol (PAP) by sending a PostScript file direct
+to the printer with the lwpr utility:
+
+  bin/lwpr -p PrinterName:LaserWriter@* PSfilename
+
+where the PrinterName is exactly as output by atlook above.
+
+If this works, it means that the CAP name and address daemons and the
+printer access protocol are all OK. Next step is to set up lpd spooling.
+
+
+Set up Printer Spooling.
+========================
+
+There are several ways to do this, as per the papif man pages. This one is
+the simplest and most understandable.
+
+Create a printcap entry, spool directory, and so on, as per normal. (Note
+that CAP _does_ write to the accounting and log files, so you will need to
+keep an eye on them).
+
+   # LaserWriter IIG (Admin) via CAP/Ethertalk
+   lp2|lw2|Administration Room A1.62:\
+           :lp=/dev/lw2:\
+           :sd=/var/spool/lw2:\
+           :sf:\
+           :mx#0:\
+           :lf=/var/adm/lw-errs:\
+           :af=/var/adm/lw-acct:\
+           :if=/usr/local/cap/cap60/bin/lw2if:\
+           :of=/usr/local/cap/cap60/bin/papof:
+
+Some systems are said to perform locking on the device file for local
+printers (the "lp" entry), so just create an empty normal file for each
+CAP printer:
+
+   auric# touch /dev/lw2
+   auric# chmod 660 /dev/lw2
+   auric# ls -lg /dev/lw2
+   -rw-rw----  1 root     daemon          0 Jan 19 12:19 /dev/lw2
+
+The input filter "lw2if" is a small shell script which simply passes the 
+Unix short printer name (eg "lw2") and any other lpd arguments to the 
+"real" filter (CAP papif). There are more elaborate examples in the 
+papif man pages. Create one of these for each CAP printer:
+
+   #!/bin/sh
+   # lw2if - CAP Input filter for lw2
+   /usr/local/cap/cap60/bin/papif -P lw2 $*
+
+The Unix short printer name ("lw2" above) then has to be mapped to a
+fully-qualified AppleTalk entity name (name:type@zone) via a list
+in ./etc/cap.printers:
+
+   # Unix to AppleTalk Printer Name Mappings
+   #
+   lw2=Administration Room A1.62 :LaserWriter@*
+
+Note again the spurious space character at the end of the printer name.
+
+
+Ownerships and Permissions.
+===========================
+
+Now, the final key point, from the cap60/support/ethertalk/README file - 
+you need to set matching ownerships and permissions on the network 
+interface /dev/nit and all of the executables, or none of this will work 
+(not even for root, if you got there via a regular su). The most secure
+method is:
+
+Create a group "nit" in /etc/groups.
+
+Change /dev/nit to be group "nit", with group read/write permission:
+
+   crw-rw----  1 root     nit       37,  40 Jul 30  1992 /dev/nit
+
+Change papif, papof, and all your input filters ("lw2if" above) to be group
+"nit" and setgid "nit":
+
+   -rwxr-sr-x  1 root     nit           203 Jan 14 16:05 lw2if
+   -rwxr-sr-x  1 root     nit        106496 Jan 14 15:15 papif
+   -rwxr-sr-x  1 root     nit         16384 Jan 14 15:15 papof
+
+
+Final Stages.
+=============
+
+Now test the printer by sending a PostScript file via lpr. Watch the job
+progress with "lpc stat lw2", check the printout, and check the entries in
+the printer accounting and log files.
+
+When all is well, re-compile if desired using the "normal" directories, make
+clean, and add a suitable startup script to /etc/rc.local:
+
+   if [ -f /usr/local/cap/cap60/start-cap-servers ]; then
+           /usr/local/cap/cap60/start-cap-servers & echo -n ' CAP ' > /dev/co
+           nsole
+   fi
+
+where start-cap-servers is something like:
+
+   #!/bin/sh
+   # start-cap-servers
+   # Called from /etc/rc.local
+   #
+   # Start aarpd for Native Ethertalk
+   /usr/local/cap/cap60/bin/aarpd le0 "*"
+   sleep 5
+
+   # Start atis for RTMP and NBP
+   /usr/local/cap/cap60/bin/atis
+   sleep 15
+
+
+
+
+
+
+
+John Wolff                                                24 January 1994
+Electronics & Networks Engineer           Phone:           +61 3 542 2281
+CSIRO Ian Wark Laboratories               Fax:             +61 3 543 6613
+Private Bag 10, Rosebank MDC              Private:         +61 3 754 2426
+Clayton, VIC, 3169, Australia             Email: J.Wolff@forprod.csiro.au

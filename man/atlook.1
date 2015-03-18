@@ -1,0 +1,164 @@
+.TH atlook 1 "20 June 1990" "Columbia University"
+.SH NAME
+atlook, atlooklws, atpinger \- look up appletalk devices accessible from UNIX
+.SH SYNTAX
+.B atlook,
+.B atlooklws,
+.B atpinger
+[
+.B \-dn
+] [
+.B \-n 
+] [
+.B \-s
+] [
+.BI \-r " <n>"
+] [
+.BI \-t " [" p ]<n>
+] [
+.BI \-l " <n>"
+] [
+.BI \-k
+] [
+.B \-P
+] [
+.B \-S
+]
+.B nbp-entity-name
+.SH DESCRIPTION
+.I atlook,
+.I atlooklws,
+and
+.I atpinger
+allow you to look for various nbp entities on the AppleTalk internetwork.
+.I atlook
+and
+.I atpinger
+do a lookup on the wildcard nbp entity name "=:=@*" (any object, any
+type, my zone) by default while
+.I atlooklws
+(which stands for look LaserWriter status)
+only tries to find entities 
+of type "LaserWriter". 
+.PP
+.I atpinger
+also attempts to evoke a "echo reply" from the remote by sending an
+"echo request".  (c.f. Apple Echo Protocol).
+.I atpinger
+actually sends a special packet that contains information that allows
+it to report the round trip time (in seconds).  In addition,
+.I atpinger
+will report if the sent packet length is not the same as the returned
+packet length.
+.PP
+.I atlooklws
+tries to find the PAP status of the remote object and confirms
+the nbp address.
+.PP
+You can override the zone easily by simply specifying it.
+For example,
+.I atlook myzone
+would do a lookup on "=:=@myzone" and
+.I atlooklws myzone
+would look for "=:LaserWriter@myzone".
+To override
+the type or object, you should give a fully specified NBP entity name,
+for example,
+.I atlook =:Macintosh@myzone.
+Normally, the output is sorted with a primary key of "type" and a
+secondary key of "object".
+.PP
+The NBP entity object or type fields may contain 3-digit octal numbers
+to represent characters not in the 7-bit ascii character set. For
+example, \\252 is the \s-4\v'-0.4m'TM\v'0.4m'\s+4 trademark symbol in
+the Macintosh Character Codes set (refer
+.I Inside AppleTalk, 2nd Edition, Appendix D).
+Such octal numbers
+start with a leading backslash which, when used on the UNIX
+command line, must be escaped:
+.eo
+.ul 1
+atlook =:UNIX\\252
+.ec \
+.PP
+To lookup an NBP entity containing the backslash character itself ...
+.eo
+.ul 1
+atlook =:back\\\\slash
+.ec \
+.PP
+In AppleTalk Phase 2 environments,
+.I atlook
+and friends can use the partial matching
+ability of NBP by specifying the wildcard symbol \\305 in the command line.
+.eo
+.ul 1
+atlook mu\\305:=
+.ec \
+will find all entities with object names that start with "mu" and have
+any NBP type.
+Only one partial match character may be used per object or type field.
+.PP
+.I atlook,
+.I atlooklws,
+and
+.I atpinger
+accept the following arguments:
+.TP 10
+.B \-P
+says to ping the entities after lookup.  The timeout for response is 5
+seconds.  The default length of the packet is based on an internal
+structure whose size is system dependent.
+.I atpinger
+is
+.I atlook
+with
+.I \-P
+set as default.
+.TP 10
+.B \-S
+says to get the LaserWriter status after lookup.
+.I atlooklws
+is
+.I atlook
+with
+.I \-S
+set as default.
+.TP 10
+.B \-n
+says to sort by the network numbers for output.
+.TP 10
+.B \-s
+says to sort the output by socket numbers.
+.TP 10
+.B \-k
+specifies that DDP checksums are not to be used, the field is set to zero.
+.TP 10
+.BI \-t " [" p ]<n>
+can be used to specifiy the NBP timeout as <n> ticks (1/4 second units) on
+lookups.  The default is 
+3 ticks.  With 'p' preceeding the number, it specifies the
+ping timeout in ticks.  Using
+.I \-t p<n>
+turns on pinging.
+.TP 10
+.BI \-r " <n>"
+can be used to specify the number of NBP retries (default is 3).
+.TP 10
+.BI \-l " <n>"
+can be used to specify the ping packet length (lower bound: internal
+data structure, upper bound: ddpMaxData (currently 586).  Using this
+option turns on pinging.
+.TP 10
+.BI \-d " <cap debug flags>"
+can be used to specify standard CAP library debugging flags.  See
+CAP(3) for valid flags.
+.SH NOTES
+.I atpinger
+figures out the round trip delay by inserting the time the packet was
+sent into the echo request packet.
+.SH AUTHOR
+atlook, atlooklws, and atpinger were written by Charlie C. Kim of Columbia
+University and share a common source.
+.SH "SEE ALSO"
+atis(8), CAP(3), CAP(8)

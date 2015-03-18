@@ -1,0 +1,15 @@
+.TH TRASH L "December 1990"
+.UC
+.SH NAME
+trash \- delete a CAP aufs file
+.SH SYNOPSIS
+.B trash
+file ...
+.SH DESCRIPTION
+.I Trash
+simply deletes the given CAP aufs files. Don't use
+.I rm
+to delete CAP aufs files as it will not handle the multiple forks
+correctly, leaving hidden unwanted files on your disc.
+.SH AUTHOR
+Nigel Perry (np@doc.ic.ac.uk)

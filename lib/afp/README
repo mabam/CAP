@@ -1,0 +1,5 @@
+    afpcmd.c - packing and unpacking routines for afp pkts
+    afperr.c - error messages, etc. for afp
+    afppacks.c - definition for various afp pkts
+    afposlock.c - locking routines
+

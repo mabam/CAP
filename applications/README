@@ -1,0 +1,12 @@
+Installation notes
+
+lwsrv - lwsrv is a spooling agent - it pretends to be a LaserWriter.
+        See lwsrv/README for installation notes.
+
+aufs  - aufs is a Appletalk Filing Protocol Unix based File Server
+        (AppleShare compatible)
+
+papif - contains a set of programs that can be "plugged" into the
+        Berkeley lpd to allow printing to a laserwriter from unix
+	via appletalk. See papif/README for installation notes.
+

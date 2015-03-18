@@ -1,0 +1,167 @@
+This directory contains all the files needed to install and use the
+Ethernet packet filter under SunOS 4.0.3c.  This code has been tested
+on sun3, sun4, and sun4c kernel architectures, with the 4.0.3c kernel.
+It "should" work with 4.0.3 and all releases later than 4.0.3, but it
+has only been tested with 4.0.3c.  It will not work in its current
+form with 4.0.1 and earlier releases.
+
+You do not need kernel source to install it.  The necessary "hooks"
+into the network code already exist in the standard Sun code.  The
+primary interactions are
+
+  - The packet filter needs a way to get packets from the network
+	device drivers.  It registers interest in specific Ethernet
+	packet types, using the ether_family structure documented
+	in /usr/include/net/if_arp.h.  All packets of those types
+	are passed to the routine enet_filter in enet.c
+
+  - The packet filter needs a way to output packets to the network.
+	It simply passes packet to the network drivers using
+	a raw address type.
+
+  - Initialization is done the first time a program opens the
+	packet filter device.  Thus no special provisions are
+	needed to call the code at system startup time.
+
+The ether_family interface changed slightly between 4.0.1 and 4.0.3c.
+ef_infunc is called with one additional argument in 4.0.3c.  The
+packet filter needs this argument.  Thus the code will not work as is
+under 4.0.1.  We hope that few, if any, changes will be needed under
+4.1 and later releases.  We believe that it will run under 4.0.3, but
+it has only been tested under 4.0.3c.
+
+Here is how to install the packet filter.  In the following, sunX
+refers to your architecture type, e.g. sun3, sun3x, sun4, sun4c.  /sys
+refers to the location where you normally build kernels, which may be
+/sys, /usr/sys, etc.
+
+  - create a directory /sys/enet, and put the files enet.c and *.h from
+    this distribution into that directory.  (You may put this
+    entire distribution there if you prefer.)
+
+  - edit /sys/sunX/conf/files, inserting the line
+
+	enet/enet.c		optional enetfilter
+
+    If you want to put the packet filter into all of your architectures,
+    you can instead add this line to /sys/conf.common/files.cmn.  The
+    line can be anywhere in the file.  I have added a tab at the
+    beginning of the line for readability.  When you put the line
+    into the file, it should start at the left margin.
+
+  - edit /sys/sun/conf.c.  Add the following lines in the first half
+    of the file, where devices are being defined.  The exact location
+    is not critical, however you should make sure you add them
+    between existing devices, not in the middle of an entry.  E.g.
+    a safe place would be right before the line
+
+	#include "cgthree.h"
+
+    Here are the lines to insert:
+
+	#include "enetfilter.h"
+	#if NENETFILTER > 0
+	int	enetopen(),enetclose(),enetread(),enetwrite(),enetioctl(),enetselect();
+	#else
+	#define enetopen nodev
+	#define enetclose nodev
+	#define enetread nodev
+	#define enetwrite nodev
+	#define enetioctl nodev
+	#define enetselect nodev
+	#endif
+
+    (Leading tabs are added to make this document readable.  When you
+    put the lines into conf.c, they should begin at the left margin.)
+    Now look for entry number 4 in cdevsw.  In your editor, find
+    for the following.  (You can simply search for the first occurence
+    of "cdevsw".)
+
+	struct cdevsw	cdevsw[] =
+
+    Now look down a few lines, for lines labeled /*4*/ and /* was ip */
+    Replace those lines, so that they look as follows.  (You are replacing
+    lines one for one.)
+
+    {
+	enetopen,	enetclose,	enetread,	enetwrite,	/*4*/
+	enetioctl,	nulldev,	enetselect,	0,	/* was ip */
+	0,
+    },
+
+  - cd to /sys/sunX/conf
+ 
+  - edit the config file you normally use, e.g. GENERIC.  Add the
+    following line:
+
+	pseudo-device	enetfilter
+
+    (As usual, I have inserted a tab for readability.  The line should
+    start at the left margin.)  The exact location in the file is not
+    critical, but one reasonable place would be right after the
+    following lines:
+
+	pseudo-device	snit		# streams NIT
+	pseudo-device	pf		# packet filter
+	pseudo-device	nbuf		# NIT buffering module
+
+   - config and build a new kernel, as you normally do.  If you use
+     a generic kernel (which however is not recommended under 4.0.x,
+     since tailored kernels use less space), you would do
+
+	config GENERIC
+	cd ../GENERIC
+	make
+
+   - install the new kernel, which will be called vmunix, in root:
+
+	mv /vmunix /vmunix.OLD
+	cp vmunix /vmunix
+
+   - install the header files enet.h and enetdefs.h in /usr/include/net
+
+   - install the man page enet.4 in /usr/man/man4
+
+   - make the devices needed by the packet filter.  You need one
+     device for each Ethernet or Ethernet-like interface you have.
+     (It has not been tested with things like FDDI, but might work.)
+     Each device will be associated with one network interface.
+     The association is established when the first program opens
+     one of the devices.  In general, /dev/enet0 will be associated
+     with the first network interface, /dev/enet1 with the second, etc.
+     They should be in the order that the interfaces are listed by
+     "netstat -i".  However only broadcast interfaces will be included.
+     Serial lines and the loopback device (lo0) will be skipped.  
+     Suppose you have two Ethernets.  Here's how to create the two
+     devices:
+
+	mknod /dev/enet0 c 4 0
+	mknod /dev/enet1 c 4 1
+
+   - reboot
+
+Now your kernel has the necessary support for the Ethernet packet
+filter.  Of course this won't do you any good unless you have software
+that uses it.  We use it with a special version of the CAP software,
+to support Appletalk over Ethertalk.  Software to support PUP is
+probably also available.
+
+This distribution also contains source for a program "etherstat".  It
+can be used to see what connections are currently using the packet
+filter.  See the man page, etherstat.8.  To build and install
+etherstat:
+
+  - type "make etherstat"
+
+  - install etherstat whereever you prefer to keep your network
+    debugging tools.  /usr/etc would be a reasonable place, or
+    /usr/ucb, which is where netstat is.  If you want normal users to
+    be able to use it, make sure it is set up the same way as
+    /usr/ucb/netstat.  Depending upon your system, this may be
+    setuid to root or setgid to some special group.  Try
+
+	ls -lg /usr/ucb/netstat
+
+    to see.  The program needs to be able to read /dev/kmem.
+
+  - install etherstat.8 into /usr/man/man8

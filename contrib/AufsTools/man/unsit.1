@@ -1,0 +1,131 @@
+.TH UNSIT L "Septermber 28, 1988"
+.UC
+.SH NAME
+unsit \- extract/list files in a Macintosh Stuffit archive file
+.SH SYNOPSIS
+.B unsit
+[
+.B \-rdulM
+] [
+-vqfm
+] file
+.br
+.SH DESCRIPTION
+For the Stuffit archive file listed, 
+.I unsit
+extracts the files in the archive into separate files.
+This makes it possible, for example, to separate a large StuffIt file
+into component files for selective downloading, rather than
+downloading the larger archive file just to extract a single, small
+file.  It also allows the use of StuffIt to compress a group of files
+into a single, smaller archive that can be uploaded to a Unix system
+for storage, printing, etc.
+.PP
+In the normal mode, both the data and the resource forks of the
+component Macintosh files in the archive are extracted and stored in
+Unix files with the extension
+.I .data
+and 
+.I .rsrc
+appended to the end of the Macintosh file name.
+In addition, a 
+.I .info
+file will be created with the Finder information.
+These three file are compatible with the
+.I macput
+program for downloading to a Mac running MacTerminal.  The output files can
+also be generated in the MacBinary format which is easier to use if they are to
+be sent to the Mac over a network connection using an FTP program.  The
+MacBinary format file will have the same name as the file would have on the
+Mac.  If only the data or resource fork is extracted, no addition extension is
+appended to the Mac file name.  Characters in the Mac file name that are
+illegal (or unwieldy, like spaces) are changed to underscores in the Unix file
+name.  The true Mac file name is retained internally in the MacBinary file or
+in the
+.I .info
+file and is restored when the file is downloaded.
+.PP
+StuffIt version 1.5 has the ability to archive a group of files and folders
+in such a way that the hierarchical relationship of the files and folders
+is maintained.
+.I Unsit
+version 1.5 can unpack files archived in this manner and place them in
+corresponding subdirectories so as to maintain the hierarchy.  As an option,
+the hierarcy can be flattened out and all the files stored in the current
+directory.
+.PP
+The options are similar to those for 
+.I macput
+and
+.I unpit.
+.TP
+.B \-M
+Generate output files in MacBinary format instead of the .data, .rsrc,
+and .info format.
+.TP
+.B \-f
+For StuffIt files containing a "Hierarchy Maintained Folder" entry, extract the
+files into a "flat" organization (all in the current directory) rather than
+maintaining the hierarchy by creating new directories, etc.
+Default is to maintain the hierarchical folder organization.
+.TP
+.B \-l
+List the files in the archive but do not extract them.  The name, size,
+type, and creator of each file is listed.
+.TP
+.B \-m
+Assumes the input file in MacBinary format rather than macput/macget
+format and skips over the MacBinary header.
+.TP
+.B \-r
+Extract resources forks only.
+.TP
+.B \-d
+Extract data forks only.
+.TP
+.B \-u
+Extract data fork and change into a Unix text file.
+This only works if the file is really a text file.
+.TP
+.B \-q
+Query user before extracting files and folders.  If a "n" answer is given for
+a folder, none of the files or folders in that folder will be extracted.
+.TP
+.B \-v
+Verbose option.  Causes 
+.I unsit
+to list name, size, type, and creator of each file extracted.
+.SH BUGS
+Files that were compressed by StuffIt with the Lempel-Ziv method and are
+extracted with the 
+.B \-u
+switch (text files) are not checked for a correct CRC value when 
+.I unsit
+uncompresses them.  This is because 
+.I unsit
+pipes the data through
+.I compress
+and
+.I tr
+to extract the file and never has a chance to do the CRC check.
+.PP
+The
+.I compress
+program has been observed to go into strange states when uncompressing a 
+damaged file.  Often it will get stuck writing out bogus data until the
+disk fills up.  Since 
+.I unsit
+sends data through 
+.I compress,
+the same problem could occur when extracting files from a damaged Stuffit
+archive.
+.SH FILES
+For archives that have been compressed with the Lempel-Ziv method, the 
+.I compress 
+program must be present on the system and in the search path since 
+.I unsit 
+uses it for the uncompressing.
+.I Compress
+is available from the comp.sources.unix archives.
+.SH AUTHOR
+Allan G. Weber (weber@sipi.usc.edu)

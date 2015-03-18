@@ -1,0 +1,12 @@
+#
+# This is Bill's Apple Filing Protocol Volume file
+#
+# Format:
+#  path:volume name[:password][:]
+#
+
+/usr/src/local/mac/Special:Special Mac Files::
+/usr/src/local/mac:Macintosh Files:
+~cck/mac:Chuck's Volume:
+
+

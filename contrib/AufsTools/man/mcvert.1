@@ -1,0 +1,149 @@
+.TH MCVERT LOCAL "May 5, 1987"
+.UC 4.2
+.SH NAME
+mcvert \- BinHex 4.0 to MacBinary file conversion utility
+.SH SYNOPSIS
+.B mcvert
+[-options] name... [[-options] name...]...
+.br
+.SH DESCRIPTION
+The
+.I mcvert
+program translates MacIntosh files from one format to another.
+The primary formats in which MacIntosh files are represented on non-Macs are:
+.TP
+.B MacBinary:
+An eight bit wide representation of the data and resource forks of a Mac
+file and of relevant Finder information, MacBinary files are recognized
+as "special" by several MacIntosh terminal emulators.  These emulators,
+using Kermit or Xmodem or any other file transfer protocol, can separate
+the incoming file into forks and appropriately modify the Desktop to display
+icons, types, creation dates, and the like.
+.TP
+.B BinHex 4.0:
+A seven bit wide representation of a Mac file with CRC error checking,
+BinHex 4.0 files are designed for communication of Mac files over long
+distance, possibly noisy, seven bit wide paths.
+.TP
+.B PackIt:
+PackIt files are actually representations of collections of Mac files, possibly
+Huffman compressed.  Packing many small related files together before
+a MacBinary transfer or a translation to BinHex 4.0 is common practice.
+.TP
+.B Text:
+A MacIntosh ends each line of a plain text file with a carriage return
+character (^M), rather than the newline character (^J) that some systems
+seem to prefer.  Moreover, a MacBinary file has prepended Finder information
+that non-MacIntoshes don't need.
+.TP
+.B Data, Rsrc:
+A Data or Rsrc file is the exact copy of the data or resource fork of a
+MacIntosh file.
+.PP
+It is the purpose of this program to convert to the MacBinary format
+files in other of the above formats, and vice versa.
+.PP
+.SH PARAMETERS
+Exactly one of the following operations may be specified for an input name:
+.TP
+.B x
+BinHex 4.0 - files in the MacBinary format are translated to BinHex
+files, or vice versa.  The name argument may be the name of a file to be
+converted or a basename to which an appropriate suffix must be appended
+to get a filename.  If the conversion is from Binhex 4.0 to MacBinary,
+several files may comprise the BinHex representation of the Mac file.
+Rather than manually concatenate the files and manually delete mail
+headers and other extraneous garbage, one may specify the names of the
+files in order and
+.I mcvert
+will do the concatenating and deleting.  Conversely, in converting
+a MacBinary file to BinHex 4.0 format for mailing over long distances,
+one may be restricted to mail messages of no greater that some fixed
+length.  In this case,
+.I mcvert
+can automatically divide the BinHex file into pieces and label each
+piece appropriately.
+Option 'x' is selected by default.
+.TP
+.B r
+Resource - files in the MacBinary format with empty data forks
+and nonempty resource forks are made from ordinary data files, or vice versa.
+.TP
+.B d
+Data - files in the MacBinary format with nonempty data forks
+and empty resource forks are made from ordinary data files, or vice versa.
+.TP
+.B u
+Text - files in the MacBinary format with nonempty data forks
+and empty resource forks are made from ordinary data files, or vice versa.
+Unix newline
+characters are interchanged with MacIntosh carriage return
+characters, and a newly created MacBinary file has creator field given by
+the MAC_EDITOR environment variable.
+.PP
+.SH OPTIONS
+.TP
+.B p | q
+If a BinHex to MacBinary conversion is taking place and option 'p' is selected,
+any file of type "PIT "
+will be unpacked into its constituent parts.  This option does not recursively
+unpack "PIT " files packed in "PIT " files.
+If a MacBinary to BinHex conversion is taking place, this option is currently
+ignored.  By default, option 'q' is selected.
+.TP
+.B U | D
+When option 'U' is selected, the conversion that takes place is the one suitable
+for Uploading files.  That is, the conversion is from MacBinary to something
+else when 'U' is selected.  Conversely, option 'D', as in Download,
+converts from something to MacBinary.  Option 'D' is the default.
+.TP
+.B s | v
+Normally,
+.I mcvert
+prints to stderr information about the files it is creating.  Selecting
+option 's', as in silent, disables this reporting.  Option 'v', for verbose,
+is the default.
+.SH "ENVIRONMENT VARIABLES"
+There are four environment variables one may use to customize 
+the behavior of
+.I mcvert
+slightly.
+.TP
+.B MAC_EDITOR
+The creator of MacBinary text files produced with options -uD.  
+The default is MACA, the creator type of MacWrite.
+.TP
+.B MAC_DLOAD_DIR
+The MacBinary files created when option -D is selected are placed in this
+directory.  The default is ".", the current working directory.
+.TP
+.B MAC_EXT
+The MacBinary files created when option -D is selected are named according
+to the filename field stored in the file header, with the name extended by
+this suffix.  The default is ".bin".
+.TP
+.B MAC_LINE_LIMIT
+The BinHex files created when option -U is selected may be no longer than
+this many lines long.  Files that would otherwise exceed this line limit
+are broken up into several files with numbers embedded into their file 
+names to show their order.  Each such file has "Start of part x" and "End
+of part x" messages included where appropriate.
+.SH BUGS
+It should be possible to discard bad input now and successfully translate
+good input later, but bad input mostly just causes immediate termination.
+.PP
+A more diligent person would support BinHex 3.0 and BinHex 2.0 and BinHex
+5000.0 B. C., but I've never seen anyone use them in three years.  A
+more diligent person would also do something for users of macget and
+macput, but hopefully someone will make those programs support the
+MacBinary file protocol.
+.SH SEE ALSO
+xbin(1), macget(1), macput(1), xmodem(1), kermit(1)
+.SH AUTHOR
+Doug Moore, Cornell University Computer Science.  Based upon
+.I xbin
+by Dave Johnson, Brown University, as modified by Guido van Rossum, and upon
+.I unpit
+by Allan G. Weber, as well as upon correspondence with several helpful
+readers of USENET.
+

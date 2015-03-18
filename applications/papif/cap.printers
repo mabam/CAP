@@ -1,0 +1,15 @@
+#
+# Sample Unix Printer name to LaserWriter mapping file
+#
+# Form: unix printer name (no spaces)
+#       the token '='
+#       laserwriter name terminated by lf
+# 
+
+# These are all the same printer
+xmac=LaserWriter Plus:LaserWriter@*
+PostScript=LaserWriter Plus:LaserWriter@*
+ps=LaserWriter Plus:LaserWriter@*
+# Another printer with aliases (as in /etc/printcap)
+us=User Services:LaserWriter@*
+elw=User Services:LaserWriter@*

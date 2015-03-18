@@ -1,0 +1,429 @@
+.TH papif 8 "24 July 1990" "Columbia University"
+.SH NAME
+papif, papof \- printer system input and output filters for printing to AppleTalk LaserWriters
+.SH DESCRIPTION
+.I papif
+and
+.I papof
+are input and output filters, respectively, for the Berkeley line
+printer spooling system (see the section "Line Printer Spooling
+System" below for definition of these terms and some explanation),
+that print to a LaserWriter (or other PostScript printer) attached to
+an AppleTalk network (see CAP(8)).
+.I papif
+is actually the "formatted text" input filter, but may also be used to
+"backend" other input filters.
+.I papof
+simply creates a PostScript format banner page for use by 
+.I papif.
+.PP
+.I papif
+has functionality similar to that of 
+.I pscomm
+in Adobe's TranScript package.  TranScript provides support for
+spooling to a LaserWriter via a serial line.   
+.I papif
+can be used in most
+cases as a replacement for
+.I pscomm
+when a printer is attached to AppleTalk instead of a serial line.
+.PP
+When
+.I papif
+is used in conjunction with TranScript, two special TranScript filters
+.I psrv
+and 
+.I pstext
+may be used to reverse the order in which pages are printed
+and convert plain text files to PostScript, respectively.  
+If 
+.I pstext
+is used
+.I papif
+decides to invoke pstext if the first two characters in the file are
+not the PostScript magic sequence "%!".
+If
+.I psrev
+is used, then the first 11 characters must be "%!PS-Adobe-".  All
+files conforming to the Adobe Document Structuring Convention
+(required for 
+.I psrv
+to work properly) must start with that sequence.
+.I papif
+will work properly even if the input is a pipe.
+.PP
+A particular printer is established as usable under the Berkeley line
+printer spooling system by installing an entry in /etc/printcap (see
+printcap(8)).  Unfortunately, there is no printcap entry field that allows
+one to easily specify the NBP entity name of the AppleTalk printer
+(the name that shows up in Chooser).  To bypass this problem, 
+.I papif
+translates the UNIX printer name to the NBP entity name by the use of
+a lookaside file called "cap.printers".  The format of cap.printers is
+described in the section "cap.printers format", below.
+.PP
+The Berkeley line printer daemon does not pass the UNIX printer queue 
+name as an argument to printing filters.
+.I papif
+needs to know
+which UNIX printer queue it is servicing, so it can map to the NBP 
+entity name via cap.printers.
+.I papif
+will determine the printer queue name from any of these methods:
+.RS 5
+.TP 5
+1)
+It will use the value passed by a "-P" or "-p" command line option.
+This can be arranged by creating a shell script to be specified in
+the /etc/printcap file as the "if" filter.
+This script would in turn just call
+.I papif,
+passing all the arguments it received from lpd, plus the "-P printer-name"
+argument.
+The shell script can either have a fixed value
+for the "-P" switch or try to figure it out.
+For example, lpd always
+forks off the input filter in the spool directory of the printer, so
+if the spool directory has a name matching the UNIX printer name, then
+this value could be used - this is the method used by TranScript.
+If the system already has TranScript or is licensed for TranScript, then
+the shell scripts provided with TranScript are very good.
+.TP 5
+2)
+If argv[0] (the name it is invoked by on the command line) is neither
+.I papif
+nor
+.I psif,
+then that name will be used as the printer queue
+name.
+This can be arranged, for example, by renaming
+.I papif
+to the queue name, or making a hard or symbolic link with the queue name,
+and then specifying that name as the "if" filter in the /etc/printcap file.
+.TP 5
+3)
+The PRINTER environment variable can be set to the queue name, for example,
+by an "if" shell script filter.
+.RE
+If none of these methods is used to set the printer queue name, then
+.I papif
+will assume that the NBP entity name is "LaserWriter
+Plus:LaserWriter@*" (LaserWriter named "LaserWriter Plus" in the local
+zone).
+See the section "Example printcap entries" for an example printcap entry.
+.PP
+If the printer name ends in -dup* (e.g. has a name such as lw-dup or
+lj-duplex), and papif was compiled with the DUPLEXMODE option, papif will
+assume that this printer has the capability to print on both sides of a
+page.  The printer is then directed (by the addition of some PostScript
+code) to use this ability.
+.SH ARGUMENTS
+.PP
+.I papif
+accepts the following arguments, most of which are supplied by the 
+printer system daemon, lpd:
+.TP 10
+.BI \-n " <user name>"
+is a standard lpd argument specifying the user name.
+.TP 10
+.BI \-h " <host name>"
+is a standard lpd argument specifying the name of the host from which
+the print job was submitted.
+.TP 10
+.B \-c, \-x, \-y, \-i, \-w
+are standard lpd arguments which are ignored.
+.TP 10
+.B \-L
+is a Rutgers added option to specify landscape mode printing.
+.TP 10
+.BI \-P " <UNIX printer name>"
+is a TranScript compatible option that specifies the UNIX printer name.
+.TP 10
+.BI \-2
+directs the printer to print this job in 2-sided mode.  Only use this if
+your printer has the hardware to support this.  This switch only exists
+if papif has been compiled with the DUPLEXMODE feature.
+.TP 10
+.BI \-p " <program name>"
+is a TranScript compatible option that specifies the program name.
+.TP 10
+.B \-r
+is a TranScript compatible option that says never to invoke the page
+reversal filter.
+.TP 10
+.BI \-k
+specifies that DDP checksums are not to be used, the field is set to zero.
+.TP 10
+.I <accounting file name>
+An argument without a leading hyphen (-) is assumed to be the
+accounting file name.
+.TP 10
+.BI \-d " <debug args>"
+is used to specify the
+.B CAP
+library debugging arguments.  (No spaces allowed between the
+.I \-d
+and the flags).
+See CAP(3) for valid flags.
+.PP
+In addition, a number of environment variables may be set to modify
+.I papif
+operating parameters.
+Most of these can and should be customized when compiling 
+.I papif
+(cf. installation instructions) rather than at runtime.
+The LOCAL CONFIGURATION section, below, should specify the values
+that have been compiled into
+.I papif
+at this site.
+The first group are TranScript compatibility options (e.g. used by
+TranScript).  Most of these options are "binary" in that setting them
+to 0 means off and non-zero means on.
+.TP
+.I BANNERFIRST
+if set, says to print the banner first.
+.TP
+.I BANNERLAST
+If set, says to printer the banner last.  BANNERFIRST overrides
+BANNERLAST.
+.TP
+.I CHARGEBANNER
+is a papif specific binary option.  If set, banner pages
+will be charged to the user if accounting is being done.
+.PP
+Note if you wish to define banner pages as on, you must have an
+"of" output filter defined in /etc/printcap that presents a ".banner"
+file in PostScript format.
+CAP includes a filter 
+.I papof
+that accomplishes this.  You should also
+be able to use the standard TranScript filter for this as well.
+.TP
+.I VERBOSELOG
+If set, tells papif to be a little more verbose in its logging.  This
+is the default.
+.TP
+.I REVERSE
+a string containing the location of the page reversal filter.  This is a
+standard part of TranScript.
+.TP
+.I PSTEXT
+a string containing the location of the text filter that translates plain
+text to PostScript.  This is a standard part of TranScript.
+.PP
+Here are a number of non-TranScript options settable in the environment.
+.TP
+.I ADOBE_STRUCTURED
+PAPIF has a minimal understanding of the Adobe Systems Document
+Structuring Conventions (to wit, it understands the "%%EOF" marker).
+Setting ADOBE_STRUCTURED to be true implies that it should try to
+interpret the incoming document.
+.TP
+.I IDLESTUFF
+Some sites have reported seeing an "idle" bug where papif doesn't do
+anything while the LaserWriter is idle.  You can define "IDLESTUFF"
+when compiling papif to enable some code to get around this problem.
+Note: with the new release of papif, this problem shouldn't be there
+anymore, but it is included just in case.
+.TP
+.I SFLOWQ, RFLOWQ
+.I papif
+has a settable "Send Flow Quantum multiplier" called SFLOWQ that
+tells how many packets it should be sending in a single write.  This
+should be set to 1 (maximum 8) if there are problems with the FastPath or
+LaserWriter dropping packets.
+RFLOWQ is the same thing but in the other direction.  You can probably
+leave it set to 8 (the maximum).
+.TP
+.I ATPRESPONSETIMEOUT
+specifies the ATP response cache timeout in
+ticks (1/4 second intervals).  (Note: zero is infinity: it never times
+out).  This is used to extend the time that a response from the
+LaserWriter may take.
+.TP
+.I WATCHTIME
+specifies the minimum interval in seconds that
+will take place
+before
+.I papif
+polls the LaserWriter for its status (and updates the
+status file in the spool directory).  Zero implies that no status
+watching should be done.
+.TP
+.I DEBUG
+if set, tells
+.I papif
+that is should print out debugging information giving the state of the
+environment variables, etc.
+.TP
+.I STRIPCONTROLD
+if set, tells
+.I papif
+that it should map control-d's to a line feed.  Danger: this may cause
+problems with binary files.
+.TP
+.I MAPCRTOLF
+if set, tells
+.I papif
+that it should map carriage returns to line feeds.  This option is
+useful when printing Macintosh files.  (It is preferrable to make
+.I lwsrv
+do this mapping if possible).  Danger: this may cause
+problems with binary files.
+.TP
+.I CAPPRINTERS
+a string containing the name of
+an alternate cap.printers file for mapping printer queue name
+to LaserWriter NBP network name.
+.TP
+.I JOBOUTPUT
+a string containing the name of a file to get a copy of the 
+.I papif
+logging messages.  This is useful when using
+.I lp
+and the TranScript interfaces under a System V style machine.
+.TP
+.I BANNER
+a string containing the name of a banner file other than ".banner".
+This is useful when using
+.I lp
+and the TranScript interfaces under a System V style machine.
+.TP
+.I DOACCT
+if set, turns on page accounting.  No accounting will be
+done even if set unless an accounting file is specified as an
+argument to papif (e.g., the "af" field is set in /etc/printcap).
+.TP
+.I PSJOBHEADER
+if set, specifies a file that contains PostScript code to be sent to
+the printer before the print job.  Uses include manipulating printer
+features such as duplex mode, paper tray control and so on (this
+option must be specified at compile time by enabling the PSJOBHEADER
+option at Configure time).
+.SH Line Printer Spooling System
+Technically, an output filter is used to massage output from a filter.
+However,
+.I papof
+only accepts the banner from lpd and converts it to PostScript for use
+by the input filter.
+.PP
+An input filter takes certain types of input and has the
+responsibility for actually sending it to the printer.  Common
+types of input are formatted text ("if"), graphics (plot(3x)) input ("gf"),
+etc.  
+.I papif
+was originally designed as the "if" or formatted text
+input filter and hence its name.  It can also be used in combination
+with other programs, such as those provided with Adobe's TranScript
+package that take a particular type of input and convert them into
+PostScript format by simply piping the output of those "filters" into
+.I papif.
+In other words, 
+.I papif
+can be used as the "active" backend
+for various filters.  Its role is equivalent to that of
+.I pscomm
+in the TranScript package.
+.SH "Example printcap entries"
+A printcap entry for a system without TranScript would look something
+like:
+.sp
+.nf
+      ps:LaserWriter:A sample LaserWriter printer:\\ # printer name
+	 :lp=/dev/ps:\\			# spool device
+	 :sd=/usr/spool/lpd/ps:\\	# spool directory
+	 :pl#72:pw#85:\\		# page length and width
+	 :sf:\\				# suppress form feeds
+	 :lf=/usr/adm/ps-errs:\\	# log file
+	 :af=/usr/adm/ps.acct:\\	# accounting file
+	 :if=/usr/local/lib/cap/ps:\\	# input filter
+	 :of=/usr/local/lib/cap/papof:	# output filter
+.fi
+.sp
+The spool device (:lp=) is not used, but
+some systems may do locking on it, so it may need to be
+unique.  Just create a unique null file.
+"/usr/local/lib/cap/ps" could be a copy of papif
+compiled with the defaults required or it could be a shell script as such:
+.sp
+.nf
+	#!/bin/sh
+	BANNERLAST=1
+	PSTEXT=/usr/local/lib/ps/pstext
+	export BANNERLAST PSTEXT
+	# pass the printer name and the arguments lpd passed us
+	/usr/local/cap/papif -P ps $*
+.fi
+.sp
+.I papof
+is the supplied output filter.
+The accounting file and log file must be created by hand if
+accounting or logging is desired.  The page length and width are
+probably only
+required if pstext is used.
+.PP
+A TranScript printer entry should be installed with the aid of
+TranScript.  One point to be careful of is that TranScript's "psof"
+filter assumes that "sb" (or short banner) has been defined.
+.I papof
+works with "sb" on, but is designed for use without "sb" defined.
+.SH "cap.printers format"
+Cap.printers is used to map UNIX printer queue names to LaserWriter 
+NBP network names.  It consists of a series of lines, each specifying
+a single mapping.  Multiple lines may map the various aliases of a 
+UNIX printer queue to the same NBP name.  Lines beginning with the 
+pound sign (#) are comment lines.
+.PP
+Each mapping line contains the  "UNIX printer name" without spaces followed
+by an "=" character and the exact NBP entity name.  There can be no 
+extraneous spaces!  Please note that due to a bug in the Apple "Namer" 
+program, under certain conditions, a blank space may be added to the 
+end of the name you set for the LaserWriter with that program.  
+If that happens, this extra blank space must be included in the 
+cap.printers entry (just before the ":").  It is best to use the CAP
+.I
+atlook
+program to confirm the exact printer NBP entity name.
+For example:
+.nf
+	ps=ALaserWriter:LaserWriter@SomeZone
+.fi
+
+See the sample cap.printers file
+in the 
+.I papif
+distribution directory for more examples.
+.SH LP
+.I papif
+should work with the appropriate shell script surrounding it under the
+UNIX System V "lp" spooling system.  In particular, it
+is known to work under
+Release 1 of
+.I A/UX
+from Apple Computer.  See the README file in the 
+.I papif
+source directory for more information.
+.SH LOCAL CONFIGURATION
+
+.SH NOTES
+.I papif
+TranScript is available under license from Adobe Systems Incorporated.
+.SH BUGS
+.I papif
+has changed considerably since the idle code was added and the idle code
+may no longer work properly.
+.SH FILES
+.nf
+.ta \w'/etc/cap.printers     'u
+/etc/printcap
+/etc/cap.printers	(location is settable)
+\&.status	lpd status file
+newstatus	papif status temporary file
+\&.banner	lpd banner file
+.fi
+.SH AUTHOR
+Charlie C. Kim, User Services Group, Center for Computing Activities,
+Columbia University
+.SH "SEE ALSO"
+CAP(3), CAP(8), printcap(8), lpd(8), lwsrv(8), atlook(1), transcript(8)
+

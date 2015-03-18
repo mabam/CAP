@@ -1,0 +1,71 @@
+.\" troff -man
+.TH MESSAGES 1L Mac/UNIX_Messages CAP
+.SH NAME
+macto, macwrite, macwall, macmail \- Macintosh Messages for UNIX users.
+.SH SYNOPSIS
+.BI macto
+user[@zone] message
+.br
+.BI macwrite
+user[@zone] ...
+.br
+.BI macwall
+@zone ...
+.br
+.BI macmail
+user[@zone] ...
+.SH DESCRIPTION
+.BI macto
+provides the equivalent of
+.BI to(1)
+for sending one line messages to users on Macintoshes. Usage is the same as
+for the
+.BI to(1)
+command.
+.PP
+.BI macwrite
+provides the equivalent of
+.BI write(1)
+for sending multiple line messages to users on Macintoshes. Usage is the same as
+for the
+.BI write(1)
+command.
+.PP
+.BI macwall
+provides the equivalent of
+.BI wall(1)
+for broadcast of messages to users on Macintoshes. Multiple AppleTalk
+zones may be specified.
+.PP
+.BI macmail
+provides the equivalent of
+.BI biff(1)
+for informing Macintosh users that mail has arrived for them on a UNIX machine
+and for passing the important headers of that message to the users' Macintosh.
+.PP
+These commands provide equivalent UNIX functionality to
+"Messages DA" which is used on a Macintosh to lookup users, edit and
+send messages.
+"Messages" is a Macintosh Control Panel document that receives and
+displays short messages. The equivalent UNIX command is macuser(1l).
+.SH FILES
+~/.myicon \- the resource fork of a Mac file with an ICON (ID of 1) to be
+sent along with the message (just a little bit of magic here).
+.SH SEE ALSO
+CAP (Columbia AppleTalk Package)
+.br
+macwho(1l) \- list macUsers, see also who(1)
+.br
+macuser(1l) \- Register a Unix user on the AppleTalk network
+.SH DIAGNOSTICS
+Incorrect invocation diagnostics, aka usage: ...
+.SH BUGS
+1. The messages system was implemented in two parts on the Macintosh
+to allow the use of "Messages DA" to be restricted in a student environment.
+.br
+2. messages are limited to about 550 bytes less 128 for any included ICON.
+.br
+3. If you want to send a message between UNIX users, the syntax is somewhat
+painful. You can use user@host@zone or user%host.
+.SH AUTHOR
+djh\@munnari.OZ.AU, May 1990. Updates via FTP from munnari.OZ.AU

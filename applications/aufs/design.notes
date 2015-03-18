@@ -1,0 +1,537 @@
+Internal Directory IDs 
+----------------------
+
+As of Sun Apr  26.
+
+The current implementation of the Macintosh Hierarichal File System
+uses "fixed dirids" which means that every directory has a unique id
+fixed for the lifetime of the file system and which is never reused.
+
+A directory id should to be fixed over invocations of the server
+because the macintosh remembers directory ids.  An example of this is
+the standard file package which likes to pickup the selection in the
+directory you last left off.
+
+Unfortunately, Under unix there is no mechanism available for
+generating consistent directory ids in the manner required.  The
+directory/file inode would be suitable since it is unique, but (a) it
+is derived from the file's disk address and it is possible to see
+recycled ids (even in the same session) and there is no efficient
+"unix version independent" method of translating from inode to file.
+
+We have determined that the minimum functionality that the AFP client
+requires is that the directory IDs be unique and constant over the
+lifetime of the server.  It would be nice if a full function variable
+dirid filesystem would be available on the macintosh side; however,
+evidently Apple has no plans to do this.
+
+The mechanism we choose is to return indices of a table which contains
+pointers to nodes in an internal tree representing the volumes
+directory structure.  To minimize the effect of "same dirid, but
+different directory" we randomly assign a "base" to the range of
+dirids (e.g. pick a number like 300 out of the hat and add it to every
+index of the table when translating from internal to external).  The
+internal structure is called an IDir:
+
+	typedef struct idir {		/* local directory info (internal) */
+	  char *name;			/* the directory name */
+	  struct idir *next;		/* ptr to next at same level */
+	  struct idir *subs;		/* ptr to children */
+	  struct idir *pdir;		/* ptr to parent */
+	} IDir, *IDirP;
+	
+The name stored is the component name, not the full path name.  The
+next pointer links directories at the same level.  The subs pointer is
+a list of subdirectories, and the pdir pointer is a pointer to the
+parent directory.
+
+So, given an IDir you can generate the path by following the parent
+links until pdir == rootd.
+
+The mount point for a volume is not necessarily at "/" so there is
+also the notion of the volume's root directory or mount point.  This
+is needed in order to translate between the special ids 1 and 2 which
+are parent of root directory and root directory.
+
+Using the IDir structure you can either build the tree completely by
+scanning the unix filesystem at startup or you can add nodes as
+needed.  We choose to add nodes as needed.
+
+The internal directory structure needs to be modified to be kept in
+sync with the actual filesystem directory structure.  Because of this
+the FPMove and FPRename calls can result in the modification of the
+internal representation.   
+
+There some large drawbacks in this design:
+
+1. 	Does not handle the case of other servers or unix users changing 
+	the directory structure.
+2.	Does not generate constant directory ids between invocations.
+
+The benefits:
+
+1.	Very simple and quick resolution of directory ids to paths.
+
+Given the alternatives we will be keeping this method for the time
+being and including a validation word (or magic word) in the IDir
+nodes to prevent random memory references.
+
+We have considered other methods which include using the directory's
+inode in the IDir node, and using the inode as the directory id.  In
+this case the IDir would have a second thread(s) for looking up by
+inode number.  This would marginally improve the situation and would
+increase the complexity of the code substantially.
+
+
+Folder groups and creators
+--------------------------
+
+As of Aug 1987
+
+Under AFP a folder has a group and creator.  These attributes are used
+in resolving access privileges.
+
+Unix maps AFP groups and creators into unix groups and creators.  This
+means that a file you would have access to under unix by virtue of
+group/creator modes are also available under the server.
+
+Under BSD unix you need to be su in order to change a files creator,
+thus you may not change the owners (available under sys v machines).
+
+
+Protections
+-----------
+
+As of Aug 1987
+
+Under AFP only folders, aka directories, have protections.  These
+protections are: See Files (read), See Folders (search),  write objects.
+
+This does not map well into the unix protection scheme.  Our
+"solution" is simply to respect the unix protections as best as
+possible.  The ramifications are:
+
+ (1) we do not distinguish between see files and see folders
+ (2) read and write ability is based upon the protection of
+     individual files - not folders
+
+We do not see (1) as a serious problem.  (2) does not present any
+problems if the user is not the owner of the file.  (2) does present a
+minor problem in that there is no way for the user to change the
+permissions through AFP.
+
+Specifically, when mapping from unix to mac protections:
+	Read access is translated to search folders/files (search, read)
+	Write access is translated to write access (write)
+Note: The owner protection is the same as the user if the user owns
+the file, else group if you have group access, else other access.  The
+elses are important because if you have write access as other, but not
+as group or user, then you will not be able to write to a directory -
+this is the way unix interprets the protections (right or wrong).
+
+From Mac to unix, we take:
+	See Files (read), to be unix read/search(execute)
+	Make Changes (write), to be unix write
+	See Folders (search), is not mapped
+
+When a "folder" protection is changed, all files in the folder also
+have their protections changed to the same protection.
+
+
+On file or folder creates, the protection is taken from the protection
+of the superior "folder" (directory).
+
+
+Newline conversion
+
+As of Tue July 22, 1987
+
+On Unix the newline character is \n (code 012, lf), however, most Macintosh
+applications use \r (code 015, cr) as newline.
+
+We now translate lf to cr on reads and cr to lfs on writes if the file
+creator is unix and the file type is TEXT.  These are the defaults for
+"unix" files.
+
+In addition, lf and cr are defined internally as INEWLINE (internal
+unix newline) and ENEWLINE (external mac newline), and conversion
+between them is carried out in the following case:
+  1. NONLXLATE must not be defined when compiling module afpos.c.  
+     The symbol NONNLXLATE disables newline conversion.
+  2. If conversion code is enabled and FPRead is issued with 
+	NewLineMask equal to 0xFF, NewLineChar equal to 
+	ENEWLINE, then the read terminates on either an ENEWLINE 
+	or INEWLINE, and the INEWLINE is converted to ENEWLINE.
+In summary, for this method: conversion only occurs when reading from
+the unix filesystem and FPRead is issued in the special break on
+newline mode, and the requested break character is the expected
+macintosh newline character.  There is no conversion when writing to
+the Unix filesystem.
+
+
+Name Conversion
+---------------
+
+Filenames on the mac can contain characters which are illegal in unix
+file names.  These include all 8 bit characters and /.  The only chars
+which are illegal on the mac are ":" and null.
+
+The current name conversion maps special mac characters to be ":"
+followed by two hex digits.  For example the name "Copy/Hey" on the
+mac would convert to "Copy:2fHey" on unix.  A ":" found on a unix file
+which does not have 2 hex digits following is mapped into "|" on the
+mac.
+
+When a unix file name is encountered a check is made to see if the
+converted name is longer than MAXLFLEN (31) chars.  If the name is
+longer than the mac allows, then it is skipped completely and is not
+seen by the mac.
+
+The algorithm for name conversion is more specifically:
+	Mac to Unix
+		if (char is ascii and not control and is printable and
+				is not "/") then 
+			leave as is
+		else
+			replace with ":" followed by two hexidecimal 
+			digits that is a direct encoding of the binary
+			value of the char
+	Unix to Mac:
+		if (":" followed by two hex digits) then
+			replace with binary value of hex digits
+		if (":" not followed by two hex digits) then
+			replace ":" with "|".
+
+
+File Format (.finderinfo, .resources, data)
+
+Macintosh files are currently stored in a directory in three main
+files.  We have the resource fork, the data fork, and various file
+specific finder information to store.  Since the data fork is the
+closest match to a unix file, it is stored as-is in the
+specified directory, the resource fork and the so
+called "finder info" fork  are "special" and can be
+stored by the same name in special subdirectories of the specified
+directory.  To be concrete, the Mac file "keeper" stored in a
+directory "stuff" would be stored by Aufs on the unix file system as:
+	stuff/keeper			- data fork
+	stuff/.finderinfo/keeper	- "finder info" fork
+	stuff/.resource/keeper		- resource fork
+It is important to note that the .finderinfo and .resource directories
+are only created by a "create directory" afp (Finder new folder)
+command.  This prevents these directories from drifting into places
+people probably don't want them.  However, these directories are
+created iff the superior directory also had them.
+
+Getting to the finder info and resource fork is a pain under unix, but
+how often do you really need to anyway?
+
+The defaults for a file that has no finder information is
+		type: TEXT  [first four bytes]
+		creator: unix [second four bytes]
+		rest is set to zeros
+	file attributes: none
+	comment:
+		"This is a Unix\252 created file." (\252 is the tm sign)
+
+A directory with no finder information defaults the comment to one of:
+	This is a unix directory
+	This is an Aufs Macintosh directory
+	This is an Aufs unix directory (.finderinfo only)
+if it has a no .finderinfo and .resource directory or just a resource
+directory, both a .finderinfo and .resource directory, or just a
+.finderinfo directory respectively.
+
+Turning on SMART_FINDERINFO in afpudb.c will yield more information;
+however, it is unix variant dependent and slows things down
+considerably.
+
+See MAJOR FILE FORMATS below for the finderinfo formats.
+
+
+Desktop databases.
+
+As of Feb 1988
+
+The icon data base is stored in .IDeskTop in the volume's root.  A new
+Icon are always appended to end unless it replaces an old one in which
+case the old space will be reused if possible.  New icons are written
+out when received.  The .IDeskTop is only read on the inital
+"open desk" call.  Locking is done if possible to prevent corruption.
+(cf. section on locking).
+
+The APPL mappings are stored in .ADeskTop in the volume's root.  We
+store for each mapping the File creator, the path relative to the
+volume root to the application, and the application name.  Modified or
+changed entries are appended to the .ADeskTop on every "flush" if you
+have write access.  It is possible for this database to grow rapidly
+or be corrupted.  The problems lie in the fact that we always append
+(the solution for now is to rebuild the desktop now and then).  It may
+get corrupted because people move directories around (though we try to
+minimize this).  Also, note that entries are never deleted from the
+.ADeskTop - there should be a mechanism to do this.  Like the Icon
+database, the APPL mappings are read only when the inital desktop open
+is issued.
+
+See MAJOR FILE FORMATS below for the .ADeskTop and .IDeskTop file formats.
+
+MAJOR FILE FORMATS
+
+
+Aufs Version 3 File Formats (CURRENT)
+-------------------------------------
+In the following:
+	byte:	unsigned 8 bits
+	word: 	unsigned 16 bits
+	dword:	unsigned 32 bits
+	sdword:	signed 32 bits
+
+Important: all items are stored in network order!  This means on a vax
+you use htons/ntohs on words and htonl/ntohl on dwords.
+
+.ADeskTop format:
+
+The Applications mapping database is kept as an array of the
+APPLFileRecords and associated data as shown following.  The
+associated data is the parent directory name relative to the volume
+root and the application name as null terminated strings.
+
+	/* never use zero or 0x1741 as the major version */
+	#define AFR_MAGIC 0x00010002
+	/* version 1.2 (don't use 1.1, 2.2, etc) */
+	/* version 1.0 (version 0x1741.0000/0x1741) */
+
+	typedef struct {	/* APPL information */
+	  byte a_FCreator[4];	/* creator of application */
+	  byte a_ATag[4];	/* user bytes */  
+	} APPLInfo;
+
+	typedef struct {	/* File Format APPL record */
+	  dword afr_magic;	/* magic number for check */
+	  APPLInfo afr_info;	/* the appl info */
+	  sdword afr_pdirlen;	/* length of (relative) parent directory */
+	  sdword afr_fnamlen;	/* length of application name */
+				/*  names follows */
+	} APPLFileRecord;
+
+
+.IDeskTop format:
+
+The Applications mapping database is kept as an array of the
+ICONFileRecords and associated data as shown following.  The
+associated data is the bitmap.
+
+IconInfo in the below is padded to a double word boundary.  Hopefully,
+this is good enough to prevent differences in structure size in
+ICONFileRecord on different machines.
+
+	/* never use zero or 0x2136 as the major version */
+	#define IFR_MAGIC 0x00010002	/* Version 1.2, skip 1.1, 2.2, etc. */
+	/* version 1.0: 0x2136.0000/0x2136 */
+
+	#define FCreatorSize 4
+	#define FTypeSize 4
+	#define ITagSize 4
+
+	typedef struct {		/* Icon Information */
+	  sdword i_bmsize;		/* 4: size of the icon bitmap */
+	  byte i_FCreator[FCreatorSize]; /* 4[8]: file's creator type */
+	  byte i_FType[FTypeSize];	/* 4[12] file's type */
+	  byte i_IType;			/* 1[13] icon type */
+	  byte i_pad1;			/* 1[14] */
+	  byte i_ITag[ITagSize];	/* 4[18] user bytes */
+	  byte i_pad2[2];		/* 2[20] pad to double word boundary */
+	} IconInfo;
+
+	typedef struct {		/* File Format ICON record */
+	  dword ifr_magic;		/* the magic check */
+	  IconInfo ifr_info;		/* the icon info */
+					/* bitmap follows this */
+	} IconFileRecord;
+
+.finderinfo format:
+
+In the following space for all entries is allocated.  The bitmap
+merely tells us if the indicated items are valid.
+
+	#define FINFOLEN 32
+	#define MAXCLEN 199
+	typedef struct {
+	  byte fi_fndr[FINFOLEN];	/* finder info */
+	  word fi_attr;			/* attributes */
+	#define FI_MAGIC1 255
+	  byte fi_magic1;		/* was: length of comment */
+	#define FI_VERSION 0x10		/* version major 1, minor 0 */
+					/* if more than 8 versions then */
+					/* something wrong anyway */
+	  byte fi_version;		/* version number */
+	#define FI_MAGIC 0xda
+	  byte fi_magic;		/* magic word check */
+	  byte fi_bitmap;		/* bitmap of included info */
+	#define FI_BM_SHORTFILENAME 0x1	/* is this included? */
+	#define FI_BM_MACINTOSHFILENAME 0x2 /* is this included? */
+	  byte fi_shortfilename[12+1];	/* possible short file name */
+	  byte fi_macfilename[32+1];	/* possible macintosh file name */
+	  byte fi_comln;		/* comment length */
+	  byte fi_comnt[MAXCLEN+1];	/* comment string */
+	} FileInfo;
+
+
+Aufs Version 1 and Version 2 FILE FORMATS
+-----------------------------------------
+In the following, "bit.x" defines a type of x bits.  "str" means an
+ascii string (256 character ascii set) terminated by a null.  The
+formats are defined below in the formats section.
+
+IMPORTANT: THESE FILES WERE STORED IN THE HOST MACHINE ORDER.  You
+cannot transport a these files from a byte swapped machine to a
+non-bytes swapped machine.
+
+.ADeskTop format:
+The .ADeskTop file contains an array of the following structure:
+  bit.32	afr_magic;		/* magic number for check */
+  bit.8		a_FCreator[4];		/* creator of application */
+  bit.8		a_ATag[4];		/* user tag information */  
+  bit.32	afr_pdirlen;		/* length of parent directory name */
+  bit.32	afr_fnamlen;		/* length of application name */
+  str		pdir[afr_pdirlen];	/* path to directory holding */
+					/* appl. relative to volume root */
+  str 		file[afr_fnamlen];	/* file name */
+The file names are stored are the unix file names.  Note: the
+directory path is relative to the volume root directory.  The magic
+number is a consistency check and is currently: AFR_MAGIC (8107+8556).
+
+.IDeskTop format
+The .IDeskTop file contains an array of the following structure:
+  bit.32	ifr_magic;		/* the magic check */
+  bit.8		i_FCreator[4];		/* file's creator type */
+  bit.8		i_FType[4];		/* file's type */
+  bit.8		i_IType;		/* icon type */
+  bit.8		i_ITag[4];		/* user bytes */
+  bit.32	i_bmsize;		/* size of the icon bitmap */
+  bit.8		i_icon[i_bmsize];	/* icon */
+The magic number is a consistency check and is currently: IFR_MAGIC
+(8107+5750).
+
+The .finderinfo files contain the following information:
+  bit.8		fi_fndr[32];		/* finder info */
+  bit.16	fi_attr;		/* attributes */
+  bit.8		fi_comln;		/* length of comment */
+  bit.8		fi_comnt[200];		/* comment string */
+
+
+
+LOCKING
+
+Draft 2: Jan, 1988
+Charlie C. Kim
+User Services
+Columbia University
+
+Coordination of multiple access to files is best done through system
+calls that implement the locks internal to the system.  Advisory locks
+allow coordination of multiple Aufs processes (if they all honor the
+locks), but processes external to Aufs may cause problems.  "Hard"
+locks would be real real nice, but we haven't seen them.
+
+Two systems calls, "lockf" and "flock", are known to exist in a number
+of different unix systems to allow "advisory" locks.  Where these
+exist, they can be used to coordinate Aufs processes (c.f.
+INSTALLATION notes).  The basic semantics of these calls (as known)
+are:
+	flock - for an open file, establish a "shared" or "exclusive"
+lock.  A "exclusive lock" may be placed iff no locks are in place.  A
+shared lock may be upgraded to an exclusive lock iff no other locks
+are in place.  Multiple shared locks are allowed :-).  Locks go away
+when the file is closed.  Allow locks to be tested and removed (can't
+distingush between exclusive and shared on test though). 
+	lockf - for an open file, allow exclusive locks at various
+offsets for particular lengths.  Also allow locking of the entire
+file.  Locks only allow if the file is open for read/write (sigh).
+Locks can be removed and/or tested.  (Do locks go away when file
+closes?).
+
+FPOpen
+
+FPOpen allows "deny read", "deny write", and "deny r/w" and "deny
+none" "locks" to be place on a file.  We still do not implement these
+(major pain because it requires access to lock information AND
+previous open statuses).
+
+File-locks
+
+Certain files, such as, .ADeskTop, .IDeskTop and the file info files
+must be coordinated between servers (ignore outside access).  Two
+system calls (exists in various unixs) help do this: flock and lockf.
+Coordination can be easily accomplished by using the "flock" system
+call if it exists.  flock allows exclusive and shared locks.
+Basically, when a file is "read", then a shared lock is set first.  If
+a file is to be written, then an exclusive lock must be set first -
+this fails if a shared lock is already set.  Some systems might have
+"lockf" available which allows "exclusive" locks only.  In theory this
+would be okay (though you can't have multiple readers then) too;
+however, "lockf" only works if the file is open for write, so if a
+process has "read-only" access to one of the above files, then it
+can't be guaranteed that the data is okay.
+
+ByteRangeLock
+
+The only available unix system call option for this is "lockf".  This
+allows pretty much what is necessary except you cannot lock
+"read-only" files.  (Reading Inside Mac Volume 4 seems to lead me to
+believe that this is correct, but the AFP specification doesn't
+really make this clear).
+
+Warning: NFS systems may not allow locks across remotely mounted file
+systems.  Even when they are allowed, special daemons must be run
+since locking is not within the NFS protocol.
+
+
+
+NORMALIZING CHARACTER SETS
+
+Dan Sahlin of the Swedish Institute of Computer Science pointed out
+the need to normalize between Unix character sets and the Macintosh
+character set.  Previously, Aufs provided this feature in a very
+limited fashion: it would map between cr and lf when the file type was
+"TEXT" and creator was "unix" (defaults for unix files).  This
+provided "good" functionality in the US.
+
+However, people outside the United States need to make use of various
+international character sets that must be mapped to the Macintosh
+character sets to be useful.  The primary intent of this mapping is to
+allow unix files to be mapped; however, it is also possible to allow a
+large class of files to be mapped (such as all text files ending in
+.swe, etc).
+
+The design is quite simple: define a mac to unix and unix to mac table
+of 256 entries each that contain a direct mapping (must be one
+character to one since file sizes, etc. require this).
+
+The routine that decides whether mapping is necessary or not bases it
+decision on an internal table (should be per volume, not per server as
+it is now).  For each normalizing set of tables, Aufs records a file
+extention, file creator, and file type of which any can be null.  In
+addition it stores a "conjuction" operator.  It decides whether to
+apply one when file has the specified extention "conjuction" file type
+and file creator matches.  null entries are treated as always true.
+
+For the old unix files, the table entry is:
+	extension: NULL
+	creator: unix
+	type: TEXT
+and for Swedish D47:
+	extension: .swe
+	creator: NULL
+	type: TEXT
+which means any file of type TEXT with the extension .swe will have
+normalization applied.
+
+Note: the defaults for Swedish D47, Swedish-Finnish E47, and IOS
+8859-1 Latin 1 were establish by Dan Sahlin.
+
+
+
+Packing unpacking packets.
+Enumeration cache.
+

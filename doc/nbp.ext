@@ -1,0 +1,232 @@
+
+NBP in the UNIX environment.
+
+Charlie C. Kim
+User Services Group
+Academic Information Services Division
+Libraries and Center for Computing Activities (Scholarly Information Center)
+Columbia University
+
+Draft: July 12, 1986
+
+INTRODUCTION
+
+The NBP protocol specification (June 1986 version) assumes that the
+NBP database within a particular machine is accessible by any process
+in that machine.  In the Unix environment, this is possible, but
+probably not the best idea (would be easy in System V with shared
+memory, would be easy with shared files in BSD 4.2).  We extend and
+modify NBP for the Unix in the following ways.
+
+Our goal is quite simple.  We wish to provide a name data base for a
+particular unix node which is reliable and secure.  To achieve this
+goal, the information in the database should be correct and timely.
+In addition, we should be able to prevent "malicious" or "ignorant"
+users from inserting invalid or deleting correct information.
+
+Since there is a need for a privileged process acting as a name
+information socket (NIS) listener in any event, we leverage our
+position by extending the functionality of this listener.  We modify
+its simple purpose of answering NBP lookup requests to that of acting
+as the NBP database for a particular unix node (or set of nodes).
+
+SPECIFICATION
+
+We now outline the actions the client and server must take, in the
+unix environment of course, to register and deregister a name.  We
+also outline an optional method for maintain the validity of the
+database.
+
+Note that the Unix NBP server differs from the standard NBP
+specification in that it WILL respond to NBP Lookups from itself.
+Under a shared table os environment like the MacIntosh it is
+reasonable to impose this restriction.  Under the independent process
+environment of Unix, we do not belive the restriction to be reasonable.
+In addition, we are assuming the overhead involved on the Ethernet-Unix
+end to be smaller (relatively speaking that the overhead on the
+AppleTalk-MacIntosh end).
+
+First, we shall note that the table the NBP server keeps contains a
+list of the various "local" NVEs and the associated client process
+NBP addresses.
+
+Name registration
+--------------
+
+We first extend the range of NBP control types to include NBPRegister
+and NBPStatusReply.  The standard NBP packet format is used for
+NBPRegister.  The name to be registered goes into the NBP tuple.  Note
+that exactly one entity can be registered with a single NBP register
+message and the contents of the NBP packet tuple count field must be
+zero (note: actually the tuple count field is used for something else,
+but we'll ignore that and say that it should be zero for now).
+NBPStatusReply uses the same packet, but overloads the usage of the
+tuple count field - it is now used to indicate a status.
+
+The transaction for a register is as follows.  [Note: The client is
+responsible for checking whether the name is already in use within the
+specified zone and should do this before sending the NBPRegister
+message to the internal server.]  Build a NBP Register message with
+the correct entity name encoded in the NBP tuple area.  The address
+placed there should be that of the local process's NBP manager.  The
+message is then sent out on the socket which the name should be
+registered.  This requirement assures us that the service is available
+and the agency requesting the service is responsible if the service
+applies to a WKS.  [Note: it does confuse things a little though].
+
+The NBP server, upon receiving a registration message, will first
+check the name encoded in the incoming NVE is not already in use
+within its table.  If the name is already in use, we know that a
+"valid" NVE exists (entries in table are assumed valid).  We know
+check the "valid" NVE's address against the address of the incoming
+NVE.  If the addresses match, a valid name registration update event
+has occurred.  [Note: we cannot do otherwise - the process sending the
+message "owns" that socket - if there was a previous owner then
+tough].
+
+At this point, up to three conditions may be in effect.  We have a
+valid name registration event, a valid name registration update event,
+or the NVE may already be in use.  For the third condition, we simply
+respond to the NBP client with a NBP Status Reply with a code
+indicating the name was already in use.  
+
+For a valid name registration event, we must insert the new item into
+our table.  Since we can't use the trick of the MacIntosh's NBP to use
+memory allocated to the client process, we must be prepared to deal
+with table/memory overflow.  If this happens, a NBP server must send a
+NBP Status Reply message with the code "table overflow".  Otherwise,
+all is okay and we send a NBP Status Reply to the client NBP process
+with condition all okay.
+
+For a valid name registration update event, we need only update the
+address of the client NBP and send a NBP Status Reply to the client
+NBP process with the condition all okay.
+
+The client is responsible for sending NBP registration messages to the
+server until some retry count is exceed or a NBP Status Reply is
+received.  Our semantics for the NBP registration attempt ensures that
+the client will always receive the correct reply from the server no
+matter how many times the server receive the NBP registration message.
+
+Note: we maintain the NBP id and the server MUST respond with the
+same NBP id as the registration request.
+
+
+Name deletion
+-------------
+
+The client sends a NBP deletion message to the server with the
+specified NVE encoded the NBP packet tuple area.  The server upon
+receiving the message will attempt to look up the specified NVE.
+[Note: it will use the address that it received the packet from as the
+client address!].  If the NVE does not exist, the NBP server will send
+back a NBP Status Reply message with the condition "no error".  If the
+NVE exists in the server's tables, the server will validate the
+deletion request by checking the address of the NBP client against the
+NBP client address associated with the NVE in the table.  If the
+addresses do not match, the server will respond with a "permission
+denied" NBP Status Reply message.  Otherwise, we have reached the
+final case and the NBP server will remove the NVE from its tables and
+send a NBP Status reply message with condition "no error".
+
+Note: we do not specify the NBP deletion request be sent from the
+socket the NVE exists upon to allow the client to close down the
+socket before it sends the name deletion request.  If a client has
+opened the socket and wishes to delete the name and has received a
+"permission denied", the client should send a NBP register message
+(which is probably all it ever wanted to do unless it's some sort of
+maintenance program) to override the previous owner.
+
+Note: we maintain the NBP id and the server MUST respond with the
+same NBP id as the deletion request.
+
+Note: deleting a name not in table returns no error so multiple delete
+requests won't return an error (since we need to be able to rexmit)
+
+
+
+Name table maintenance (optional)
+----------------------
+
+We need a method of ensuring that some or all of the names held by the
+NBP server process are valid.  How?  We can require that the client
+process "tickle" the server process at regular intervals.  Also, less
+satisfying is to require the NBP server process to tickle the client
+process of each NVE at regular intervals and have the client process
+respond.
+
+
+We take the following approach.  The client may note that name will be
+"tickled" by encoding a flag in the NBP tuple count field on a name
+registration (note: we may require that all NVEs using dynamic sockets
+do this - enforcement would come from server: either it would timeout
+NVEs which didn't respond or it would reject the registration
+message).  The server will then age NVEs based upon NBP "tickle"
+messages from client.  When the NVE is in danger of timing out - the
+server will send a NBP "tickle" to the NBP address of the client
+associated with the NVE.  The client can validate the server "NVE" by
+checking the socket - since it is a privileges socket we know that
+the message is valid.  The client must respond it desires to keep the
+NVE active by sending a tickle packet.
+
+Note that the client may send a list of tuple in NBP tickle packet.
+
+
+Finding the NBP server
+----------------------
+
+We have assumed throughout the above discourse that the NBP server
+address is known.  We leave this unspecified - allowing the NBP server
+to reside on a different node than the client.  The current Unix
+implementation assumes that the NBP server is running on the same node
+as the NBP client.
+
+
+POSSIBLE ENHANCEMENTS
+
+NBP Lookup server
+-----------------
+To reduce the number of message flying across the bridge/gateway to
+the Appletalk network, we could have the NBP server do lookups and
+keep track of NVEs it finds.  The clients would then be required to do
+a NBPConfirm to ensure the NVE (since we must assume early binding in
+this situation).
+
+We would in this case look at the NBP server (for the limited purpose
+of this discussion) as the NBP lookup server.  The server would do look
+ups on its own infrequently (app. 5-10 minutes would be frequently).
+The server, upon receiving a lookup request from one of its lookup
+clients that it could not satisfy or involved wildcards, would check
+to see when it last did a lookup - if less than a small interval (say
+10-30 seconds) would issue another NBP lookup request to the zone.
+
+Note: when we're dealing with wildcards, it's probably best for the
+client to issue its own request instead of going through the lookup
+server.
+
+Priviledged is priviledged
+--------------------------
+
+Allowed a name registration request from a WKS override a name used by
+someone else.  Should allow for notification too; possibly the message
+used in maintenace to inform of a name going away should be extended
+to allow a message which say that a name has gone away.
+
+
+NBP Delete all message
+----------------------
+
+An NBP delete all message from a client would specify that all names
+"owned" by the client be removed - useful for a closing down state.
+In addition, a message to remove all names based on (network
+address,socket) pairs would be useful.  These two functions would be
+encoded by using the NBP tuple count field as a flag field.
+
+
+Combining with internet server
+------------------------------
+
+Would be nice to integrate this with the internet name server.  In
+particular, it would nice to be able to register TCP/IP hosts.
+
+

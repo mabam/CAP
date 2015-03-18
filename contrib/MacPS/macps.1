@@ -1,0 +1,87 @@
+.\" SCCSid = "@(#)macps.1	2.2 10/24/89"
+.TH MACPS 1 "24 Oct 1989"
+.UC 4
+.SH NAME
+macps \- print Macintosh-created PostScript file on Unix
+.SH SYNOPSIS
+.B macps
+[
+\-c copies
+]
+[
+\-d directory
+]
+[
+\-r
+]
+[
+file
+]
+.SH DESCRIPTION
+.I Macps
+takes the command-line file (or the standard input if no filename is given),
+and prepends the appropriate Macintosh LaserPrep file (e.g., those generated
+by
+.IR prepfix (1)).
+The standard output can then be directed to a PostScript printer, via
+.IR lpr (1),
+for example.
+.PP
+The input PostScript file is generated on a Macintosh by typing (and holding)
+Command-F immediately after clicking the OK button of the LaserWriter printer
+dialog box.
+Another dialog will appear, confirming that a file named ``PostScript'' is
+being created (the Command-F keys can be released now).
+.PP
+Depending on the application, the created PostScript file can be found in the
+System Folder, the application folder or the top level of the disk.
+This file can then be uploaded via some file transfer program, such as
+MacTerminal/VersaTerm and
+.IR macget (1)
+or MacKermit/Red Ryder and
+.IR kermit (1).
+.PP
+Normally, you would specify the number of copies in the LaserWriter
+print dialog box on the Macintosh.
+However, you can override that after uploading the PostScript file by
+specifying the
+.B \-c
+option, followed by the number of copies.
+.PP
+The file
+.B macps.config
+specifies the mapping between the internal LaserPrep name and the actual
+file it resides in.
+This file is normally located in the lib subdirectory from which
+.I macps
+was called from.
+The
+.B \-d
+option allow you to specify an alternate directory in which the
+.B macps.config
+file can be found.
+.PP
+Most Macintosh applications produce normal ASCII PostScript files.
+However, some graphics programs that manipulate gray-scale images will
+produce PostScript files that contain 8-bit binary data.
+Since
+.I macps
+normally converts this binary data, these PostScript file will not work
+properly.
+The
+.B \-r
+(raw) option suppresses this binary conversion.
+(Note: Depending on how the printer is physically connected, it may not be
+able to handle 8-bit binary data properly, and results may be disappointing.)
+.SH FILES
+.TP "\w'lib/macps.config   'u"
+lib/macps.config
+maps ProcSet ids to LaserPrep filenames
+.SH "SEE ALSO"
+lpr(1), macget(1), kermit(1), prepfix(1)
+.SH BUGS
+.I Macps
+only works with version 4.0 and up of the Macintosh LaserPrep files.
+Because of the way bit smoothing is implimented by the LaserWriter driver,
+some PostScript printers other than the Apple LaserWriters may not be able to
+bit smooth.

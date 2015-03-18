@@ -1,0 +1,32 @@
+Contributions
+-------------
+
+  snitch.c - a mimic of the "responder" INIT for Apple's Inter*Poll
+	: Contributed by Rob Chandhok, Computer Science Department,
+	: Carnegie-Mellon University
+  
+  cvt2apple.c - convert from CAP's Aufs format to AppleDouble or AppleSingle 
+  cvt2cap.c - convert from AppleDouble/AppleSingle to CAP's Aufs format
+	: Contributed by Paul Campbell
+
+  lwrename.c - a daemon to reset LaserWriter names and types
+  printqueue.c - allow a Mac DA to access UNIX lpd information
+	: Contributed by Ed Moy <edmoy@violet.berkeley.edu>
+
+  aufsmkkey.c - tool for creating global key for distributed passwords
+  aufsmkusr.c - tool for creating non-cleartext authentication password file
+	: Contributed by David Hornsby <djh@munnari.OZ.AU>
+
+The following are not automatically made with CAP and some have not been
+tested on (or ported to) all of the systems that otherwise fully support CAP.
+
+  Messages/* - send short messages to/from/between Mac and UNIX users
+  Timelord/* - set Mac time from UNIX host (maybe using NTP) or another Mac
+  AsyncAtalk/* - asynchronous AppleTalk for UNIX hosts & UAB
+	: Contributed by David Hornsby <djh@munnari.OZ.AU>
+
+  MacPS/* - useful tools for manhandling Mac PostScript file on UNIX
+	: Contributed by Ed Moy <edmoy@violet.berkeley.edu>
+
+  AufsTools/* - tools for manipulating AUFS files under UNIX
+	: Contributed by Nigel Perry <np@doc.ic.ac.uk> and others.

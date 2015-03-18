@@ -1,0 +1,11 @@
+UAB
+---
+
+*** still to be done as of 15th February 1991:
+
+UAB should work OK with the 'enet' interface (via senetp.c)
+on SUNs, this is untested.
+
+*** already done:
+
+The NIT interface (snitp.c) on SUNs and DLI (dlip.c) under ULTRIX seem fine.

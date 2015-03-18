@@ -1,0 +1,117 @@
+.TH SNITCH 1 "21 Mar 1988" "Carnegie-Mellon University"
+.SH NAME
+snitch \- respond to AppleTalk Inter\(buPoll requests
+.SH SYNOPSIS
+.B snitch
+[
+.BI \-d " <cap-flags>"
+] [
+.BI \-n " <name>"
+] [
+.BI \-t " <type>"
+] [
+.BI \-f " <finderstring>"
+] [
+.BI \-l " <laserwriterstring>"
+] [
+.BI \-D n
+] [
+.B \-S
+]
+.SH DESCRIPTION
+.I snitch
+is a CAP program designed to run as a daemon to respond to Inter\(buPoll
+requests.
+It performs the same function as the "Responder" program on a Macintosh.
+It registers itself as "name:type@*" via NBP, where 'name' defaults
+to the host name (without the domain) and 'type' defaults to "UNIX/CAP".
+You can override the default NBP name values with the 
+.I \-n
+and
+.I \-t
+options.
+The response packets that are sent back to Inter\(buPoll try to have useful
+information about the machine you are running on and the version of CAP.
+You can override this information with the
+.I \-f
+and
+.I \-l
+options.
+.PP
+The kinds of packets that
+.I snitch
+sends back are only meaningful to
+Inter\(buPoll, at least for now.  Also, the packet format is not documented by
+Apple, so it currently is an educated guess.
+.PP
+To kill a
+.I snitch
+process cleanly, send the process a QUIT or TERM signal.
+It will nbp_delete itself (as all nbp services should).
+.PP
+To really make this work with Inter\(buPoll, you want to modify your copy
+of Inter\(buPoll on the Macintosh (with ResEdit or similar program) to
+add the string "UNIX/CAP" (or your snitchtype) to the STR# resource
+that specifies the kinds of expected machine types.
+The first item in that STR# is a number that 
+indicates the number of following valid entries - add one to it and then
+add "UNIX/CAP" at the end.  The string list is STR# "NIP Devices".
+.SH OPTIONS
+.TP 10
+.BI \-d " <cap-flags>"
+specifies standard CAP debugging flags.  See cap(3) for a list of valid
+flag values.
+.TP 10
+.BI \-n " <name>"
+specifies the NBP entity name to be used when registering
+.I snitch
+on the AppleTalk network.  The default value is the UNIX machine host
+name without the domain qualifiers.
+.TP 10
+.BI \-t " <type>"
+specifies the NBP entity type to be used when registering
+.I snitch
+on the AppleTalk network.  The default value is "UNIX/CAP".
+.TP 10
+.BI \-f " <finderstring>"
+<finderstring> is a character string
+that will be passed to Inter\(buPoll
+to be displayed as the "Finder" version for the UNIX host.
+You might use this to specify UNIX and CAP versions, for example.
+The string must be no more than 100 characters long (actually, Inter\(buPoll
+will only display about 60 characters) and enclosed in quotes if it contains
+embedded blanks or special characters.
+.TP 10
+.BI \-l " <laserwriterstring>"
+like the 
+.I \-f
+option, but this string will be displayed by Inter\(buPoll as the 
+"LaserWriter" driver version.
+.TP 10
+.BI \-D n
+Set 
+.I snitch
+debugging level to
+.I n.
+Valid values are 1 for basic debugging messages and 2 for additional
+dumps of user data.  Writes to stderr.
+.TP 10
+.BI \-S
+Tells
+.I snitch
+to disassociate from the terminal (like starting
+.I snitch
+in the background).
+.SH FILES
+Uses the cap file "atalk.local", usually in /etc.
+.SH "SEE ALSO"
+CAP(8), atis(8), cap(3)
+.SH EXAMPLE
+snitch -n "myCapMachine" -S
+.SH DIAGNOSTICS
+Are written to stderr if any debugging switches are on.
+If you use the "-S" switch, you won't see anything.
+.SH BUGS
+Only works with Inter\(buPoll by chance, might not work with future versions.
+.SH AUTHOR
+Ravinder Chandhok, Carnegie-Mellon University

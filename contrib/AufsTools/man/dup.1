@@ -1,0 +1,20 @@
+.TH DUP L "December 1990"
+.UC
+.SH NAME
+dup \- copy CAP aufs file(s)
+.SH SYNOPSIS
+.B dup
+file file
+.br
+.B dup
+f1 f2 ... folder
+.br
+.SH DESCRIPTION
+.I Dup
+duplicates a CAP aufs file, if given multiple arguments the last must be
+a folder and each file will be copied into it.
+Do not use
+.I cp
+to duplicate files as this does not handle the hidden CAP aufs files.
+.SH AUTHOR
+Nigel Perry (np@doc.ic.ac.uk)

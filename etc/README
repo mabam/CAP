@@ -1,0 +1,8 @@
+  atis.c - AppleTalk Information Server.  It must run as a root process.
+  nisaux.c - Part of atis.c.  Manages the names table.
+  start-cap-servers - shell script to start CAP servers (call from rc.local)
+  atalk.local - a sample network configuration file for CAP IPTalk.
+  etalk.local - a sample network configuration file for CAP UAB/EtherTalk.
+
+The nisaux routines could stand a good rewriting.
+

@@ -1,0 +1,338 @@
+The purpose of setting up CAP on GitHub is to build an AppleTalk
+protocol stack for OS X 10.6 and newer that is compatible with 
+Classic Mac OS. That is, AFP-version up to 2.x and transport via DDP
+(despite Apple removing DDP from OS X since 10.6).
+
+This will enable AppleTalk networking with emulated machines running 
+Classic Mac OS as well as printing on non-IP, AppleTalk-only printers.
+
+It should be possible to make this work using Homebrew.
+
+- 'mabam', March 2015
+
+----------------------------------------------------------------------
+
+	CAP Distribution 6.0, Patch Level 198 + 'asip1', March 1999
+
+In 'CAP.faq' it is stated that the following interim patches are 
+available for download from munnari.OZ.AU and can be reversed once 
+patch 199 is completed:
+
+	asip.patch	- AppleShareIP support
+	cicon.patch	- Color Desktop Icon support
+	extnd.patch	- Extended volume size support
+	desktop.patch	- Desktop tool color icon support
+
+It appears that patch 199 has never been released and the interim 
+patches are not available anymore at munnari.OZ.AU.
+
+They are, however, available for download at
+	ftp://iubio.bio.indiana.edu/util/cap/ (log in as guest)
+with the first patch substituted for a fixed version called 
+'asip1.patch'. 
+In this therefore unofficial, though fully patched version of CAP 6.0 
+these patches have been applied in the required, above stated order on 
+top of the patches 001 to 198.
+
+See also 'cap60.pl198+asip.README' for the original information by 
+Don Gilbert from the Department of Biology, Indiana University 
+Bloomington.
+
+- 'mabam', March 2015
+
+----------------------------------------------------------------------
+
+	       CAP - Columbia AppleTalk Package for UNIX
+
+	o RELEASE NOTES
+	o CAP Distribution 6.0, Patch Level 198, June 1996
+
+Notice
+------
+
+Copyright (c) 1986, 1987, 1988, The Trustees of Columbia University in
+the City of New York.  Charlie C. Kim, User Services Group, Academic
+Information Services Division, Libraries and Center for Computing
+Activities and Bill Schilit, formerly of Computer Research Facilities,
+Computer Science Department.
+
+Permission is granted to any individual or institution to use, copy,
+or redistribute this software so long as it is not sold for profit,
+provided that this notice and the original copyright notices are
+retained.  Columbia University makes no representations about the
+suitability of this software for any purpose.  It is provided "as is"
+without express or implied warranty.
+
+--
+
+Portions Copyright (c) 1985, Stanford Univ. SUMEX project.
+May be used but not sold without permission.
+
+Portions Copyright (c) 1984, Apple Computer Inc.
+Gene Tyacke, Alan Oppenheimer, G. Sidhu, Rich Andrews.
+
+Portions Copyright (c) 1990 - 1996 The University of Melbourne
+
+Modules copyright in part or whole by any other entity than Columbia
+University are clearly marked as such.
+
+--
+
+Portions are of the CAP distribution are public domain software.  The
+specific items are:
+	extras/att_getopt.c
+	extras/des.c
+
+Portions of the CAP distribution are contributed by other sites including:
+	Rob Chandhok, Computer Science Department, Carnegie Mellon University
+	Ed Moy, University of California at Berkeley
+	David Hornsby, The University of Melbourne
+	Rakesh Patel, Rutgers University
+	Paul Campbell
+
+
+ABSTRACT
+--------
+
+CAP was written for BSD 4.2 Unix and derivatives.  CAP implements a
+library containing a portion of Apple Computer's AppleTalk protocols.
+In order to use this package you may need an AppleTalk/Ethernet bridge
+(e.g. Shiva FastPath, Webster MultiPort Gateway). CAP includes a number
+of applications that can be used to print to a LaserWriter, spool for a
+LaserWriter, and act as Unix based AppleShare compatible file server.
+CAP also includes a number of sample programs and contributed software.
+
+CAP library routines are structured, for the most part, the same as
+the Apple routines described in "Inside AppleTalk" and "Inside
+LaserWriter."  Refer to the Apple documents and the procedure comments
+for a complete description of the routines and how to call them.
+
+Bill Croft's original work in this area provided the inspiration for CAP.
+
+Prerequisties
+------------
+
+ o CAP as originally shipped needs a gateway capable of supporting
+   IPTalk (the transmission of AppleTalk DDP packets inside IP UDP packets)
+   to translate (gateway) IPTalk packets to/from EtherTalk or LocalTalk.
+   Suitable candidates include ...
+
+     * Webster MultiPort Gateway
+     * Cayman Gatorbox
+     * Shiva FastPath
+     * Cisco Router
+
+ o This CAP version supports Native EtherTalk, UAR (Phase 1 or Phase 2) and
+   Kernel AppleTalk, UAB (Phase 1) on certain hosts. A gateway as listed
+   above is only required to access LocalTalk services.
+
+ o baseline host system: Ultrix 2.0-1.  Most will work under BSD 4.2,
+   BSD 4.3, Ultrix 1.0-1.2, Sun OS 3.2 or higher, ACIS 4.2, A/UX, IBM
+   RISC 6000, IRIS/IRIX, HP/Apollo Domain (BSD environment), OSF/Alpha,
+   386/BSD, FreeBSD and other systems with BSD like networking
+   facilities with varying levels of functionality.  Under certain
+   systems, only portions will work.
+
+Where
+-----
+
+CAP can be obtained by anonymous FTP from
+
+munnari.OZ.AU		mac/{cap60.pl100.tar.Z,cap.patches/*}
+ftp-ns.rutgers.EDU      pub/cap/{cap60.pl100.tar.Z,cap.patches/*}
+gatekeeper.DEC.COM	pub/net/appletalk/cap/{cap60.pl100.tar.Z,cap.patches/*}
+ftp.kuis.kyoto-u.AC.JP	net/cap/{cap60.pl100.tar.Z,cap60.patches/*.Z}
+src.doc.ic.AC.UK	packages/multigate/{cap60.pl100.tar.Z,cap.patches/*}
+
+Please choose an appropriate site and an off-peak time for the transfer.
+
+The patches are available individually or as the files "patches.1-100.tar.Z",
+"patches.101-126.tar.Z", "patches.127-143.tar.Z", "patches.144-154.tar.Z",
+"patches.155-162.tar.Z", "patches.163-182.tar.Z" & "patches.183-192.tar.Z".
+Additionally, for new users, a partially patched source file is available
+as "cap60.pl100.tar.Z" (beware: the file cap60.tar.Z is totally unpatched).
+
+Patches
+-------
+
+To make the process of patching easier, you should get the 'patch' utility
+written by Larry Wall, it is normally available from sites that archive
+comp.sources.unix in volume7/patch2 and at GNU archive sites as
+patch-2.1.tar.gz (which requires gzip-1.2.2.tar for unpacking).
+
+For each of the patches, run 'patch -p < cap60.patchNNN' from the top level
+cap60 directory, for example, in csh
+
+		foreach i (cap60.patches/cap60.patch*)
+		patch -p < $i >>& /tmp/patches
+		end
+
+and check the /tmp/patches file for patching errors (look for the strings
+"rej", "failed", "offset", "fuzz" - should be none).  To remove the *.orig
+files that patch leaves behind (containing the original version of the file),
+run 'make spotless' from the top level directory (note that spotless also
+removes all makefiles so gen.makes needs to be run to regenerate them).
+
+Information
+-----------
+
+There is no CAP mailing list.  Instead, notices and information about
+CAP are posted to the mailing list info-appletalk which is gatewayed
+with the USENET news group comp.protocols.appletalk.  If you don't
+have access to comp.protocols.appletalk and have access to the
+ARPANET, you can get on the mailing list by sending mail to
+info-appletalk-request@andrew.cmu.edu.
+
+Information about CAP and related UNIX AppleTalk packages is available
+via the World Wide Web using
+
+	http://www.cs.mu.OZ.AU/appletalk/atalk.html
+
+The CAP FAQ (Frequently Asked Questions) file is available via FTP
+from munnari.OZ.AU as the file
+
+	mac/CAP.faq
+
+Documentation
+-------------
+
+Important documentation resides in:
+
+	doc/install.ms - stepwise installation document: assumes
+	  you have read NOTES and this document
+	doc/print.cookbook - simple steps to implement CAP printing
+	man/* - UNIX manual entries for the various CAP programs
+	NOTES - installation notes: READ THIS BEFORE STARTING INSTALLATION
+	PORTING - notes on porting CAP to machines it doesn't know about
+
+What's in CAP
+-------------
+
+The Columbia AppleTalk Package consists of a number of libraries, a
+number of programs, and associated documentation.  Following is a list
+of the main parts along with a brief description.  
+
+ o NOTES for a general overview of installation and some overview material.
+
+ o PORTING for information about making CAP work on systems not listed
+   in NOTES
+
+ netat - general header files used by various parts of CAP
+ man - man pages for some of the programs
+ doc - documentation
+ lib/cap - main appletalk libraries: ASP, PAP, ATP, NBP, DDP
+ lib/afp - generic AppleTalk Filing Protocol (AFP) routines
+ lib/afpc - AFP client libraries
+ lib/xenix - compatibility routines for XENIX use
+ etc - support programs: only atis - support program for NBP
+ extras - code and materials not necessarily related to AppleTalk
+ samples - sample programs: allow simple interaction with lw, appleshare
+	server, etc.  See README there.
+ contrib - contributed programs
+ support - alterative LAP delivery support, Native EtherTalk,
+	Kernel AppleTalk and UAB.
+ applications - main applications.
+
+The following programs in applications are in regular use at Columbia
+and are a main part of the reason we work on CAP:
+  papif		- UNIX lpd "input" filter for spooling to appletalk
+		- also includes sample "output" filter and printcap entry
+		- Note: this is a very bare bones filter
+  lwsrv		- Simple LaserWriter spooler suitable for extension
+  aufs		- AppleTalk Filing Protocol Unix File Server
+
+    NOTE: You must have the AppleShare 1.1 or 2.0 client code installed in
+      your Macintosh to use this.  You must obtain this from Apple -
+      we do not and do not plan to supply this.  The client code is
+      a lot of work and Apple's already done an excellent job here.
+
+Bug Reports
+-----------
+
+Send bug report, comments, etc. to cap@munnari.OZ.AU or uunet!munnari!cap
+
+Notes
+-----
+Hasn't been througly checked out on any system except Ultrix 2.0 & SunOS.
+It it known to have run or should be able to run under: BSD 4.2, BSD
+4.3, Ultrix 1.0, 1.1, 1.2, 2.2, Sun OS 3.2 or higher, Pyramid's Unix
+under the BSD universe, ACIS 4.2 or 4.3 for the IBM RT PC, A/UX, HP-UX
+for the series 9000 (release 6.0), Convex Unix V6.1, Sequents, IBM AIX
+on the RISC 6000, Silicon Graphics IRIS/IRIX, HP/Apollo Domain (BSD),
+OSF/1 Alpha, 386/BSD, FreeBSD and the Encore Multimax.
+
+LAP - will probably never be implemented
+DDP - don't try to use it directly
+Documentation - in shorter supply than it should really be
+
+
+TODO list
+---------
+a) Complete NBP - completed.
+b) Complete PAP - completed.  
+c) Complete ATP - completed.
+d) Complete DDP - essentially completed, but some minor parts missing.
+e) Complete ASP - completed.
+f) Start AFP - client side needs to be redone, server side okay.
+g) Start ZIP work.  KIP modified to allow under rev 1/88.
+h) Start RTMP work.  Not need under KIP.
+i) miscellanous other fixes and cleanup
+
+
+Credits
+-------
+
+Thanks to the User Services staff at Columbia University Center for
+Computing Activies for patiently testing all the broken software that
+was foisted on them as "working" with special thanks going to:
+	Rob Cartolano for testing Aufs beyond the call of duty
+	Alan Crosswell for making papif die more than anyone else and
+		letting me use his RT.
+	Lisa Covi and Jeff Eldredge for living with the software in
+		our Mac MicroLab
+	Mark Kennedy, Tom Chow, and Richard Sacks for giving Charlie
+		the support and time to work on CAP
+and Father Larry "Mac" McCormick from the Columbia University
+Macintosh Users Group for his inspiration and support.
+
+And to the following list of people for their
+support, help, commentary, and bug fixes:
+	Bill Croft, SUMEX, Stanford University
+	Janet Tornow, Apple Computer
+	Dan Tappan, Bolt Beranek and Newman
+	Rakesh Patel, Rutgers University
+	Charles Hedrick, Rutgers University
+	Robert Elz, University of Melbourne, Australia
+	Dan Sahlin, Swedish Institute of Computer Science, Sweden
+	Scooter Morris, Genentech
+	Mike Byron, Adobe Systems Incorporated
+	Tom Mallory, Adobe Systems Incorporated
+	Phil Farrell, School of Earth Sciences, Stanford University
+	Mark Davies, VUW, New Zealand
+	Roy Smith, Public Health Research Institute, NYC
+	Ritch Ruff, Oregeon State
+	Dan Lanciani, Harvard University
+	Ravinder (Rob) Chandhok, Carnegie Mellon University
+	Dwight Mckay, Purdue University
+	Steve Fram, CITI, University of Michigan
+	Paul Campbell, Unisoft
+	Edward Moy, WSSG, University of California at Berkelely
+	Tharen Debold, Georgia Tech
+	Jim Guyton, The Rand Corporation
+	and any we might accidently left out of this list
+our thanks!
+ 
+
+Further CAP 6.0 thanks to
+	William Roberts, Queen Mary & Westfield College, UK
+	Edward Moy, University of California at Berkeley
+	Steve P. Andrewartha, University of Tasmania
+	Tom Evans, Webster Computer Corp.
+	Phil Budne, Shiva
+	Rakesh Patel, Rutgers University
+	Chip Salzenberg, Teltronics/TCT
+	Dan Oscarsson, Lund Institute of Technology, Sweden
+	Bridget Rogers, University of MN, Duluth
+	Matthew Lewis, University of Amsterdam
+	Max Tardiveau, University of St. Thomas
+and lots of nice people at the University of Melbourne, Australia.

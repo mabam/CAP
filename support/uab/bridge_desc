@@ -1,0 +1,89 @@
+#
+# The bridge description file is a list of the valid ports for a
+# particular Unix AppleTalk Bridge (UAB).
+# 
+# In order to minimize the maintaince headache, one may use the same
+# file on a multitude of hosts with the host name as a selector.
+#
+# Each port description is entered on a single line.
+#
+# The first item in a line is the host selector field.  It can be the
+# host name (as returned by gethostname).  In addition, you can use % to
+# match any character.  "*" can be used to match any host.  Finally, you
+# can use "*" at the end of a string to complete a match.  (Allowing "*"
+# at both the beginning and end or at an arbritrary location is a pain
+# because it is an unanchored search -- would have to use a regular
+# expression matcher to do this -- ugh).
+# [MUST BE SPECIFIED]
+#
+# The second field contains a tuple that specifies the interface's
+# link access protocol (LAP) and any device specific data required.
+#
+# Valid LAP method specifications:
+#    ELAP - EtherTalk Link Access Protocol 
+#    EtherTalk - same as above
+#    ASYNC - Asynchronous AppleTalk for UNIX
+#    AsyncATalk - same as above
+# [MUST BE SPECIFIED]
+#
+# The device specific data consists of a "device name" followed by an
+# colon and a "device number".  If the colon is omitted, the device
+# number is assumed to be zero.
+#
+# For Ethertalk, this should be interpreted as a ethernet "tap" device
+# (SunOS, Ultrix).  For example, "ie:1" for ethertalk on interface ie1.
+#
+# For Asynchronous Appletalk, this is just a label. Suggested use as:0
+#
+# (Note, this is subject to change)
+# 
+# The third field specifies the local demultiplexing delivery
+# mechanism for delivery of DDP packets not destined for the bridge
+# process.  Currently defined mechanisms are: "none" which says there
+# will be no other client processes; "mkip" - modified version of kip
+# style udp encapsulation using a different udp port range.
+# Asynchronous AppleTalk has a built-in delivery mechanism, specify 'none'.
+# [MUST BE SPECIFIED]
+#
+# The fourth and last field specifies two items paired in a
+# [<item1>,<item2>] format.  The first is the DDP network that should
+# be associated with this port.  If you specify zero, the ddp network
+# number will be acquired via RTMP if there are other bridges that
+# know the network number.  Note that only a single network is allowed
+# at this point.  The network number may be specified as <number> or
+# <high byte>.<low byte>.  In both cases, the number may be decimal
+# (no leading zero), octal (leading zero), or hexadecimal (leading 0x
+# or 0X).
+#
+# The second item specifies the zone name associated with
+# the ddp network associated with this port.  If it is not specified,
+# it will be acquired via ZIP if there are other bridges on the
+# network that know the zone name.  Note: you may omit the comma if
+# you do not wish to specify a zone.
+#
+# For Asynchronous Appletalk, the net number and Zone name MUST BE SPECIFIED
+# as there is no associated ZIP mechanism (and we are the only gateway ...)
+#
+# note, \ can be used to quote a character (like a space in the zone
+# name :-)  A "\" at the end of a line continues the line.  Carriage
+# return and line feed both terminate a line.
+#
+#  You should order the file from more specific to less specific (in
+#  terms of host name matches.  Once a match has been found, then only
+#  matches with the exactly same pattern will succeed!
+
+#hostname	[type,data]	local	[network,zone]
+
+munnari.OZ.AU	[elap,ie:1]	mkip	[0]
+munnari.OZ.AU	[elap,ie:0]	mkip	[83.1,unimelb-CompSci]
+munnari.OZ.AU	[async,as:0]	none	[170.170,unimelb-Async]
+
+# In this example, munnari.OZ.AU has three interfaces, two using modified KIP
+# for local host delivery (EG CAP). The third has no local form of delivery.
+# We expect ie1 to find out its Network Number and Zone from another gateway
+# using RTMP and ZIP. We seed interface ie0 with the values we want. The end
+# result is that munnari.OZ.AU acts as an EtherTalk gateway ...
+#
+# munnari.OZ.AU also provides an async appletalk network 170.170 in the zone
+# unimelb-Async. It is strongly suggested that you provide a separate network
+# for async clients to avoid swamping them in lookups.

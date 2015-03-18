@@ -1,0 +1,141 @@
+.TH atalk.local 5 "9 December 1990" "Melbourne University"
+.SH NAME
+atalk.local \- configuration file for CAP.
+.SH DESCRIPTION
+atalk.local contains the static configuration information needed to run
+the CAP system with IPTalk (See CAP(8)). This document defines the
+permissible contents of atalk.local for this distribution.
+.PP
+The version of CAP that supports Ethertalk uses another file
+called etalk.local. The contents of etalk.local are "free format" with
+keyword identifiers for each piece of information. The file is written by
+both UAB and the Native Ethertalk AARP daemon aarpd
+after they have identified the network, node and zone name. Refer to
+etalk.local(5) and UAB(8) for more information. If atalk.local exists, it
+is used to "seed" values that are not otherwise obtained from the network.
+.PP
+Unlike LocalTalk and EtherTalk hosts, IPTalk based CAP hosts do not
+dynamically establish their AppleTalk addresses, zones, or the network's
+AppleTalk bridge.
+The primary function of 
+.I atalk.local
+is to define these values.
+.PP
+The format of the file for IPTalk is quite simple.
+There are two significant lines in the file, and two extra lines which are
+optional (the third line is mandatory if the fourth line is used).
+There may also be any number of comment lines, which are identified
+by an initial pound sign (#) character.
+The first significant line defines the AppleTalk address of the host.
+The second line defines which AppleTalk Bridge to use.
+This bridge must be running software that supports the IPTalk
+(KIP) encapsulation.
+For example:
+.nf
+	# host's AppleTalk network, node, zone
+	55.1	6	"MY ZONE"
+	# bridge's AppleTalk network, node, and IP address
+	55.1	5	128.254.1.5
+.fi
+A network number can be specified as a single number or as two bytes
+separated by a "." (as above).
+.sp
+.BI IMPORTANT NOTE:
+An underscore in the zone name is
+no longer treated as a space as in previous versions.
+If a space in a zone name is desired, then use double or single forward
+(" or ') quotes to surround the name, as in the example shown above.
+This is the same convention used by later versions of
+.I atalkad.
+To have a quote in the zone name, escape it with a backslash (\\).
+.SH OPTIONAL LINES
+atalk.local may have up to two more (non comment) lines. The third line
+describes the network and node number for the NIS information server. That
+is, the network and node numbers for the host that is running atis, see
+atis(8). If this line is not present, the network and node numbers are
+taken from the first (host) line.
+.PP
+The optional fourth line (meaning you MUST HAVE a NIS entry) specifies the
+network and zone name for Asynchronous AppleTalk running on this host.
+Async AppleTalk allows connection to AppleTalk networks via serial lines
+connected to UNIX hosts. The entry specifies a Network number and Zone name
+that belong to this host only and must match the 'A' entries in atalkatab
+(using atalkad 1.23 or later available via FTP from munnari.OZ.AU). This
+service is currently only available with a Webster MultiPort Gateway, Shiva
+FastPath (early 1991) and when CAP is used with UAB.
+.PP
+A fully qualified atalk.local would therefore look like this.
+.sp
+.nf
+	# host's AppleTalk network, node, zone
+	55.1	6	"MY ZONE"
+	# bridge's AppleTalk network, node, and IP address
+	55.1	5	128.254.1.5
+	# name information server network, node
+	55.1	6
+	# async appletalk network and zone
+	170.32	"Async Zone"
+.fi
+.PP
+The contents of 
+.I atalk.local
+for IPtalk follow rigidly from what is defined in atalkad's
+.I atalkatab
+file.  Remember that
+.I atalkatab
+defines mappings for IP subnets to AppleTalk networks.  The host's
+appletalk network number must set as one of those mappings for 
+the subnet that the host is on.  In addition, the zone name 
+specified in
+.I atalk.local
+must be the zone name of the appletalk network specified.
+The host's node number must be the last byte of the host's ip network
+number.  For more information on why this is necessary, see the
+section on IPTalk routing
+below.
+.PP
+The AppleTalk bridge information comes from the anete network number in
+atalkatab.
+The anete network number is the one specified in the bridge's configuration
+for the UDP encapsulated "interface".
+When using the anete network number for the bridge,
+its AppleTalk node number MUST EQUAL the last byte of its IP address.
+.PP
+The overall combination of the Async AppleTalk UNIX code and the specified
+bridge form the "pseudo" Async AppleTalk bridge.
+.SH IPTalk ROUTING
+Appletalk bridges that implement IPtalk route to UDP encapsulated
+networks by using the AppleTalk to IP mappings (N[0123] and "H" flagged lines)
+defined in
+.I atalkatab
+to go from AppleTalk network numbers to IP network
+numbers and vice versa.  Of
+particular interest is that it assumes
+that the IP address of a host can be found by replacing the last byte
+of the IP address defined in the mapping with the DDP node number.
+(Remember, KIP encapsulates DDP packets not LAP packets).
+This has
+two major consequences.  First, 
+the node numbers of KIP/CAP hosts
+must be the same as the last byte of their IP network numbers.
+.PP
+Second, Appletalk to IP network mappings
+are expected to cover subnets (8 bit subnets for Class B networks, 16
+bit for Class A networks).  For the purposes of routing, it does not
+matter how your IP networks are really subnetted (or not subnetted).
+However, the mapping also defines a second piece of information.  It
+tells how to broadcast NBP lookup requests to all hosts on a
+particular UDP capsulated Appletalk network and the
+underlying IP network structure is of importance here.  Unfortunately,
+the details of this issue are beyond the scope of this document.
+.SH FILES
+atalk.local usually resides in /etc
+.SH BUGS
+The node numbers should be automatically determined since they are
+fixed.  In addition, it would be nice if the zone name were picked up
+automatically as well.
+.PP
+.SH SEE ALSO
+KIP documentation
+.br
+CAP(3), CAP(8), atalkatab(5), atalkad(8), atis(8)

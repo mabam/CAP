@@ -550,3 +550,26 @@ LaserWriter = (
 		AvantGarde-DemiOblique,
 	);
 );
+
+"LaserWriter 4/600 PS" = (
+	include "LaserWriter Plus";
+	FeatureQuery *LanguageLevel '"2"';
+	FeatureQuery *PSVersion '"(2014.107) 1"';
+	FeatureQuery *FreeVM '"1607044"';
+	FeatureQuery *TTRasterizer Type42;
+	FeatureQuery *Product '"(LaserWriter 4/600 PS)"';
+	Query Product '"(LaserWriter 4/600 PS)"';
+	Query ADORamSize '"6291456"';
+	FeatureQuery *?Resolution 600dpi;
+);
+
+"Personal LaserWriter 320" = (
+	include "LaserWriter Plus";
+	FeatureQuery *LanguageLevel '"2"';
+	FeatureQuery *PSVersion '"(2013.112) 1"';
+	FeatureQuery *FreeVM '"2371856"';
+	FeatureQuery *TTRasterizer Type42;
+	FeatureQuery *Product '"(LaserWriter Personal 320)"';
+	Query Product '"(LaserWriter Personal 320)"';
+	Query ADORamSize '"8388608"';
+);

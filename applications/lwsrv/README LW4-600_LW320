@@ -1,0 +1,10 @@
+The values for LaserWriter 4/600 PS in 'DBFile' are for the
+memory upgrade to 6 MB. Without upgrade your printer has 2 MB
+memory. Then the correct value for FreeVM is 481544 and for
+ADORamSize 2097152.
+
+The values for Personal LaserWriter 320 in 'DBFile' are for the
+memory upgrade to 8 MB. With upgrade to 4 MB the correct value
+for FreeVM is 2191632 and for ADORamSize 4194304. Without upgrade
+your printer has 2 MB memory. Then the correct value for FreeVM
+is 425600 and for ADORamSize 2097152.

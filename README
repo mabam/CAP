@@ -6,6 +6,9 @@ Classic Mac OS. That is, AFP-version up to 2.x and transport via DDP
 This will enable AppleTalk networking with emulated machines running 
 Classic Mac OS as well as printing on non-IP, AppleTalk-only printers.
 
+See also this forum discussion:
+http://www.emaculation.com/forum/viewtopic.php?t=8589#p50155
+
 - 'mabam', March 2015
 
 ----------------------------------------------------------------------
